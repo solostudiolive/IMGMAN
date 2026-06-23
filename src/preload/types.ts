@@ -21,6 +21,30 @@ export interface ImportProgress {
   total: number
 }
 
+export type ItemType = 'image' | 'video' | 'audio' | 'font' | 'doc' | 'other'
+
+// A grid row (mirrors src/main/services/items.ts Item).
+export interface Item {
+  id: string
+  name: string
+  ext: string
+  type: ItemType
+  size_bytes: number
+  width: number | null
+  height: number | null
+  rating: number
+  created_at: number
+  imported_at: number
+}
+
+// The full items row for the inspector (mirrors items.ts FullItem).
+export interface FullItem extends Item {
+  duration_ms: number | null
+  palette: string | null
+  source_url: string | null
+  note: string | null
+}
+
 export interface IpcApi {
   getVersion: () => Promise<string>
   ping: () => Promise<string>
@@ -40,5 +64,10 @@ export interface IpcApi {
     count: () => Promise<number>
     // Subscribe to batch progress; returns an unsubscribe function.
     onProgress: (cb: (p: ImportProgress) => void) => () => void
+  }
+  items: {
+    list: () => Promise<Item[]>
+    get: (id: string) => Promise<FullItem | null>
+    count: () => Promise<number>
   }
 }

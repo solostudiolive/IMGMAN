@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import type { ImportResult } from '../../preload/types'
 
-export default function ImportZone() {
+export default function ImportZone({ onChanged }: { onChanged?: () => void } = {}) {
   const [count, setCount] = useState<number | null>(null)
   const [dragging, setDragging] = useState(false)
   const [busy, setBusy] = useState(false)
@@ -37,9 +37,10 @@ export default function ImportZone() {
         setProgress(null)
         setBusy(false)
         await refreshCount()
+        onChanged?.()
       }
     },
-    [refreshCount]
+    [refreshCount, onChanged]
   )
 
   const onDrop = useCallback(

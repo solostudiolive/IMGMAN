@@ -3,6 +3,10 @@ import { join } from 'path'
 import { closeActiveLibrary, openLibrary } from './services/library'
 import { getLastOpened } from './config'
 import { registerIpcHandlers } from './ipc'
+import { registerImgmanScheme, registerImgmanProtocol } from './protocol'
+
+// Privileged scheme must be registered before the app is ready.
+registerImgmanScheme()
 
 function createWindow(): void {
   const mainWindow = new BrowserWindow({
@@ -39,6 +43,7 @@ function createWindow(): void {
 }
 
 app.whenReady().then(() => {
+  registerImgmanProtocol()
   registerIpcHandlers()
 
   // No fixed userData DB anymore: reopen the last-used library if it's still valid.

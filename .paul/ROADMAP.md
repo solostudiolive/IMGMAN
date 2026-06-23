@@ -8,7 +8,7 @@ A local-first desktop asset manager built in stages: stand up the Electron/React
 
 **v0.1 MVP** (v0.1.0)
 Status: In progress
-Phases: 2 of 4 complete
+Phases: 3 of 4 complete
 
 ## Phases
 
@@ -20,7 +20,7 @@ Phases: 2 of 4 complete
 |-------|------|-------|--------|-----------|
 | 1 | Foundation & skeleton | 1 | ✅ Complete | 2026-06-23 |
 | 2 | Library & import | 2 | ✅ Complete | 2026-06-23 |
-| 3 | Browse (grid + inspector) | TBD | Not started | - |
+| 3 | Browse (grid + inspector) | 2 | ✅ Complete | 2026-06-23 |
 | 4 | Organize & search | TBD | Not started | - |
 
 ## Phase Details
@@ -48,6 +48,11 @@ Phase scope and plans will be defined during `/paul:plan`. Provisional intent (f
 **Goal:** Virtualized grid view, inspector/metadata panel, spacebar quick preview.
 **Depends on:** Phase 2
 **Research:** Unlikely (virtualization libraries are well known)
+**Status:** Complete (2026-06-23) — see `phases/03-browse/03-01-SUMMARY.md`, `03-02-SUMMARY.md`
+**Decisions:** react-virtuoso (VirtuosoGrid) for windowing; custom privileged `imgman://` protocol to serve library files to the sandboxed renderer (confined to active library); items:list returns all rows (paging deferred); items:get full row for the inspector; read-only inspector (editing → Phase 4).
+**Plans:**
+- [x] 03-01: Data access + virtualized grid (imgman:// protocol, items:list, VirtuosoGrid, selection) — see `phases/03-browse/03-01-SUMMARY.md`
+- [x] 03-02: Inspector/metadata panel + spacebar quick preview (items:get, Inspector, QuickPreview, Space/Esc, CSP media-src) — see `phases/03-browse/03-02-SUMMARY.md`
 
 ### Phase 4: Organize & search
 **Goal:** Folders, tags, ratings; keyword search + format/type/rating/date filters (FTS).

@@ -17,12 +17,12 @@ A fast, offline-first local "second brain" — collect, organize, search, and br
 - ✓ electron-builder Windows packaging (native module ABI-correct) — Phase 1
 - ✓ Create / open / switch a portable `.library` (per-library SQLite, recents, last-opened) — Phase 2
 - ✓ Drag & drop + clipboard + bulk folder import (copy original, sharp thumbnail, metadata.json, items row) — Phase 2
+- ✓ Virtualized grid view (react-virtuoso) + inspector/metadata panel — Phase 3
+- ✓ Spacebar quick preview (image/GIF full-size, video/audio native playback) — Phase 3
 
 ### Must Have (MVP)
-- Virtualized grid view + inspector/metadata panel
 - Folders (nested), tags (many-to-many), star ratings (1–5)
 - Keyword search (name/tag/note) + filter by format/type/rating/date
-- Spacebar quick preview
 - Cross-platform (Windows + macOS)
 
 ### Should Have (V1)
@@ -66,6 +66,10 @@ A fast, offline-first local "second brain" — collect, organize, search, and br
 | sharp for image thumbnails; no ffmpeg yet | 2 | Non-image types get correct classification + generic handling; media thumbs are V1 |
 | No worker pool for import (sharp async is off-thread) | 2 | Non-blocking enough for MVP; revisit at scale |
 | IDs via crypto.randomUUID() | 2 | Built-in, stable, unique; no extra dependency |
+| Custom privileged `imgman://` protocol to serve library files | 3 | Sandboxed renderer can't read FS; beats base64-over-IPC; path-confined to active library |
+| react-virtuoso VirtuosoGrid; items:list returns all rows | 3 | Render-side windowing scales to 50k; paging deferred |
+| items:list lean projection vs items:get full row | 3 | Grid payload stays small; inspector fetches the full record on demand |
+| Read-only inspector for MVP | 3 | Rating/tag/note editing deferred to Phase 4 (Organize) |
 
 ## Reference
 
@@ -73,4 +77,4 @@ Full design doc (architecture, data model, library format, risks): see root `PRO
 
 ---
 *Created: 2026-06-23*
-*Last updated: 2026-06-23 after Phase 2*
+*Last updated: 2026-06-23 after Phase 3*

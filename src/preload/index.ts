@@ -26,6 +26,11 @@ const api: IpcApi = {
       ipcRenderer.on('import:progress', listener)
       return () => ipcRenderer.removeListener('import:progress', listener)
     }
+  },
+  items: {
+    list: () => ipcRenderer.invoke('items:list'),
+    get: (id: string) => ipcRenderer.invoke('items:get', id),
+    count: () => ipcRenderer.invoke('items:count')
   }
 }
 

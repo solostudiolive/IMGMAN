@@ -1,6 +1,7 @@
 import { app, ipcMain } from 'electron'
 import { registerLibraryIpc } from './library'
 import { registerImportIpc } from './import'
+import { registerItemsIpc } from './items'
 
 /**
  * Central registration point for all main-process IPC handlers.
@@ -12,4 +13,5 @@ export function registerIpcHandlers(): void {
 
   registerLibraryIpc()
   registerImportIpc()
+  registerItemsIpc()
 }

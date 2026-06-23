@@ -1,6 +1,9 @@
 import { useCallback, useEffect, useState } from 'react'
-import type { LibraryInfo, LibraryResult } from '../../preload/types'
+import type { Item, LibraryInfo, LibraryResult } from '../../preload/types'
 import ImportZone from './ImportZone'
+import Grid from './Grid'
+import Inspector from './Inspector'
+import QuickPreview from './QuickPreview'
 
 export default function LibraryGate() {
   const [active, setActive] = useState<LibraryInfo | null>(null)
@@ -10,15 +13,53 @@ export default function LibraryGate() {
   // Electron doesn't support window.prompt(), so collect the name inline.
   const [creating, setCreating] = useState(false)
   const [name, setName] = useState('')
+  // Browse state for the active library.
+  const [items, setItems] = useState<Item[]>([])
+  const [selectedId, setSelectedId] = useState<string | null>(null)
+  const [previewOpen, setPreviewOpen] = useState(false)
 
   const refresh = useCallback(async () => {
     setActive(await window.api.library.getActive())
     setRecents(await window.api.library.listRecent())
   }, [])
 
+  const reloadItems = useCallback(async () => {
+    setItems(await window.api.items.list())
+  }, [])
+
   useEffect(() => {
     refresh()
   }, [refresh])
+
+  // Load (or clear) items whenever the active library changes; reset selection.
+  useEffect(() => {
+    setSelectedId(null)
+    setPreviewOpen(false)
+    if (active) reloadItems()
+    else setItems([])
+  }, [active?.path, reloadItems])
+
+  // A cleared selection can't have a preview open.
+  useEffect(() => {
+    if (!selectedId) setPreviewOpen(false)
+  }, [selectedId])
+
+  // Space toggles the quick preview of the selected item; Escape closes it.
+  useEffect(() => {
+    if (!active) return
+    const onKey = (e: KeyboardEvent): void => {
+      const t = e.target as HTMLElement | null
+      if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable)) return
+      if (e.code === 'Space') {
+        e.preventDefault()
+        if (selectedId) setPreviewOpen((open) => !open)
+      } else if (e.key === 'Escape') {
+        setPreviewOpen(false)
+      }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [active, selectedId])
 
   // Apply a library:* result: update state on success, surface errors, ignore cancels.
   const apply = useCallback(
@@ -53,19 +94,45 @@ export default function LibraryGate() {
     setName('')
   }
 
+  const previewItem = previewOpen && selectedId ? items.find((it) => it.id === selectedId) : null
+
   if (active) {
     return (
-      <section>
-        <h2 style={{ margin: '0 0 4px' }}>{active.name}</h2>
-        <p style={{ color: '#888', fontSize: 13, margin: '0 0 16px' }}>{active.path}</p>
-        <ImportZone key={active.path} />
-        <p style={{ marginTop: 16 }}>
-          <button onClick={() => run(() => window.api.library.open())} disabled={busy}>
-            Open a different library…
-          </button>
-        </p>
-        <Recents recents={recents} active={active} busy={busy} onPick={(p) => run(() => window.api.library.openPath(p))} />
-        {error && <p style={{ color: '#c00' }}>{error}</p>}
+      <section
+        style={{ display: 'flex', flexDirection: 'column', gap: 12, height: 'calc(100vh - 120px)' }}
+      >
+        <header style={{ flex: '0 0 auto' }}>
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: 12, flexWrap: 'wrap' }}>
+            <h2 style={{ margin: 0 }}>{active.name}</h2>
+            <span style={{ color: '#888', fontSize: 12 }}>{active.path}</span>
+            <button
+              style={{ marginLeft: 'auto' }}
+              onClick={() => run(() => window.api.library.open())}
+              disabled={busy}
+            >
+              Open a different library…
+            </button>
+          </div>
+          <div style={{ marginTop: 10 }}>
+            <ImportZone key={active.path} onChanged={reloadItems} />
+          </div>
+          <Recents
+            recents={recents}
+            active={active}
+            busy={busy}
+            onPick={(p) => run(() => window.api.library.openPath(p))}
+          />
+          {error && <p style={{ color: '#c00' }}>{error}</p>}
+        </header>
+        <div style={{ flex: '1 1 auto', minHeight: 0, display: 'flex' }}>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <Grid items={items} selectedId={selectedId} onSelect={setSelectedId} />
+          </div>
+          <Inspector selectedId={selectedId} />
+        </div>
+        {previewItem && (
+          <QuickPreview item={previewItem} onClose={() => setPreviewOpen(false)} />
+        )}
       </section>
     )
   }
