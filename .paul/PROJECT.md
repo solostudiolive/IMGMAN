@@ -19,11 +19,13 @@ A fast, offline-first local "second brain" — collect, organize, search, and br
 - ✓ Drag & drop + clipboard + bulk folder import (copy original, sharp thumbnail, metadata.json, items row) — Phase 2
 - ✓ Virtualized grid view (react-virtuoso) + inspector/metadata panel — Phase 3
 - ✓ Spacebar quick preview (image/GIF full-size, video/audio native playback) — Phase 3
+- ✓ Editable star ratings (1–5) via allow-listed `items:update` mutation — Phase 4
+- ✓ Tags (many-to-many): CRUD + assign/remove + inspector editor with autocomplete — Phase 4
+- ✓ Folders (nested): tree CRUD, assign items, filter grid by folder — Phase 4
+- ✓ Keyword search (name/note/tags) + filter by format/type/rating/date — Phase 4
 
 ### Must Have (MVP)
-- Folders (nested), tags (many-to-many), star ratings (1–5)
-- Keyword search (name/tag/note) + filter by format/type/rating/date
-- Cross-platform (Windows + macOS)
+- Cross-platform (Windows + macOS) — Windows verified; macOS build unverified (see Constraints/packaging)
 
 ### Should Have (V1)
 - Smart folders + saved searches
@@ -70,6 +72,10 @@ A fast, offline-first local "second brain" — collect, organize, search, and br
 | react-virtuoso VirtuosoGrid; items:list returns all rows | 3 | Render-side windowing scales to 50k; paging deferred |
 | items:list lean projection vs items:get full row | 3 | Grid payload stays small; inspector fetches the full record on demand |
 | Read-only inspector for MVP | 3 | Rating/tag/note editing deferred to Phase 4 (Organize) |
+| Item edits via allow-listed `items:update(patch)` (optimistic → reconcile → revert) | 4 | Only recognized keys reach SQL; values validated main-side |
+| Many-to-many relations (tags, folders) each get their own IPC namespace returning the canonical post-write list | 4 | Reusable pattern; renderer reconciles to the returned list |
+| Folder tree = flat parent_id list rendered nested; cascade-delete keeps items | 4 | No recursive SQL; deleting a folder never deletes assets |
+| Search is LIKE-based (name/note/tags + filters); items_fts left unwired | 4 | One consistent path covering tags; FTS triggers+backfill deferred to V1 perf pass |
 
 ## Reference
 
@@ -77,4 +83,4 @@ Full design doc (architecture, data model, library format, risks): see root `PRO
 
 ---
 *Created: 2026-06-23*
-*Last updated: 2026-06-23 after Phase 3*
+*Last updated: 2026-06-23 after Phase 4 — v0.1 MVP feature-complete*

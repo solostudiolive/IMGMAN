@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react'
 import type { FullItem, ItemType } from '../../preload/types'
+import TagEditor from './TagEditor'
+import FolderAssigner from './FolderAssigner'
 
 // Type glyphs for the preview fallback (mirrors Grid's set).
 const TYPE_GLYPH: Record<ItemType, string> = {
@@ -59,6 +61,22 @@ export default function Inspector({ selectedId }: { selectedId: string | null })
   const created = formatDate(item.created_at)
   const imported = formatDate(item.imported_at)
 
+  // Optimistically update, persist, then reconcile to the canonical DB row.
+  // On failure, revert and surface — never leave a phantom rating that vanishes
+  // on the next selection.
+  const setRating = async (n: number): Promise<void> => {
+    const prev = item.rating
+    setItem({ ...item, rating: n })
+    try {
+      const row = await window.api.items.update(item.id, { rating: n })
+      if (row) setItem(row)
+      else setItem((cur) => (cur ? { ...cur, rating: prev } : cur))
+    } catch (err) {
+      console.error('Failed to save rating:', err)
+      setItem((cur) => (cur ? { ...cur, rating: prev } : cur))
+    }
+  }
+
   return (
     <aside style={ASIDE_STYLE}>
       <div
@@ -91,13 +109,63 @@ export default function Inspector({ selectedId }: { selectedId: string | null })
         <Row label="Type" value={`${item.type}${item.ext ? ` · ${item.ext.toUpperCase()}` : ''}`} />
         <Row label="Dimensions" value={dims} />
         <Row label="Size" value={formatBytes(item.size_bytes)} />
-        <Row label="Rating" value={item.rating > 0 ? '★'.repeat(item.rating) : '—'} />
+        <div
+          style={{
+            display: 'flex',
+            gap: 8,
+            padding: '4px 0',
+            borderTop: '1px solid #f0f0f0',
+            alignItems: 'center'
+          }}
+        >
+          <dt style={{ flex: '0 0 84px', color: '#999' }}>Rating</dt>
+          <dd style={{ margin: 0, flex: 1 }}>
+            <StarRating value={item.rating} onChange={setRating} />
+          </dd>
+        </div>
         <Row label="Created" value={created} />
         <Row label="Imported" value={imported} />
         <Row label="Source" value={item.source_url} />
         <Row label="Note" value={item.note} />
       </dl>
+
+      <TagEditor itemId={item.id} />
+      <FolderAssigner itemId={item.id} />
     </aside>
+  )
+}
+
+// Five clickable stars. Click a star to set the rating; click the current
+// top star again to clear back to 0.
+function StarRating({
+  value,
+  onChange
+}: {
+  value: number
+  onChange: (n: number) => void
+}): React.JSX.Element {
+  return (
+    <span style={{ display: 'inline-flex', gap: 2 }}>
+      {[1, 2, 3, 4, 5].map((n) => (
+        <button
+          key={n}
+          type="button"
+          aria-label={`${n} star${n > 1 ? 's' : ''}`}
+          onClick={() => onChange(n === value ? 0 : n)}
+          style={{
+            background: 'none',
+            border: 'none',
+            padding: 0,
+            cursor: 'pointer',
+            fontSize: 16,
+            lineHeight: 1,
+            color: n <= value ? '#f59e0b' : '#d1d5db'
+          }}
+        >
+          {n <= value ? '★' : '☆'}
+        </button>
+      ))}
+    </span>
   )
 }
 

@@ -1,5 +1,5 @@
 import { contextBridge, ipcRenderer, webUtils } from 'electron'
-import type { IpcApi, ImportProgress } from './types'
+import type { IpcApi, ImportProgress, ItemPatch, SearchCriteria } from './types'
 
 // The typed surface exposed to the renderer as `window.api`.
 // Request/response uses invoke/handle (not send/on). The raw ipcRenderer is
@@ -30,7 +30,28 @@ const api: IpcApi = {
   items: {
     list: () => ipcRenderer.invoke('items:list'),
     get: (id: string) => ipcRenderer.invoke('items:get', id),
-    count: () => ipcRenderer.invoke('items:count')
+    update: (id: string, patch: ItemPatch) => ipcRenderer.invoke('items:update', id, patch),
+    count: () => ipcRenderer.invoke('items:count'),
+    search: (criteria: SearchCriteria) => ipcRenderer.invoke('items:search', criteria)
+  },
+  tags: {
+    listAll: () => ipcRenderer.invoke('tags:listAll'),
+    listForItem: (itemId: string) => ipcRenderer.invoke('tags:listForItem', itemId),
+    add: (itemId: string, name: string) => ipcRenderer.invoke('tags:add', itemId, name),
+    remove: (itemId: string, tagId: string) => ipcRenderer.invoke('tags:remove', itemId, tagId)
+  },
+  folders: {
+    list: () => ipcRenderer.invoke('folders:list'),
+    create: (name: string, parentId: string | null) =>
+      ipcRenderer.invoke('folders:create', name, parentId),
+    rename: (id: string, name: string) => ipcRenderer.invoke('folders:rename', id, name),
+    delete: (id: string) => ipcRenderer.invoke('folders:delete', id),
+    itemsIn: (folderId: string) => ipcRenderer.invoke('folders:itemsIn', folderId),
+    forItem: (itemId: string) => ipcRenderer.invoke('folders:forItem', itemId),
+    assign: (itemId: string, folderId: string) =>
+      ipcRenderer.invoke('folders:assign', itemId, folderId),
+    unassign: (itemId: string, folderId: string) =>
+      ipcRenderer.invoke('folders:unassign', itemId, folderId)
   }
 }
 

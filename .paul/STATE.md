@@ -5,26 +5,26 @@
 See: .paul/PROJECT.md (updated 2026-06-23)
 
 **Core value:** A fast, offline-first local "second brain" — collect, organize, search, and browse tens of thousands of visual assets in under a second, with full data ownership.
-**Current focus:** v0.1 MVP — Phase 4 (Organize & search)
+**Current focus:** v0.1 MVP COMPLETE — awaiting next milestone (V1 polish) decision.
 
 ## Current Position
 
-Milestone: v0.1 MVP
-Phase: 4 of 4 (Organize & search) — Not started
-Plan: Not started
-Status: Phase 3 complete and committed. Ready to plan Phase 4.
-Last activity: 2026-06-23 — Phase 3 complete (03-01 + 03-02 unified); transitioned to Phase 4
+Milestone: v0.1 MVP — ✅ COMPLETE (4 of 4 phases)
+Phase: 4 of 4 (Organize & search) — ✅ Complete
+Plan: 04-04 complete (loop closed); Phase 4 transition done
+Status: Milestone complete — ready to start next milestone or pause
+Last activity: 2026-06-23 — Closed 04-04 loop + Phase 4 transition: PROJECT.md/ROADMAP evolved, phase committed. v0.1 MVP feature-complete.
 
 Progress:
-- Milestone: [███████░░░] 75% (3 of 4 phases complete)
-- Phase 4: [░░░░░░░░░░] 0% (not started)
+- Milestone: [██████████] 100% (4 of 4 phases complete)
+- Phase 4: [██████████] 100% (4 of 4 plans complete)
 
 ## Loop Position
 
 Current loop state:
 ```
 PLAN ──▶ APPLY ──▶ UNIFY
-  ✓        ✓        ✓     [Phase 3 loop complete — ready to PLAN Phase 4]
+  ✓        ✓        ✓     [Loop complete — Phase 4 transition done — v0.1 MVP COMPLETE 🎉]
 ```
 
 ## Accumulated Context
@@ -40,6 +40,10 @@ PLAN ──▶ APPLY ──▶ UNIFY
 - 2026-06-23: react-virtuoso VirtuosoGrid for the grid; items:list returns all rows (paging deferred). | Phase 3 | Render-side windowing handles scale.
 - 2026-06-23: items:list lean projection vs items:get full row (FullItem) for the inspector. | Phase 3 | Grid payload stays small; detail views fetch on demand.
 - 2026-06-23: Read-only inspector for MVP; container (LibraryGate) owns Space/Escape, QuickPreview is presentational; CSP media-src += imgman: for video/audio originals. | Phase 3 | Rating/note/tag editing → Phase 4; keyboard avoids focus/scroll bugs.
+- 2026-06-23: Item mutation pattern — items:update(id, patch) with an allow-listed ItemPatch (only recognized keys build the SET clause; values validated main-side); renderer does optimistic update → persist → reconcile to returned row → revert on failure. | Phase 4 | Tags/folders/notes extend ItemPatch; rating clamped 0..5.
+- 2026-06-23: Many-to-many relations get their own IPC namespace (NOT ItemPatch) — tags:* over tags/item_tags. Tags de-duped by trimmed exact name; add is a transactional lookup-or-insert + INSERT OR IGNORE link; unlink deletes only item_tags (tags row kept for reuse). Mutations return the canonical post-write list; renderer reconciles to it. Autocomplete via native <datalist>. | Phase 4 (04-02) | 04-04 search reuses tags:* to filter; folders (04-03) follow the same many-to-many pattern.
+- 2026-06-23: Search (04-04) is LIKE-based, NOT FTS5 — items:search(criteria) runs one parameterized query: name/note LIKE + a tag-name subquery (over item_tags/tags), AND'd with type IN / ext / rating>= / imported_at range filters. LIKE specials (\ % _) escaped with ESCAPE '\'; all values bound. items_fts left UNWIRED (it indexes only name/note, isn't populated/triggered, and tags need a separate match anyway) — proper FTS triggers+backfill deferred to a V1 perf pass. Search is a 3rd grid scope in LibraryGate, mutually exclusive with the folder filter; date filter uses imported_at. | Phase 4 (04-04) | Revisit FTS only if LIKE misses the <0.5s @ 50k target.
+- 2026-06-23: Folders (04-03) — folders:* IPC over folders/item_folders (8 channels). Tree is a FLAT parent_id list from main, nested + indented in the renderer (no recursive SQL CTE). Cascade delete computes the descendant set in JS then deletes item_folders links + folders rows in one transaction; items are NEVER deleted. Grid filter = DIRECT members only (folders:itemsIn), no descendant rollup. Grid scope lives in LibraryGate (selectedFolderId in reloadItems deps: null → items:list, else folders:itemsIn). Assign via inspector <select>, no drag-drop. | Phase 4 (04-03) | 04-04 search generalizes the selected-scope→items-query path; rollup/colors/drag-drop/sort_order deferred.
 - 2026-06-23: Pinned vite ^7 + @vitejs/plugin-react ^5 (electron-vite 5 caps vite at 7; plugin-react 6 needs vite 8). | Phase 1 | Constrains future vite/plugin upgrades.
 - 2026-06-23: SQL schema imported via Vite `?raw` (inlined into bundle) instead of copying schema.sql as an asset. | Phase 1 | Schema travels with build; edits need rebuild.
 - 2026-06-23: postinstall runs `node node_modules/electron/install.js` + `electron-builder install-app-deps` because npm 11 silently skips dependency install scripts (Electron binary download was missed). | Phase 1 | Required for `npm run dev` to find Electron on fresh installs.
@@ -52,11 +56,14 @@ None logged.
 - No real thumbnails for video/audio/pdf/font — grid uses type-based placeholder icons until V1 media thumbnails.
 - Import runs sequentially on the main process; revisit the deferred worker pool if 10k+ imports stutter.
 - Renderer bundle ~655 kB (react + react-virtuoso) — fine for desktop; revisit if cold start regresses.
-- No arrow-key navigation in grid/quick-preview yet — likely expected UX; consider in Phase 4 or a polish pass.
+- No arrow-key navigation in grid/quick-preview yet — likely expected UX; consider in a V1 polish pass.
+- items_fts (FTS5) declared in schema but UNWIRED — search is LIKE-based; wire triggers+backfill in a V1 perf pass if LIKE misses <0.5s @ 50k.
+- Performance targets (<0.5s search @ 50k, 60fps scroll) not yet measured against a real 50k-item library.
 
 ### Git State
 - Repository initialized 2026-06-23 (branch: main).
-- Last commit: e1fa1b7 — feat(02-library-import): portable library + import pipeline (covers Phase 1 + Phase 2).
+- Last commit: 6dd5bf1 — feat(03-browse): virtualized grid, inspector, and spacebar quick preview (Phase 3).
+- Prior: e1fa1b7 — feat(02-library-import): portable library + import pipeline (Phase 1 + Phase 2).
 - Feature branches merged: none.
 
 ### Resolved (Phase 2 planning, 2026-06-23)
@@ -72,8 +79,8 @@ None logged.
 ## Session Continuity
 
 Last session: 2026-06-23
-Stopped at: Phase 3 complete (browse: grid + inspector + quick preview), unified and committed
-Next action: Run /paul:plan to create the first plan of Phase 4 (Organize & search)
+Stopped at: v0.1 MVP COMPLETE — Phase 4 closed + transitioned + committed
+Next action: /paul:discuss-milestone (or /paul:milestone) to scope V1, or /paul:complete-milestone to formally archive v0.1. Optional first: verify a real packaged Windows build (asarUnpack for sharp + better-sqlite3).
 Resume file: .paul/ROADMAP.md
 
 ---

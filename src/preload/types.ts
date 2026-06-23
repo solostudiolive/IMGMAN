@@ -45,6 +45,38 @@ export interface FullItem extends Item {
   note: string | null
 }
 
+// Allow-listed mutable fields for items.update (mirrors items.ts ItemPatch).
+export interface ItemPatch {
+  rating?: number
+}
+
+// Search/filter criteria (mirrors src/main/services/search.ts SearchCriteria).
+// Absent fields impose no constraint; query matches name/note/tag-name.
+export interface SearchCriteria {
+  query?: string
+  types?: ItemType[]
+  ext?: string
+  minRating?: number
+  from?: number | null
+  to?: number | null
+}
+
+// A tag row (mirrors src/main/services/tags.ts Tag).
+export interface Tag {
+  id: string
+  name: string
+  color: string | null
+}
+
+// A folder row (mirrors src/main/services/folders.ts Folder). parent_id is null
+// for roots; the renderer builds the nested tree from the flat list.
+export interface Folder {
+  id: string
+  name: string
+  parent_id: string | null
+  sort_order: number | null
+}
+
 export interface IpcApi {
   getVersion: () => Promise<string>
   ping: () => Promise<string>
@@ -68,6 +100,24 @@ export interface IpcApi {
   items: {
     list: () => Promise<Item[]>
     get: (id: string) => Promise<FullItem | null>
+    update: (id: string, patch: ItemPatch) => Promise<FullItem | null>
     count: () => Promise<number>
+    search: (criteria: SearchCriteria) => Promise<Item[]>
+  }
+  tags: {
+    listAll: () => Promise<Tag[]>
+    listForItem: (itemId: string) => Promise<Tag[]>
+    add: (itemId: string, name: string) => Promise<Tag[]>
+    remove: (itemId: string, tagId: string) => Promise<Tag[]>
+  }
+  folders: {
+    list: () => Promise<Folder[]>
+    create: (name: string, parentId: string | null) => Promise<Folder[]>
+    rename: (id: string, name: string) => Promise<Folder[]>
+    delete: (id: string) => Promise<Folder[]>
+    itemsIn: (folderId: string) => Promise<Item[]>
+    forItem: (itemId: string) => Promise<Folder[]>
+    assign: (itemId: string, folderId: string) => Promise<Folder[]>
+    unassign: (itemId: string, folderId: string) => Promise<Folder[]>
   }
 }

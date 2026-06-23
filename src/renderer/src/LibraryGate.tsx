@@ -1,9 +1,23 @@
 import { useCallback, useEffect, useState } from 'react'
-import type { Item, LibraryInfo, LibraryResult } from '../../preload/types'
+import type { Item, LibraryInfo, LibraryResult, SearchCriteria } from '../../preload/types'
 import ImportZone from './ImportZone'
 import Grid from './Grid'
 import Inspector from './Inspector'
 import QuickPreview from './QuickPreview'
+import FolderTree from './FolderTree'
+import SearchBar from './SearchBar'
+
+// True when any search field constrains the results.
+function isSearchActive(c: SearchCriteria): boolean {
+  return (
+    !!c.query?.trim() ||
+    !!c.types?.length ||
+    !!c.ext?.trim() ||
+    !!c.minRating ||
+    c.from != null ||
+    c.to != null
+  )
+}
 
 export default function LibraryGate() {
   const [active, setActive] = useState<LibraryInfo | null>(null)
@@ -17,21 +31,47 @@ export default function LibraryGate() {
   const [items, setItems] = useState<Item[]>([])
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [previewOpen, setPreviewOpen] = useState(false)
+  // Active folder filter: null = "All items"; otherwise show that folder's items.
+  const [selectedFolderId, setSelectedFolderId] = useState<string | null>(null)
+  // Active search/filter criteria; when active it overrides the folder scope.
+  const [searchCriteria, setSearchCriteria] = useState<SearchCriteria>({})
 
   const refresh = useCallback(async () => {
     setActive(await window.api.library.getActive())
     setRecents(await window.api.library.listRecent())
   }, [])
 
+  // Load the grid for the current scope (search wins over folder over all-items).
   const reloadItems = useCallback(async () => {
-    setItems(await window.api.items.list())
+    let list: Item[]
+    if (isSearchActive(searchCriteria)) list = await window.api.items.search(searchCriteria)
+    else if (selectedFolderId) list = await window.api.folders.itemsIn(selectedFolderId)
+    else list = await window.api.items.list()
+    setItems(list)
+  }, [searchCriteria, selectedFolderId])
+
+  // Search and folder scopes are mutually exclusive.
+  const applySearch = useCallback((c: SearchCriteria) => {
+    if (isSearchActive(c)) setSelectedFolderId(null)
+    setSearchCriteria(c)
+  }, [])
+  const selectFolder = useCallback((id: string | null) => {
+    setSearchCriteria({})
+    setSelectedFolderId(id)
   }, [])
 
   useEffect(() => {
     refresh()
   }, [refresh])
 
-  // Load (or clear) items whenever the active library changes; reset selection.
+  // A new library starts at the "All items" scope (folders + search are per-library).
+  useEffect(() => {
+    setSelectedFolderId(null)
+    setSearchCriteria({})
+  }, [active?.path])
+
+  // Load (or clear) items whenever the active library or folder scope changes;
+  // reset selection (reloadItems identity changes with selectedFolderId).
   useEffect(() => {
     setSelectedId(null)
     setPreviewOpen(false)
@@ -43,6 +83,11 @@ export default function LibraryGate() {
   useEffect(() => {
     if (!selectedId) setPreviewOpen(false)
   }, [selectedId])
+
+  // If the selected item is no longer in the (filtered) list, clear the selection.
+  useEffect(() => {
+    if (selectedId && !items.some((it) => it.id === selectedId)) setSelectedId(null)
+  }, [items, selectedId])
 
   // Space toggles the quick preview of the selected item; Escape closes it.
   useEffect(() => {
@@ -116,6 +161,7 @@ export default function LibraryGate() {
           <div style={{ marginTop: 10 }}>
             <ImportZone key={active.path} onChanged={reloadItems} />
           </div>
+          <SearchBar criteria={searchCriteria} onChange={applySearch} />
           <Recents
             recents={recents}
             active={active}
@@ -125,6 +171,11 @@ export default function LibraryGate() {
           {error && <p style={{ color: '#c00' }}>{error}</p>}
         </header>
         <div style={{ flex: '1 1 auto', minHeight: 0, display: 'flex' }}>
+          <FolderTree
+            selectedFolderId={selectedFolderId}
+            onSelectFolder={selectFolder}
+            onFoldersChanged={reloadItems}
+          />
           <div style={{ flex: 1, minWidth: 0 }}>
             <Grid items={items} selectedId={selectedId} onSelect={setSelectedId} />
           </div>

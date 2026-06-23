@@ -23,6 +23,12 @@ export interface FullItem extends Item {
   note: string | null
 }
 
+// Allow-listed mutable fields for items:update. Extend as later slices need
+// (note, etc.) — only keys handled below ever reach SQL.
+export interface ItemPatch {
+  rating?: number
+}
+
 /** Number of items in the active library (0 when no library is open). */
 export function countItems(): number {
   if (!isDatabaseOpen()) return 0
@@ -54,4 +60,28 @@ export function getItem(id: string): FullItem | null {
     )
     .get(id) as FullItem | undefined
   return row ?? null
+}
+
+/**
+ * Apply an allow-listed patch to one item and return the persisted row (or null
+ * for unknown id / no library open). Column names are never interpolated from
+ * input — only recognized keys build the SET clause.
+ */
+export function updateItem(id: string, patch: ItemPatch): FullItem | null {
+  if (!isDatabaseOpen()) return null
+
+  const sets: string[] = []
+  const values: unknown[] = []
+  if (patch.rating !== undefined) {
+    sets.push('rating = ?')
+    values.push(Math.max(0, Math.min(5, Math.round(patch.rating))))
+  }
+
+  if (sets.length > 0) {
+    getDb()
+      .prepare(`UPDATE items SET ${sets.join(', ')} WHERE id = ?`)
+      .run(...values, id)
+  }
+
+  return getItem(id)
 }
