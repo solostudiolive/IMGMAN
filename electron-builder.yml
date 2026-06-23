@@ -1,0 +1,32 @@
+appId: com.imgman.app
+productName: IMGMAN
+directories:
+  output: dist
+  buildResources: resources
+
+files:
+  - out/**/*
+  - package.json
+
+# better-sqlite3 is a native module: keep it unpacked from the asar so its
+# .node binary is loadable at runtime. install-app-deps (postinstall) /
+# electron-rebuild build it against Electron's ABI.
+asarUnpack:
+  - node_modules/better-sqlite3/**/*
+
+win:
+  target:
+    - nsis
+
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+
+mac:
+  target:
+    - dmg
+  category: public.app-category.graphics-design
+
+linux:
+  target:
+    - AppImage
