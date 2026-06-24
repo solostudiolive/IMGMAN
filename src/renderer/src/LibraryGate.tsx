@@ -6,6 +6,8 @@ import Inspector from './Inspector'
 import QuickPreview from './QuickPreview'
 import FolderTree from './FolderTree'
 import SearchBar from './SearchBar'
+import AppShell from './components/AppShell'
+import SettingsModal from './components/SettingsModal'
 
 // True when any search field constrains the results.
 function isSearchActive(c: SearchCriteria): boolean {
@@ -35,6 +37,8 @@ export default function LibraryGate() {
   const [selectedFolderId, setSelectedFolderId] = useState<string | null>(null)
   // Active search/filter criteria; when active it overrides the folder scope.
   const [searchCriteria, setSearchCriteria] = useState<SearchCriteria>({})
+  // Settings modal visibility (Appearance + About).
+  const [settingsOpen, setSettingsOpen] = useState(false)
 
   const refresh = useCallback(async () => {
     setActive(await window.api.library.getActive())
@@ -90,8 +94,9 @@ export default function LibraryGate() {
   }, [items, selectedId])
 
   // Space toggles the quick preview of the selected item; Escape closes it.
+  // Suppressed while the Settings modal is open (it owns the keyboard then).
   useEffect(() => {
-    if (!active) return
+    if (!active || settingsOpen) return
     const onKey = (e: KeyboardEvent): void => {
       const t = e.target as HTMLElement | null
       if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable)) return
@@ -104,7 +109,7 @@ export default function LibraryGate() {
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [active, selectedId])
+  }, [active, selectedId, settingsOpen])
 
   // Apply a library:* result: update state on success, surface errors, ignore cancels.
   const apply = useCallback(
@@ -143,95 +148,155 @@ export default function LibraryGate() {
 
   if (active) {
     return (
-      <section
-        style={{ display: 'flex', flexDirection: 'column', gap: 12, height: 'calc(100vh - 120px)' }}
-      >
-        <header style={{ flex: '0 0 auto' }}>
-          <div style={{ display: 'flex', alignItems: 'baseline', gap: 12, flexWrap: 'wrap' }}>
-            <h2 style={{ margin: 0 }}>{active.name}</h2>
-            <span style={{ color: '#888', fontSize: 12 }}>{active.path}</span>
-            <button
-              style={{ marginLeft: 'auto' }}
-              onClick={() => run(() => window.api.library.open())}
-              disabled={busy}
+      <>
+        <AppShell
+          sidebar={
+            <div
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                height: '100%',
+                padding: 'var(--space-2)',
+                boxSizing: 'border-box'
+              }}
             >
-              Open a different library…
-            </button>
+              <div style={{ flex: '0 0 auto', marginBottom: 'var(--space-3)' }}>
+                <div
+                  title={active.path}
+                  style={{
+                    fontWeight: 'var(--fw-semibold)',
+                    fontSize: 'var(--fs-md)',
+                    whiteSpace: 'nowrap',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis'
+                  }}
+                >
+                  {active.name}
+                </div>
+                <button
+                  onClick={() => run(() => window.api.library.open())}
+                  disabled={busy}
+                  style={SECONDARY_BTN}
+                >
+                  Switch / Open…
+                </button>
+                <Recents
+                  recents={recents}
+                  active={active}
+                  busy={busy}
+                  onPick={(p) => run(() => window.api.library.openPath(p))}
+                />
+              </div>
+              <div style={{ flex: '1 1 auto', minHeight: 0, overflow: 'auto' }}>
+                <FolderTree
+                  selectedFolderId={selectedFolderId}
+                  onSelectFolder={selectFolder}
+                  onFoldersChanged={reloadItems}
+                />
+              </div>
+              <div
+                style={{
+                  flex: '0 0 auto',
+                  marginTop: 'var(--space-2)',
+                  paddingTop: 'var(--space-2)',
+                  borderTop: '1px solid var(--color-border)'
+                }}
+              >
+                <button onClick={() => setSettingsOpen(true)} style={SECONDARY_BTN}>
+                  ⚙ Settings
+                </button>
+              </div>
+            </div>
+          }
+          toolbar={<SearchBar criteria={searchCriteria} onChange={applySearch} />}
+          inspector={<Inspector selectedId={selectedId} />}
+        >
+          <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+            {error && (
+              <p style={{ color: 'var(--color-danger)', margin: 'var(--space-2) var(--space-3)' }}>
+                {error}
+              </p>
+            )}
+            <div style={{ flex: '0 0 auto' }}>
+              <ImportZone key={active.path} onChanged={reloadItems} />
+            </div>
+            <div style={{ flex: '1 1 auto', minHeight: 0 }}>
+              <Grid items={items} selectedId={selectedId} onSelect={setSelectedId} />
+            </div>
           </div>
-          <div style={{ marginTop: 10 }}>
-            <ImportZone key={active.path} onChanged={reloadItems} />
-          </div>
-          <SearchBar criteria={searchCriteria} onChange={applySearch} />
-          <Recents
-            recents={recents}
-            active={active}
-            busy={busy}
-            onPick={(p) => run(() => window.api.library.openPath(p))}
-          />
-          {error && <p style={{ color: '#c00' }}>{error}</p>}
-        </header>
-        <div style={{ flex: '1 1 auto', minHeight: 0, display: 'flex' }}>
-          <FolderTree
-            selectedFolderId={selectedFolderId}
-            onSelectFolder={selectFolder}
-            onFoldersChanged={reloadItems}
-          />
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <Grid items={items} selectedId={selectedId} onSelect={setSelectedId} />
-          </div>
-          <Inspector selectedId={selectedId} />
-        </div>
-        {previewItem && (
-          <QuickPreview item={previewItem} onClose={() => setPreviewOpen(false)} />
-        )}
-      </section>
+        </AppShell>
+        {previewItem && <QuickPreview item={previewItem} onClose={() => setPreviewOpen(false)} />}
+        <SettingsModal open={settingsOpen} onClose={() => setSettingsOpen(false)} />
+      </>
     )
   }
 
   return (
-    <section>
-      <p>No library open. Create a new one or open an existing library folder.</p>
-      {creating ? (
-        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-          <input
-            autoFocus
-            value={name}
-            placeholder="Library name"
-            onChange={(e) => setName(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') submitCreate()
-              if (e.key === 'Escape') {
+    <>
+      <section style={WELCOME_STYLE}>
+      <div style={{ maxWidth: 460, width: '100%' }}>
+        <h2 style={{ margin: '0 0 var(--space-2)' }}>IMGMAN</h2>
+        <p style={{ color: 'var(--color-text-muted)', marginTop: 0 }}>
+          No library open. Create a new one or open an existing library folder.
+        </p>
+        {creating ? (
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+            <input
+              autoFocus
+              value={name}
+              placeholder="Library name"
+              onChange={(e) => setName(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') submitCreate()
+                if (e.key === 'Escape') {
+                  setCreating(false)
+                  setName('')
+                }
+              }}
+              style={INPUT_STYLE}
+            />
+            <button onClick={submitCreate} disabled={busy || !name.trim()}>
+              Choose folder & create…
+            </button>
+            <button
+              onClick={() => {
                 setCreating(false)
                 setName('')
-              }
-            }}
-          />
-          <button onClick={submitCreate} disabled={busy || !name.trim()}>
-            Choose folder & create…
-          </button>
+              }}
+              disabled={busy}
+            >
+              Cancel
+            </button>
+          </div>
+        ) : (
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button onClick={() => setCreating(true)} disabled={busy}>
+              Create Library…
+            </button>
+            <button onClick={() => run(() => window.api.library.open())} disabled={busy}>
+              Open Library…
+            </button>
+          </div>
+        )}
+        <Recents
+          recents={recents}
+          active={active}
+          busy={busy}
+          onPick={(p) => run(() => window.api.library.openPath(p))}
+        />
+        {error && <p style={{ color: 'var(--color-danger)' }}>{error}</p>}
+        <div style={{ marginTop: 'var(--space-4)' }}>
           <button
-            onClick={() => {
-              setCreating(false)
-              setName('')
-            }}
-            disabled={busy}
+            onClick={() => setSettingsOpen(true)}
+            style={{ ...SECONDARY_BTN, width: 'auto' }}
           >
-            Cancel
+            ⚙ Settings
           </button>
         </div>
-      ) : (
-        <div style={{ display: 'flex', gap: 8 }}>
-          <button onClick={() => setCreating(true)} disabled={busy}>
-            Create Library…
-          </button>
-          <button onClick={() => run(() => window.api.library.open())} disabled={busy}>
-            Open Library…
-          </button>
-        </div>
-      )}
-      <Recents recents={recents} active={active} busy={busy} onPick={(p) => run(() => window.api.library.openPath(p))} />
-      {error && <p style={{ color: '#c00' }}>{error}</p>}
-    </section>
+      </div>
+      </section>
+      <SettingsModal open={settingsOpen} onClose={() => setSettingsOpen(false)} />
+    </>
   )
 }
 
@@ -248,8 +313,16 @@ function Recents({
 }) {
   if (recents.length === 0) return null
   return (
-    <div style={{ marginTop: 20 }}>
-      <h3 style={{ fontSize: 13, color: '#888', textTransform: 'uppercase', letterSpacing: 0.5 }}>
+    <div style={{ marginTop: 'var(--space-4)' }}>
+      <h3
+        style={{
+          fontSize: 'var(--fs-xs)',
+          color: 'var(--color-text-faint)',
+          textTransform: 'uppercase',
+          letterSpacing: 0.5,
+          margin: '0 0 var(--space-1)'
+        }}
+      >
         Recent libraries
       </h3>
       <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
@@ -261,7 +334,7 @@ function Recents({
                 onClick={() => onPick(r.path)}
                 disabled={busy || isActive}
                 title={r.path}
-                style={{ textAlign: 'left' }}
+                style={{ ...SECONDARY_BTN, textAlign: 'left' }}
               >
                 {r.name} {isActive ? '(active)' : ''}
               </button>
@@ -271,4 +344,35 @@ function Recents({
       </ul>
     </div>
   )
+}
+
+const WELCOME_STYLE: React.CSSProperties = {
+  height: '100%',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  padding: 'var(--space-5)',
+  background: 'var(--color-bg-content)'
+}
+
+const SECONDARY_BTN: React.CSSProperties = {
+  marginTop: 'var(--space-1)',
+  width: '100%',
+  background: 'var(--color-bg-elevated)',
+  color: 'var(--color-text)',
+  border: '1px solid var(--color-border)',
+  borderRadius: 'var(--radius-md)',
+  padding: 'var(--space-1) var(--space-2)',
+  fontSize: 'var(--fs-sm)',
+  cursor: 'pointer'
+}
+
+const INPUT_STYLE: React.CSSProperties = {
+  flex: 1,
+  background: 'var(--color-bg-elevated)',
+  color: 'var(--color-text)',
+  border: '1px solid var(--color-border)',
+  borderRadius: 'var(--radius-md)',
+  padding: 'var(--space-1) var(--space-2)',
+  fontSize: 'var(--fs-sm)'
 }

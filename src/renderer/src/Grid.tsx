@@ -44,7 +44,7 @@ export default function Grid({
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          color: '#999',
+          color: 'var(--color-text-faint)',
           textAlign: 'center'
         }}
       >
@@ -88,7 +88,7 @@ function Cell({
         padding: 4,
         width: '100%',
         background: 'none',
-        border: `2px solid ${selected ? '#3b82f6' : 'transparent'}`,
+        border: `2px solid ${selected ? 'var(--color-accent)' : 'transparent'}`,
         borderRadius: 8,
         cursor: 'pointer',
         textAlign: 'center'
@@ -100,7 +100,7 @@ function Cell({
           aspectRatio: '1 / 1',
           borderRadius: 6,
           overflow: 'hidden',
-          background: selected ? '#eff6ff' : '#f3f4f6',
+          background: selected ? 'var(--color-surface-selected)' : 'var(--color-bg-elevated)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center'
@@ -120,7 +120,7 @@ function Cell({
       <span
         style={{
           fontSize: 11,
-          color: '#444',
+          color: 'var(--color-text-muted)',
           whiteSpace: 'nowrap',
           overflow: 'hidden',
           textOverflow: 'ellipsis',
@@ -136,7 +136,7 @@ function Cell({
 function Placeholder({ item }: { item: Item }) {
   const label = (item.ext || item.type).toUpperCase()
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, color: '#888' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, color: 'var(--color-text-faint)' }}>
       <span style={{ fontSize: 22 }}>{TYPE_GLYPH[item.type]}</span>
       <span style={{ fontSize: 11, fontWeight: 600, letterSpacing: 0.5 }}>{label}</span>
     </div>

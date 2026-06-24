@@ -49,7 +49,14 @@ export default function Inspector({ selectedId }: { selectedId: string | null })
   if (!selectedId || !item) {
     return (
       <aside style={ASIDE_STYLE}>
-        <div style={{ color: '#999', fontSize: 13, padding: 12, textAlign: 'center' }}>
+        <div
+          style={{
+            color: 'var(--color-text-faint)',
+            fontSize: 13,
+            padding: 12,
+            textAlign: 'center'
+          }}
+        >
           Select an item to see details.
         </div>
       </aside>
@@ -85,7 +92,7 @@ export default function Inspector({ selectedId }: { selectedId: string | null })
           aspectRatio: '1 / 1',
           borderRadius: 8,
           overflow: 'hidden',
-          background: '#f3f4f6',
+          background: 'var(--color-bg-elevated)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
@@ -103,9 +110,18 @@ export default function Inspector({ selectedId }: { selectedId: string | null })
         )}
       </div>
 
-      <h3 style={{ margin: '0 0 10px', fontSize: 14, wordBreak: 'break-word' }}>{item.name}</h3>
+      <h3
+        style={{
+          margin: '0 0 10px',
+          fontSize: 14,
+          wordBreak: 'break-word',
+          color: 'var(--color-text)'
+        }}
+      >
+        {item.name}
+      </h3>
 
-      <dl style={{ margin: 0, fontSize: 12, color: '#444' }}>
+      <dl style={{ margin: 0, fontSize: 12, color: 'var(--color-text-muted)' }}>
         <Row label="Type" value={`${item.type}${item.ext ? ` · ${item.ext.toUpperCase()}` : ''}`} />
         <Row label="Dimensions" value={dims} />
         <Row label="Size" value={formatBytes(item.size_bytes)} />
@@ -114,11 +130,11 @@ export default function Inspector({ selectedId }: { selectedId: string | null })
             display: 'flex',
             gap: 8,
             padding: '4px 0',
-            borderTop: '1px solid #f0f0f0',
+            borderTop: '1px solid var(--color-border)',
             alignItems: 'center'
           }}
         >
-          <dt style={{ flex: '0 0 84px', color: '#999' }}>Rating</dt>
+          <dt style={{ flex: '0 0 84px', color: 'var(--color-text-faint)' }}>Rating</dt>
           <dd style={{ margin: 0, flex: 1 }}>
             <StarRating value={item.rating} onChange={setRating} />
           </dd>
@@ -159,7 +175,8 @@ function StarRating({
             cursor: 'pointer',
             fontSize: 16,
             lineHeight: 1,
-            color: n <= value ? '#f59e0b' : '#d1d5db'
+            // Star-yellow is an intentional fixed affordance color; empty uses a token.
+            color: n <= value ? '#f5b301' : 'var(--color-border-strong)'
           }}
         >
           {n <= value ? '★' : '☆'}
@@ -173,19 +190,20 @@ function StarRating({
 function Row({ label, value }: { label: string; value: string | null }): React.JSX.Element | null {
   if (!value) return null
   return (
-    <div style={{ display: 'flex', gap: 8, padding: '4px 0', borderTop: '1px solid #f0f0f0' }}>
-      <dt style={{ flex: '0 0 84px', color: '#999' }}>{label}</dt>
-      <dd style={{ margin: 0, wordBreak: 'break-word', flex: 1 }}>{value}</dd>
+    <div
+      style={{ display: 'flex', gap: 8, padding: '4px 0', borderTop: '1px solid var(--color-border)' }}
+    >
+      <dt style={{ flex: '0 0 84px', color: 'var(--color-text-faint)' }}>{label}</dt>
+      <dd style={{ margin: 0, wordBreak: 'break-word', flex: 1, color: 'var(--color-text)' }}>
+        {value}
+      </dd>
     </div>
   )
 }
 
 const ASIDE_STYLE: React.CSSProperties = {
-  flex: '0 0 280px',
-  width: 280,
-  height: '100%',
-  overflowY: 'auto',
+  // Width/scroll/background/border are owned by the shell inspector pane (AppShell).
+  width: '100%',
   padding: 12,
-  borderLeft: '1px solid #eee',
   boxSizing: 'border-box'
 }

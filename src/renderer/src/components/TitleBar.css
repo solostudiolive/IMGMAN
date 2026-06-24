@@ -1,0 +1,66 @@
+/*
+ * Custom title bar (Plan 05-02). The -webkit-app-region rules live here because React's
+ * CSSProperties type doesn't include WebkitAppRegion. Token-based; the only fixed color is
+ * the white glyph on the danger-red close hover.
+ */
+
+.titlebar {
+  height: var(--titlebar-h);
+  display: flex;
+  align-items: center;
+  background: var(--color-bg-panel);
+  color: var(--color-text);
+  border-bottom: 1px solid var(--color-border);
+  font-size: var(--fs-sm);
+  user-select: none;
+  -webkit-app-region: drag;
+}
+
+/* Reserve space for the native macOS traffic lights (rendered by the OS). */
+.titlebar--mac {
+  padding-left: 72px;
+}
+
+.titlebar__title {
+  padding: 0 var(--space-3);
+  color: var(--color-text-muted);
+  font-weight: var(--fw-medium);
+  letter-spacing: 0.3px;
+}
+
+.titlebar__spacer {
+  flex: 1 1 auto;
+}
+
+.titlebar__controls {
+  display: flex;
+  height: 100%;
+  -webkit-app-region: no-drag;
+}
+
+.titlebar__btn {
+  width: 46px;
+  height: 100%;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  color: var(--color-text-muted);
+  cursor: default;
+  transition: background var(--dur-fast) var(--ease-out), color var(--dur-fast) var(--ease-out);
+}
+
+.titlebar__btn:hover {
+  background: var(--color-surface-hover);
+  color: var(--color-text);
+}
+
+.titlebar__btn--close:hover {
+  background: var(--color-danger);
+  color: #fff;
+}
+
+.titlebar__btn svg {
+  display: block;
+}

@@ -1,0 +1,122 @@
+/*
+ * Three-pane shell (Plan 05-03). Structural + cursor/hover rules; token-based. Pane widths
+ * and collapsed state are managed in AppShell.tsx (persisted to localStorage).
+ */
+
+.shell {
+  display: flex;
+  height: 100%;
+  width: 100%;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.shell__sidebar {
+  flex: 0 0 auto;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--color-bg-panel);
+  border-right: 1px solid var(--color-border);
+}
+
+/* Slim header at the top of a collapsible pane, holding its collapse toggle.
+   Height matches the center toolbar so the three panes' top edges line up. */
+.shell__pane-header {
+  flex: 0 0 auto;
+  height: var(--toolbar-h);
+  display: flex;
+  align-items: center;
+  padding: 0 var(--space-1);
+  border-bottom: 1px solid var(--color-border);
+}
+
+/* Sidebar toggle hugs the inner (divider) edge. */
+.shell__pane-header--end {
+  justify-content: flex-end;
+}
+
+.shell__pane-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+}
+
+.shell__content {
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: var(--color-bg-content);
+}
+
+.shell__toolbar {
+  flex: 0 0 auto;
+  /* Grows beyond the base height when the filter row wraps on a narrow window. */
+  min-height: var(--toolbar-h);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2);
+  background: var(--color-bg-panel);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.shell__toolbar-mid {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+}
+
+.shell__body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+}
+
+.shell__inspector {
+  flex: 0 0 auto;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--color-bg-panel);
+  border-left: 1px solid var(--color-border);
+}
+
+/* Drag handles between panes. */
+.shell__splitter {
+  flex: 0 0 auto;
+  width: 5px;
+  cursor: col-resize;
+  background: transparent;
+  transition: background var(--dur-fast) var(--ease-out);
+}
+
+.shell__splitter:hover,
+.shell__splitter--active {
+  background: var(--color-accent);
+}
+
+/* Pane collapse toggles in the toolbar. */
+.shell__toggle {
+  flex: 0 0 auto;
+  width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  border-radius: var(--radius-md);
+  color: var(--color-text-muted);
+  cursor: pointer;
+}
+
+.shell__toggle:hover {
+  background: var(--color-surface-hover);
+  color: var(--color-text);
+}

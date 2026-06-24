@@ -1,21 +1,26 @@
-import { useEffect, useState } from 'react'
 import LibraryGate from './LibraryGate'
+import TitleBar from './components/TitleBar'
 
-function App() {
-  const [version, setVersion] = useState('…')
-
-  useEffect(() => {
-    window.api.getVersion().then(setVersion).catch((e) => setVersion(`error: ${e}`))
-  }, [])
-
+function App(): React.JSX.Element {
   return (
-    <main style={{ fontFamily: 'system-ui, sans-serif', padding: 24, lineHeight: 1.5 }}>
-      <h1 style={{ margin: '0 0 16px' }}>IMGMAN</h1>
-      <LibraryGate />
-      <footer style={{ marginTop: 32, color: '#bbb', fontSize: 12 }}>
-        IMGMAN v{version}
-      </footer>
-    </main>
+    <div
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        height: '100vh',
+        fontFamily: 'var(--font-sans)',
+        background: 'var(--color-bg-app)',
+        color: 'var(--color-text)',
+        lineHeight: 'var(--lh)'
+      }}
+    >
+      <TitleBar />
+      {/* LibraryGate fills the area under the title bar: the three-pane shell when a
+          library is open, or a centered welcome screen when none is. */}
+      <div style={{ flex: '1 1 auto', minHeight: 0 }}>
+        <LibraryGate />
+      </div>
+    </div>
   )
 }
 

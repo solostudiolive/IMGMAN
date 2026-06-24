@@ -15,6 +15,12 @@ function createWindow(): void {
     show: false,
     autoHideMenuBar: true,
     title: 'IMGMAN',
+    // Chrome-less custom title bar (Plan 05-02). On macOS keep the native traffic lights
+    // via titleBarStyle 'hidden' (inset); elsewhere go fully frameless and draw our own
+    // controls. resizable stays default (true) so the frameless window resizes from edges.
+    ...(process.platform === 'darwin'
+      ? { titleBarStyle: 'hidden' as const, trafficLightPosition: { x: 12, y: 11 } }
+      : { frame: false }),
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
       // contextIsolation on + nodeIntegration off keeps the renderer sandboxed;
@@ -26,6 +32,11 @@ function createWindow(): void {
   })
 
   mainWindow.on('ready-to-show', () => mainWindow.show())
+
+  // Keep the renderer's maximize/restore icon in sync, including OS-driven changes
+  // (Win+Up, edge snap) that don't go through window:toggleMaximize.
+  mainWindow.on('maximize', () => mainWindow.webContents.send('window:maximizeChanged', true))
+  mainWindow.on('unmaximize', () => mainWindow.webContents.send('window:maximizeChanged', false))
 
   // Open external links in the OS browser, never in-app.
   mainWindow.webContents.setWindowOpenHandler((details) => {

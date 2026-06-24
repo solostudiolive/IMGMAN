@@ -5,31 +5,35 @@
 See: .paul/PROJECT.md (updated 2026-06-23)
 
 **Core value:** A fast, offline-first local "second brain" — collect, organize, search, and browse tens of thousands of visual assets in under a second, with full data ownership.
-**Current focus:** v0.1 MVP COMPLETE — awaiting next milestone (V1 polish) decision.
+**Current focus:** v1.0 — Eagle Parity (Phases 5–9): full Eagle-app look, feel, and feature parity, reusing the v0.1 backend.
 
 ## Current Position
 
-Milestone: v0.1 MVP — ✅ COMPLETE (4 of 4 phases)
-Phase: 4 of 4 (Organize & search) — ✅ Complete
-Plan: 04-04 complete (loop closed); Phase 4 transition done
-Status: Milestone complete — ready to start next milestone or pause
-Last activity: 2026-06-23 — Closed 04-04 loop + Phase 4 transition: PROJECT.md/ROADMAP evolved, phase committed. v0.1 MVP feature-complete.
+Milestone: v1.0 — Eagle Parity 🚧 In Progress (1 of 5 phases complete)
+Phase: 6 of 9 (Eagle grid & content area) — Not started
+Plan: Not started
+Status: Phase 5 complete + committed; ready to plan Phase 6
+Last activity: 2026-06-24 — Closed Plan 05-04 loop and ran Phase 5 transition: evolved PROJECT.md (4 Phase-5 requirements validated + 3 key decisions), marked ROADMAP Phase 5 ✅, committed feat(05-design-system-shell). Phase 5 (Design system & shell) is feature-complete.
 
 Progress:
-- Milestone: [██████████] 100% (4 of 4 phases complete)
-- Phase 4: [██████████] 100% (4 of 4 plans complete)
+- v1.0 Eagle Parity: [██░░░░░░░░] 20% (1 of 5 phases complete; Phase 6 next)
+- Phase 5: [██████████] 100% (4 of 4 plans complete — UNIFY closed)
 
 ## Loop Position
 
 Current loop state:
 ```
 PLAN ──▶ APPLY ──▶ UNIFY
-  ✓        ✓        ✓     [Loop complete — Phase 4 transition done — v0.1 MVP COMPLETE 🎉]
+  ✓        ✓        ✓     [Phase 5 complete + committed; ready to PLAN Phase 6]
 ```
 
 ## Accumulated Context
 
 ### Decisions
+- 2026-06-24: Settings (05-04) = conditionally-rendered modal (no router). Theme state sourced ONLY from useTheme() (no localStorage/theme.ts re-read); entry points in sidebar footer + welcome (NOT TitleBar, keeps 05-02 untouched). Modal owns its Escape + stopPropagation()s past the global key handler; LibraryGate guards Space/Esc on `settingsOpen`. Temp ThemeToggle deleted. | Phase 5 (05-04) | Reusable dialog keyboard-ownership pattern for Phase 7 context menus / batch dialogs.
+- 2026-06-24: Three-pane shell (05-03) replaces the vertical-stack layout — left sidebar · center toolbar+content · right collapsible inspector; resizable/collapsible panes + modern search toolbar; pane toggles relocated. | Phase 5 (05-03) | The app shell all later phases (6–8) build inside.
+- 2026-06-24: Design tokens = semantic CSS custom properties; light on `:root`, dark on `:root[data-theme="dark"]`. Theme preference (dark/light/system) persisted in localStorage (renderer source-of-truth, NOT main settings); applied pre-render in main.tsx as a 'self' module since the renderer CSP has no script-src (inline <head> script blocked) → no FOUC. Dark is default. Components reference var(--color-*), never raw hex. | Phase 5 (05-01) | 05-02/03/04 + Phase 6–8 build on these tokens; Settings (05-04) relocates the temp toggle and reuses useTheme().
+- 2026-06-24: Chrome-less window (05-02) — per-platform frame: `frame:false` on win/linux, `titleBarStyle:'hidden'`+inset traffic lights on darwin. Custom `<TitleBar>` draws controls on win/linux only (macOS uses native traffic lights; renderer reserves 72px, branches on `window.api.platform`). New `window:*` IPC (minimize/toggleMaximize/close/isMaximized) resolves the window per-call via `BrowserWindow.fromWebContents(event.sender)`; main emits `window:maximizeChanged` on maximize/unmaximize and preload exposes `onMaximizeChange` (unsubscribe fn, mirrors import.onProgress). `-webkit-app-region` rules live in TitleBar.css (React can't type it). | Phase 5 (05-02) | 05-03 shell sits inside this frame; reusable window-IPC + event-unsubscribe patterns.
 - Electron locked for MVP (revisit Tauri only if bundle size/memory becomes a real problem).
 - 2026-06-23: Per-library SQLite — `openDatabase(dbPath)` opens metadata.db inside the active `.library` folder; exactly one connection open, close-before-open on switch. | Phase 2 | Supersedes Phase-1 fixed-userData DB (not migrated).
 - 2026-06-23: `.library` validity = folder exists AND (metadata.db OR settings.json) present. | Phase 2 | Import/Phase 3 rely on this contract.
@@ -55,16 +59,17 @@ None logged.
 - Production packaging not yet verified: sharp + better-sqlite3 are native and will need `asarUnpack` in electron-builder.yml before a real packaged build. | Deferred to a packaging pass.
 - No real thumbnails for video/audio/pdf/font — grid uses type-based placeholder icons until V1 media thumbnails.
 - Import runs sequentially on the main process; revisit the deferred worker pool if 10k+ imports stutter.
-- Renderer bundle ~655 kB (react + react-virtuoso) — fine for desktop; revisit if cold start regresses.
+- Renderer bundle ~703 kB (react + react-virtuoso + shell/theming) — fine for desktop; revisit if cold start regresses.
 - No arrow-key navigation in grid/quick-preview yet — likely expected UX; consider in a V1 polish pass.
 - items_fts (FTS5) declared in schema but UNWIRED — search is LIKE-based; wire triggers+backfill in a V1 perf pass if LIKE misses <0.5s @ 50k.
 - Performance targets (<0.5s search @ 50k, 60fps scroll) not yet measured against a real 50k-item library.
 
 ### Git State
 - Repository initialized 2026-06-23 (branch: main).
-- Last commit: 6dd5bf1 — feat(03-browse): virtualized grid, inspector, and spacebar quick preview (Phase 3).
+- Last commit: 40770ca — feat(04-organize-search): ratings, tags, folders, and keyword search (Phase 4 — v0.1 MVP complete).
+- Prior: 6dd5bf1 — feat(03-browse): virtualized grid, inspector, and spacebar quick preview (Phase 3).
 - Prior: e1fa1b7 — feat(02-library-import): portable library + import pipeline (Phase 1 + Phase 2).
-- Feature branches merged: none.
+- Feature branches merged: none (per-phase commits directly on main).
 
 ### Resolved (Phase 2 planning, 2026-06-23)
 - Library model: ONE active library at a time, with create/open/switch + recents list.
@@ -78,10 +83,14 @@ None logged.
 
 ## Session Continuity
 
-Last session: 2026-06-23
-Stopped at: v0.1 MVP COMPLETE — Phase 4 closed + transitioned + committed
-Next action: /paul:discuss-milestone (or /paul:milestone) to scope V1, or /paul:complete-milestone to formally archive v0.1. Optional first: verify a real packaged Windows build (asarUnpack for sharp + better-sqlite3).
+Last session: 2026-06-24
+Stopped at: Phase 5 complete (all 4 plans unified) + committed; transition done
+Next action: /paul:plan for Phase 6 (Eagle grid & content area)
 Resume file: .paul/ROADMAP.md
+
+Phase 6 status: Not started. Goal — masonry/waterfall grid, thumbnail-size slider, view
+modes (grid/masonry/list), sort + view-controls toolbar, hover preview for GIF/video;
+60fps @ 50k items. Builds on the Phase 5 shell + tokens.
 
 ---
 *STATE.md — Updated after every significant action*

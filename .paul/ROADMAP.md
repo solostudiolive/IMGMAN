@@ -6,9 +6,15 @@ A local-first desktop asset manager built in stages: stand up the Electron/React
 
 ## Current Milestone
 
-**v0.1 MVP** (v0.1.0)
-Status: ✅ Complete (2026-06-23)
-Phases: 4 of 4 complete
+**v1.0 — Eagle Parity** (v1.0.0)
+Status: 🚧 In Progress (started 2026-06-24)
+Phases: 1 of 5 complete (Phases 5–9)
+Focus: Transform the functional v0.1 MVP into a polished, Eagle-class desktop asset
+manager — look, feel, and feature parity — reusing the proven SQLite/IPC backend.
+
+## Completed Milestones
+
+**v0.1 MVP** (v0.1.0) — ✅ Complete (2026-06-23) — Phases 1–4. See MILESTONES.md.
 
 ## Phases
 
@@ -22,6 +28,11 @@ Phases: 4 of 4 complete
 | 2 | Library & import | 2 | ✅ Complete | 2026-06-23 |
 | 3 | Browse (grid + inspector) | 2 | ✅ Complete | 2026-06-23 |
 | 4 | Organize & search | 4 | ✅ Complete | 2026-06-23 |
+| 5 | Design system & shell | 4 | ✅ Complete | 2026-06-24 |
+| 6 | Eagle grid & content area | TBD | Not started | - |
+| 7 | Selection & interaction | TBD | Not started | - |
+| 8 | Organize power features | TBD | Not started | - |
+| 9 | Browser-extension collecting | TBD | Not started | - |
 
 ## Phase Details
 
@@ -66,5 +77,67 @@ Phase scope and plans will be defined during `/paul:plan`. Provisional intent (f
 - [x] 04-04: Keyword search (name/note/tags) + format/type/rating/date filters — see `phases/04-organize-search/04-04-SUMMARY.md`
 
 ---
+
+## Milestone v1.0 — Eagle Parity (Phases 5–9)
+
+Front-end transformation of the v0.1 MVP into an Eagle-class desktop app, plus a few new
+backend features. The existing IPC namespaces (`library:*`, `items:*`, `tags:*`,
+`folders:*`, `items:search`), per-library SQLite, and `imgman://` protocol are **reused**,
+not rebuilt — new work extends them. Phase scope and plans are defined during `/paul:plan`.
+
+### Phase 5: Design system & shell
+**Goal:** Establish the visual foundation — dark + light theming tokens (Eagle-matched
+palette/spacing/typography), a chrome-less custom title bar, and a three-pane app shell
+(left sidebar · center toolbar+content · right collapsible inspector) replacing the
+current vertical-stack layout. Includes a settings screen with theme toggle.
+**Depends on:** Phase 4 (v0.1 backend + components to re-skin)
+**Research:** Likely (Electron custom title bar / window controls, theming-token approach)
+**Status:** ✅ Complete (2026-06-24) — see the four `phases/05-design-system-shell/05-0N-SUMMARY.md`
+**Plans:**
+- [x] 05-01: Design tokens & theming foundation (token system, ThemeProvider, dark default + light, FOUC-safe persistence) — see `phases/05-design-system-shell/05-01-SUMMARY.md`
+- [x] 05-02: Chrome-less custom title bar + window controls — see `phases/05-design-system-shell/05-02-SUMMARY.md`
+- [x] 05-03: Three-pane app shell layout (resizable/collapsible shell, modern search toolbar, relocated pane toggles + sidebar theme toggle) — see `phases/05-design-system-shell/05-03-SUMMARY.md`
+- [x] 05-04: Settings screen (Appearance theme control + About) + relocate theme toggle — see `phases/05-design-system-shell/05-04-SUMMARY.md`
+
+### Phase 6: Eagle grid & content area
+**Goal:** The centerpiece — masonry/waterfall grid layout, a thumbnail-size slider,
+multiple view modes (grid/masonry/list), a sort + view-controls toolbar, and hover preview
+for GIF/video. Must hold 60fps scroll at 50k items.
+**Depends on:** Phase 5 (shell + tokens)
+**Research:** Likely (virtualized masonry at scale)
+**Status:** Not started
+**Plans:** TBD (defined during `/paul:plan`)
+
+### Phase 7: Selection & interaction
+**Goal:** Make it feel like a real desktop app — multi-select (shift-range, ctrl-toggle,
+rubber-band), right-click context menus (items/folders/tags), keyboard navigation, batch
+operations (rename/tag/move/delete), and a polished editable collapsible inspector
+(single + multi-item).
+**Depends on:** Phase 6 (grid is the selection surface); batch ops depend on multi-select
+**Research:** Unlikely
+**Status:** Not started
+**Plans:** TBD (defined during `/paul:plan`)
+
+### Phase 8: Organize power features
+**Goal:** The heavier backend work — smart folders / saved searches (persisted,
+re-runnable `SearchCriteria`), color extraction (worker) + color search, and find
+duplicates (content hashing). Scans run in workers, non-blocking.
+**Depends on:** Phase 4 search/data layer; Phase 7 (UI surfaces to invoke from)
+**Research:** Likely (color quantization/search, perceptual vs exact hashing)
+**Status:** Not started
+**Plans:** TBD (defined during `/paul:plan`)
+
+### Phase 9: Browser-extension collecting
+**Goal:** External capture surface — a companion browser extension plus a local receiver
+endpoint that sends images/URLs into the active library.
+**Depends on:** Phase 2 import pipeline; a running app to receive
+**Research:** Likely (extension ↔ desktop local-endpoint handshake, security)
+**Status:** Not started
+**Plans:** TBD (defined during `/paul:plan`)
+
+> Optional descope: V1 could ship at Phases 5–7 and defer 8–9 to a V1.1 if timeline
+> pressure appears. Kept as one milestone per the milestone discussion (2026-06-24).
+
+---
 *Roadmap created: 2026-06-23*
-*Last updated: 2026-06-23 — v0.1 MVP complete (Phase 4 done)*
+*Last updated: 2026-06-24 — Phase 5 (Design system & shell) complete; next: Phase 6*

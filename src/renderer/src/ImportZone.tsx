@@ -70,20 +70,21 @@ export default function ImportZone({ onChanged }: { onChanged?: () => void } = {
         onDrop={onDrop}
         onPaste={onPaste}
         style={{
-          padding: 32,
-          border: `2px dashed ${dragging ? '#3b82f6' : '#ccc'}`,
+          margin: 'var(--space-3)',
+          padding: 'var(--space-3) var(--space-4)',
+          border: `2px dashed ${dragging ? 'var(--color-accent)' : 'var(--color-border-strong)'}`,
           borderRadius: 8,
-          background: dragging ? '#eff6ff' : 'transparent',
+          background: dragging ? 'var(--color-surface-selected)' : 'transparent',
           textAlign: 'center',
-          color: '#666',
+          color: 'var(--color-text-muted)',
           outline: 'none',
           transition: 'background 0.1s, border-color 0.1s'
         }}
       >
-        <p style={{ margin: '0 0 8px', fontSize: 15 }}>
+        <p style={{ margin: '0 0 6px', fontSize: 13, color: 'var(--color-text)' }}>
           {count === null ? '…' : count} item{count === 1 ? '' : 's'} in this library
         </p>
-        <p style={{ margin: '0 0 12px', fontSize: 13 }}>
+        <p style={{ margin: '0 0 10px', fontSize: 12 }}>
           Drag files or folders here, paste an image (Ctrl/Cmd+V), or import a folder.
         </p>
         <div style={{ display: 'flex', gap: 8, justifyContent: 'center' }}>
@@ -97,14 +98,21 @@ export default function ImportZone({ onChanged }: { onChanged?: () => void } = {
       </div>
 
       {progress && (
-        <p style={{ color: '#3b82f6', fontSize: 13, marginTop: 12 }}>
+        <p style={{ color: 'var(--color-accent)', fontSize: 13, margin: '0 var(--space-3) var(--space-2)' }}>
           Importing {progress.done}/{progress.total}…
         </p>
       )}
       {status && !progress && (
-        <p style={{ color: '#16a34a', fontSize: 13, marginTop: 12 }}>{status}</p>
+        // Status-green is an intentional fixed affordance color.
+        <p style={{ color: '#16a34a', fontSize: 13, margin: '0 var(--space-3) var(--space-2)' }}>
+          {status}
+        </p>
       )}
-      {error && <p style={{ color: '#c00', fontSize: 13, marginTop: 12 }}>{error}</p>}
+      {error && (
+        <p style={{ color: 'var(--color-danger)', fontSize: 13, margin: '0 var(--space-3) var(--space-2)' }}>
+          {error}
+        </p>
+      )}
     </div>
   )
 }

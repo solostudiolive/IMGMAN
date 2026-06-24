@@ -4,6 +4,7 @@ import { registerImportIpc } from './import'
 import { registerItemsIpc } from './items'
 import { registerTagsIpc } from './tags'
 import { registerFoldersIpc } from './folders'
+import { registerWindowIpc } from './window'
 
 /**
  * Central registration point for all main-process IPC handlers.
@@ -18,4 +19,5 @@ export function registerIpcHandlers(): void {
   registerItemsIpc()
   registerTagsIpc()
   registerFoldersIpc()
+  registerWindowIpc()
 }

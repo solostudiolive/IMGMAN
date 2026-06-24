@@ -102,8 +102,8 @@ export default function FolderTree({
               style={{
                 ...ROW_STYLE,
                 paddingLeft: 6 + depth * 12,
-                background: selected ? '#eef2ff' : 'transparent',
-                color: selected ? '#3730a3' : '#333'
+                background: selected ? 'var(--color-surface-selected)' : 'transparent',
+                color: selected ? 'var(--color-accent)' : 'var(--color-text)'
               }}
             >
               <button
@@ -170,7 +170,14 @@ export default function FolderTree({
   return (
     <nav style={ASIDE_STYLE}>
       <div style={{ display: 'flex', alignItems: 'center', marginBottom: 6 }}>
-        <span style={{ fontSize: 11, color: '#888', textTransform: 'uppercase', letterSpacing: 0.5 }}>
+        <span
+          style={{
+            fontSize: 11,
+            color: 'var(--color-text-faint)',
+            textTransform: 'uppercase',
+            letterSpacing: 0.5
+          }}
+        >
           Folders
         </span>
         <button type="button" title="New folder" onClick={() => startAdd(null)} style={{ ...ICON_BTN, marginLeft: 'auto' }}>
@@ -183,8 +190,9 @@ export default function FolderTree({
             style={{
               ...ROW_STYLE,
               paddingLeft: 6,
-              background: selectedFolderId === null ? '#eef2ff' : 'transparent',
-              color: selectedFolderId === null ? '#3730a3' : '#333'
+              background:
+                selectedFolderId === null ? 'var(--color-surface-selected)' : 'transparent',
+              color: selectedFolderId === null ? 'var(--color-accent)' : 'var(--color-text)'
             }}
           >
             <button type="button" onClick={() => onSelectFolder(null)} style={ROW_NAME_STYLE}>
@@ -200,12 +208,8 @@ export default function FolderTree({
 }
 
 const ASIDE_STYLE: React.CSSProperties = {
-  flex: '0 0 200px',
-  width: 200,
-  height: '100%',
-  overflowY: 'auto',
-  padding: 8,
-  borderRight: '1px solid #eee',
+  // Width/scroll/background are owned by the shell sidebar pane (AppShell).
+  width: '100%',
   boxSizing: 'border-box'
 }
 
@@ -243,7 +247,7 @@ const ICON_BTN: React.CSSProperties = {
   border: 'none',
   padding: '0 2px',
   cursor: 'pointer',
-  color: '#9ca3af',
+  color: 'var(--color-text-muted)',
   fontSize: 12,
   lineHeight: 1
 }
@@ -252,7 +256,9 @@ const INPUT_STYLE: React.CSSProperties = {
   width: '90%',
   boxSizing: 'border-box',
   padding: '3px 5px',
-  border: '1px solid #c7d2fe',
+  background: 'var(--color-bg-elevated)',
+  color: 'var(--color-text)',
+  border: '1px solid var(--color-border-strong)',
   borderRadius: 5,
   fontSize: 12
 }

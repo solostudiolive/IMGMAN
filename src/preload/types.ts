@@ -80,8 +80,19 @@ export interface Folder {
 export interface IpcApi {
   getVersion: () => Promise<string>
   ping: () => Promise<string>
+  // The OS platform string (process.platform), so the renderer can branch on macOS.
+  platform: string
   // Resolve the OS path of a dropped File (Electron 32+ removed File.path).
   pathForFile: (file: File) => string
+  // Window controls for the chrome-less custom title bar (Plan 05-02).
+  window: {
+    minimize: () => Promise<void>
+    toggleMaximize: () => Promise<void>
+    close: () => Promise<void>
+    isMaximized: () => Promise<boolean>
+    // main→renderer maximize-state event; returns an unsubscribe fn (mirrors import.onProgress).
+    onMaximizeChange: (cb: (isMaximized: boolean) => void) => () => void
+  }
   library: {
     create: (name: string) => Promise<LibraryResult>
     open: () => Promise<LibraryResult>

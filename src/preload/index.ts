@@ -8,7 +8,19 @@ import type { IpcApi, ImportProgress, ItemPatch, SearchCriteria } from './types'
 const api: IpcApi = {
   getVersion: (): Promise<string> => ipcRenderer.invoke('app:getVersion'),
   ping: (): Promise<string> => ipcRenderer.invoke('app:ping'),
+  platform: process.platform,
   pathForFile: (file: File): string => webUtils.getPathForFile(file),
+  window: {
+    minimize: () => ipcRenderer.invoke('window:minimize'),
+    toggleMaximize: () => ipcRenderer.invoke('window:toggleMaximize'),
+    close: () => ipcRenderer.invoke('window:close'),
+    isMaximized: () => ipcRenderer.invoke('window:isMaximized'),
+    onMaximizeChange: (cb: (isMaximized: boolean) => void): (() => void) => {
+      const listener = (_e: unknown, isMaximized: boolean): void => cb(isMaximized)
+      ipcRenderer.on('window:maximizeChanged', listener)
+      return () => ipcRenderer.removeListener('window:maximizeChanged', listener)
+    }
+  },
   library: {
     create: (name: string) => ipcRenderer.invoke('library:create', name),
     open: () => ipcRenderer.invoke('library:open'),

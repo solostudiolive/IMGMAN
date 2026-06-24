@@ -1,0 +1,98 @@
+/*
+ * IMGMAN design tokens — the single source of color, spacing, and typography for the
+ * v1.0 Eagle redesign. Components must reference these custom properties, never raw hex.
+ *
+ * Color tokens are SEMANTIC (role-based, not palette names) so the same token resolves to
+ * the right value in each theme. Light is the :root default; dark overrides under
+ * [data-theme="dark"]. Theme-independent tokens (spacing/radius/type/layout) live on :root.
+ */
+
+:root {
+  /* ---- Color (light theme defaults) ---- */
+  --color-bg-app: #ffffff;
+  --color-bg-panel: #f4f4f5;
+  --color-bg-content: #fafafa;
+  --color-bg-elevated: #ffffff;
+
+  --color-surface-hover: rgba(0, 0, 0, 0.05);
+  --color-surface-selected: rgba(74, 158, 255, 0.18);
+
+  --color-border: rgba(0, 0, 0, 0.1);
+  --color-border-strong: rgba(0, 0, 0, 0.18);
+
+  --color-text: #1a1a1c;
+  --color-text-muted: #5f6368;
+  --color-text-faint: #9aa0a6;
+
+  --color-accent: #1473e6;
+  --color-accent-hover: #2f86f0;
+  --color-accent-contrast: #ffffff;
+
+  --color-danger: #d93838;
+
+  --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.1);
+  --shadow-2: 0 6px 24px rgba(0, 0, 0, 0.16);
+
+  /* ---- Spacing scale ---- */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+
+  /* ---- Radius ---- */
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 10px;
+  --radius-pill: 999px;
+
+  /* ---- Typography ---- */
+  --font-sans: system-ui, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-mono: ui-monospace, "Cascadia Code", "Consolas", "Courier New", monospace;
+  --fs-xs: 11px;
+  --fs-sm: 12px;
+  --fs-md: 13px;
+  --fs-lg: 15px;
+  --fs-xl: 20px;
+  --lh: 1.45;
+  --fw-medium: 500;
+  --fw-semibold: 600;
+
+  /* ---- Layout (reserved for later Phase 5 plans: title bar, shell) ---- */
+  --titlebar-h: 36px;
+  --sidebar-w: 240px;
+  --inspector-w: 300px;
+  --toolbar-h: 44px;
+
+  /* ---- Motion ---- */
+  --dur-fast: 120ms;
+  --ease-out: cubic-bezier(0.2, 0.7, 0.3, 1);
+}
+
+/* ---- Dark theme (the Eagle-matched default visual target) ---- */
+:root[data-theme="dark"] {
+  --color-bg-app: #1b1b1d;
+  --color-bg-panel: #232325;
+  --color-bg-content: #1e1e20;
+  --color-bg-elevated: #2a2a2d;
+
+  --color-surface-hover: rgba(255, 255, 255, 0.06);
+  --color-surface-selected: rgba(74, 158, 255, 0.22);
+
+  --color-border: rgba(255, 255, 255, 0.09);
+  --color-border-strong: rgba(255, 255, 255, 0.16);
+
+  --color-text: #e6e6e8;
+  --color-text-muted: #9aa0a6;
+  --color-text-faint: #6b7075;
+
+  --color-accent: #4a9eff;
+  --color-accent-hover: #62acff;
+  --color-accent-contrast: #ffffff;
+
+  --color-danger: #f06a6a;
+
+  --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-2: 0 6px 24px rgba(0, 0, 0, 0.45);
+}
