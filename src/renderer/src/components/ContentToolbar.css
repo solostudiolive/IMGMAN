@@ -1,0 +1,126 @@
+/*
+ * Content-area view bar (Phase 6, Plan 06-01). Token-based; sits directly above the grid.
+ * Hover/active states live here because inline styles can't express pseudo-classes.
+ */
+
+.content-toolbar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  height: 36px;
+  padding: 0 var(--space-3);
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-bg-app);
+}
+
+.content-toolbar__group {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.content-toolbar__group--end {
+  margin-left: auto;
+}
+
+.content-toolbar__label {
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-medium);
+  color: var(--color-text-muted);
+}
+
+.content-toolbar__select {
+  height: 28px;
+  padding: 0 var(--space-2);
+  background: var(--color-bg-elevated);
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  font-size: var(--fs-sm);
+  font-family: inherit;
+  outline: none;
+  cursor: pointer;
+  color-scheme: light dark;
+}
+
+.content-toolbar__select:focus {
+  border-color: var(--color-accent);
+}
+
+.content-toolbar__dir {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  background: var(--color-bg-elevated);
+  color: var(--color-text-muted);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  font-size: 14px;
+  line-height: 1;
+  cursor: pointer;
+  transition:
+    border-color var(--dur-fast) var(--ease-out),
+    color var(--dur-fast) var(--ease-out);
+}
+
+.content-toolbar__dir:hover {
+  border-color: var(--color-border-strong);
+  color: var(--color-text);
+}
+
+.content-toolbar__count {
+  font-size: var(--fs-xs);
+  color: var(--color-text-faint);
+}
+
+.content-toolbar__viewmode {
+  display: inline-flex;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.content-toolbar__viewbtn {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  transition:
+    background var(--dur-fast) var(--ease-out),
+    color var(--dur-fast) var(--ease-out);
+}
+
+.content-toolbar__viewbtn + .content-toolbar__viewbtn {
+  border-left: 1px solid var(--color-border);
+}
+
+.content-toolbar__viewbtn:hover {
+  color: var(--color-text);
+}
+
+.content-toolbar__viewbtn--on {
+  background: var(--color-accent);
+  color: var(--color-accent-contrast);
+}
+
+.content-toolbar__viewbtn--on:hover {
+  color: var(--color-accent-contrast);
+}
+
+.content-toolbar__glyph {
+  flex: 0 0 auto;
+  color: var(--color-text-faint);
+}
+
+.content-toolbar__slider {
+  width: 120px;
+  accent-color: var(--color-accent);
+  cursor: pointer;
+}

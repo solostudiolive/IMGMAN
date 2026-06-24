@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import type { Item, LibraryInfo, LibraryResult, SearchCriteria } from '../../preload/types'
 import ImportZone from './ImportZone'
 import Grid from './Grid'
@@ -7,7 +7,9 @@ import QuickPreview from './QuickPreview'
 import FolderTree from './FolderTree'
 import SearchBar from './SearchBar'
 import AppShell from './components/AppShell'
+import ContentToolbar from './components/ContentToolbar'
 import SettingsModal from './components/SettingsModal'
+import { useGridView, compareItems } from './hooks/useGridView'
 
 // True when any search field constrains the results.
 function isSearchActive(c: SearchCriteria): boolean {
@@ -39,6 +41,24 @@ export default function LibraryGate() {
   const [searchCriteria, setSearchCriteria] = useState<SearchCriteria>({})
   // Settings modal visibility (Appearance + About).
   const [settingsOpen, setSettingsOpen] = useState(false)
+  // Persisted grid view-state: thumbnail size + sort field/direction.
+  const {
+    thumbSize,
+    sortField,
+    sortDir,
+    viewMode,
+    setThumbSize,
+    setSortField,
+    setSortDir,
+    setViewMode
+  } = useGridView()
+
+  // Sort is a pure view transform over the already-loaded scope (all-items / folder /
+  // search), so one comparator covers every scope with no IPC change.
+  const sortedItems = useMemo(
+    () => [...items].sort((a, b) => compareItems(a, b, sortField, sortDir)),
+    [items, sortField, sortDir]
+  )
 
   const refresh = useCallback(async () => {
     setActive(await window.api.library.getActive())
@@ -144,7 +164,8 @@ export default function LibraryGate() {
     setName('')
   }
 
-  const previewItem = previewOpen && selectedId ? items.find((it) => it.id === selectedId) : null
+  const previewItem =
+    previewOpen && selectedId ? sortedItems.find((it) => it.id === selectedId) : null
 
   if (active) {
     return (
@@ -220,8 +241,27 @@ export default function LibraryGate() {
             <div style={{ flex: '0 0 auto' }}>
               <ImportZone key={active.path} onChanged={reloadItems} />
             </div>
+            <div style={{ flex: '0 0 auto' }}>
+              <ContentToolbar
+                thumbSize={thumbSize}
+                sortField={sortField}
+                sortDir={sortDir}
+                viewMode={viewMode}
+                count={sortedItems.length}
+                onThumbSize={setThumbSize}
+                onSortField={setSortField}
+                onSortDir={setSortDir}
+                onViewMode={setViewMode}
+              />
+            </div>
             <div style={{ flex: '1 1 auto', minHeight: 0 }}>
-              <Grid items={items} selectedId={selectedId} onSelect={setSelectedId} />
+              <Grid
+                items={sortedItems}
+                selectedId={selectedId}
+                thumbSize={thumbSize}
+                viewMode={viewMode}
+                onSelect={setSelectedId}
+              />
             </div>
           </div>
         </AppShell>

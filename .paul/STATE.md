@@ -9,27 +9,30 @@ See: .paul/PROJECT.md (updated 2026-06-23)
 
 ## Current Position
 
-Milestone: v1.0 — Eagle Parity 🚧 In Progress (1 of 5 phases complete)
-Phase: 6 of 9 (Eagle grid & content area) — Not started
+Milestone: v1.0 — Eagle Parity 🚧 In Progress (2 of 5 phases complete)
+Phase: 7 of 9 (Selection & interaction) — Not started
 Plan: Not started
-Status: Phase 5 complete + committed; ready to plan Phase 6
-Last activity: 2026-06-24 — Closed Plan 05-04 loop and ran Phase 5 transition: evolved PROJECT.md (4 Phase-5 requirements validated + 3 key decisions), marked ROADMAP Phase 5 ✅, committed feat(05-design-system-shell). Phase 5 (Design system & shell) is feature-complete.
+Status: Phase 6 complete + committed; ready to plan Phase 7
+Last activity: 2026-06-24 — Closed Plan 06-04 loop and ran Phase 6 transition: created 06-04-SUMMARY; evolved PROJECT.md (3 Phase-6 requirements validated + 3 key decisions); marked ROADMAP Phase 6 ✅; committed feat(06-grid-content-area). Phase 6 (Eagle grid & content area) is feature-complete.
 
 Progress:
-- v1.0 Eagle Parity: [██░░░░░░░░] 20% (1 of 5 phases complete; Phase 6 next)
-- Phase 5: [██████████] 100% (4 of 4 plans complete — UNIFY closed)
+- v1.0 Eagle Parity: [████░░░░░░] 40% (2 of 5 phases complete; Phase 7 next)
+- Phase 6: [██████████] 100% (4 of 4 plans complete — UNIFY closed)
 
 ## Loop Position
 
 Current loop state:
 ```
 PLAN ──▶ APPLY ──▶ UNIFY
-  ✓        ✓        ✓     [Phase 5 complete + committed; ready to PLAN Phase 6]
+  ✓        ✓        ✓     [Phase 6 complete + committed; ready to PLAN Phase 7]
 ```
 
 ## Accumulated Context
 
 ### Decisions
+- 2026-06-24: Content-area view bar (06-01) — `useGridView` hook holds persisted {thumbSize, sortField, sortDir, viewMode} (localStorage); sort is renderer-side via one `compareItems` over the already-loaded scope list (covers all-items/folder/search, NO IPC/SQL change); thumbnail size drives VirtuosoGrid columns via a `--imgman-thumb` custom property (no scroller remount). View controls live in a NEW content-area sub-toolbar (ContentToolbar), not the 05-03 shell toolbar. | Phase 6 (06-01) | 06-02/03/04 extend useGridView + ContentToolbar.
+- 2026-06-24: List view (06-03) = react-virtuoso `Virtuoso` (already a dep, no new package); details row = thumb + name + type·ext + W×H + formatBytes(size) + ★rating; row styles in Grid.css (hover/selected/ellipsis). Hover preview (06-04) lives in the shared grid/masonry Cell: hover-intent ~180ms timer → GIF animates (imgman://original <img>) / video plays (`<video muted loop autoPlay playsInline>`); timer cleared on leave/unmount (scroll/sweep-safe); reuses existing CSP (img-src + media-src imgman:). List rows + a disable-toggle deferred. | Phase 6 (06-03/04) | Phase 7 selection/context-menus build on these view modes.
+- 2026-06-24: Masonry engine (06-02) = `@virtuoso.dev/masonry` (VirtuosoMasonry), one new runtime dep. Chosen over custom windowed masonry (more code/risk) and CSS-columns (not virtualized → fails 60fps@50k). Pure JS (no native rebuild), bundled by Vite (no CSP change). Masonry tile aspect ratio from Item.width/height (square fallback when null, i.e. non-images); columnCount = floor((containerW+gap)/(thumbSize+gap)) via a ResizeObserver hook. viewMode added to useGridView; Grid/Masonry segmented control fills ContentToolbar's reserved right slot. | Phase 6 (06-02) | Grid-mode VirtuosoGrid + --imgman-thumb (06-01) untouched; 06-03 list view is a 3rd mode on the same switch.
 - 2026-06-24: Settings (05-04) = conditionally-rendered modal (no router). Theme state sourced ONLY from useTheme() (no localStorage/theme.ts re-read); entry points in sidebar footer + welcome (NOT TitleBar, keeps 05-02 untouched). Modal owns its Escape + stopPropagation()s past the global key handler; LibraryGate guards Space/Esc on `settingsOpen`. Temp ThemeToggle deleted. | Phase 5 (05-04) | Reusable dialog keyboard-ownership pattern for Phase 7 context menus / batch dialogs.
 - 2026-06-24: Three-pane shell (05-03) replaces the vertical-stack layout — left sidebar · center toolbar+content · right collapsible inspector; resizable/collapsible panes + modern search toolbar; pane toggles relocated. | Phase 5 (05-03) | The app shell all later phases (6–8) build inside.
 - 2026-06-24: Design tokens = semantic CSS custom properties; light on `:root`, dark on `:root[data-theme="dark"]`. Theme preference (dark/light/system) persisted in localStorage (renderer source-of-truth, NOT main settings); applied pre-render in main.tsx as a 'self' module since the renderer CSP has no script-src (inline <head> script blocked) → no FOUC. Dark is default. Components reference var(--color-*), never raw hex. | Phase 5 (05-01) | 05-02/03/04 + Phase 6–8 build on these tokens; Settings (05-04) relocates the temp toggle and reuses useTheme().
@@ -59,14 +62,15 @@ None logged.
 - Production packaging not yet verified: sharp + better-sqlite3 are native and will need `asarUnpack` in electron-builder.yml before a real packaged build. | Deferred to a packaging pass.
 - No real thumbnails for video/audio/pdf/font — grid uses type-based placeholder icons until V1 media thumbnails.
 - Import runs sequentially on the main process; revisit the deferred worker pool if 10k+ imports stutter.
-- Renderer bundle ~703 kB (react + react-virtuoso + shell/theming) — fine for desktop; revisit if cold start regresses.
+- Renderer bundle ~752 kB (react + react-virtuoso + @virtuoso.dev/masonry + shell/theming) — fine for desktop; revisit if cold start regresses.
 - No arrow-key navigation in grid/quick-preview yet — likely expected UX; consider in a V1 polish pass.
 - items_fts (FTS5) declared in schema but UNWIRED — search is LIKE-based; wire triggers+backfill in a V1 perf pass if LIKE misses <0.5s @ 50k.
 - Performance targets (<0.5s search @ 50k, 60fps scroll) not yet measured against a real 50k-item library.
 
 ### Git State
 - Repository initialized 2026-06-23 (branch: main).
-- Last commit: 40770ca — feat(04-organize-search): ratings, tags, folders, and keyword search (Phase 4 — v0.1 MVP complete).
+- Last commit: 2190713 — feat(05-design-system-shell): theming, chrome-less shell, and settings (Phase 5 — v1.0 Eagle Parity 1/5).
+- Prior: 40770ca — feat(04-organize-search): ratings, tags, folders, and keyword search (Phase 4 — v0.1 MVP complete).
 - Prior: 6dd5bf1 — feat(03-browse): virtualized grid, inspector, and spacebar quick preview (Phase 3).
 - Prior: e1fa1b7 — feat(02-library-import): portable library + import pipeline (Phase 1 + Phase 2).
 - Feature branches merged: none (per-phase commits directly on main).
@@ -84,13 +88,16 @@ None logged.
 ## Session Continuity
 
 Last session: 2026-06-24
-Stopped at: Phase 5 complete (all 4 plans unified) + committed; transition done
-Next action: /paul:plan for Phase 6 (Eagle grid & content area)
+Stopped at: Phase 6 complete (all 4 plans unified) + committed; transition done
+Next action: /paul:plan for Phase 7 (Selection & interaction)
 Resume file: .paul/ROADMAP.md
 
-Phase 6 status: Not started. Goal — masonry/waterfall grid, thumbnail-size slider, view
-modes (grid/masonry/list), sort + view-controls toolbar, hover preview for GIF/video;
-60fps @ 50k items. Builds on the Phase 5 shell + tokens.
+Phase 7 status: Not started. Goal — multi-select (shift-range/ctrl-toggle/rubber-band),
+right-click context menus (items/folders/tags), keyboard navigation, batch ops
+(rename/tag/move/delete), and a polished editable collapsible inspector. Builds on the
+Phase 6 grid/masonry/list surface. The 05-04 modal keyboard-ownership pattern applies to
+context menus / batch dialogs.
+60fps @ 50k still unmeasured — consider a perf pass before milestone close.
 
 ---
 *STATE.md — Updated after every significant action*

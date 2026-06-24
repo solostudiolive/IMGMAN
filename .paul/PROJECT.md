@@ -27,6 +27,9 @@ A fast, offline-first local "second brain" — collect, organize, search, and br
 - ✓ Chrome-less custom title bar + per-platform window controls — Phase 5
 - ✓ Three-pane app shell (sidebar · toolbar+content · collapsible inspector) + modern search toolbar — Phase 5
 - ✓ Settings screen (Appearance theme control + About) — Phase 5
+- ✓ Content-area view toolbar: thumbnail-size slider + sort (imported/created/name/rating/size × asc/desc) — Phase 6
+- ✓ Multiple view modes: grid (uniform), masonry/waterfall (virtualized, aspect-ratio), list (virtualized details) — Phase 6
+- ✓ Hover preview for GIF/video (animate / inline play on hover-intent) — Phase 6
 
 ### Must Have (MVP)
 - Cross-platform (Windows + macOS) — Windows verified; macOS build unverified (see Constraints/packaging)
@@ -34,9 +37,8 @@ A fast, offline-first local "second brain" — collect, organize, search, and br
 ### Should Have (V1)
 - Smart folders + saved searches
 - Color extraction + color search
-- Hover preview for GIF/video/audio
+- Hover preview for audio (GIF/video shipped — Phase 6)
 - Batch rename / batch tag, notes/annotations
-- Multiple layouts (masonry/list/grid) — Phase 6
 - Signed builds + auto-update
 
 ### Nice to Have (Later)
@@ -83,6 +85,9 @@ A fast, offline-first local "second brain" — collect, organize, search, and br
 | Semantic CSS-custom-property design tokens; dark default, theme persisted in renderer localStorage, applied pre-render to avoid FOUC | 5 | Components reference `var(--color-*)`, never raw hex; theme engine owned by renderer, not main settings |
 | Chrome-less window: per-platform frame (frameless win/linux, hidden-inset traffic lights darwin); custom `<TitleBar>`; new `window:*` IPC | 5 | Eagle-class custom chrome; window resolved per-call via `BrowserWindow.fromWebContents` |
 | Three-pane shell replaces the vertical stack; resizable/collapsible panes; settings as a conditionally-rendered modal (no router) | 5 | Establishes the app shell all later phases build inside; modal owns its Escape + guards host shortcuts |
+| Grid view-state (size/sort/viewMode) in a persisted useGridView hook; sort applied renderer-side via one comparator over the loaded scope | 6 | No IPC/SQL change; one path covers all-items/folder/search; later sort/view options just extend the hook |
+| `@virtuoso.dev/masonry` for the virtualized waterfall; list view via react-virtuoso `Virtuoso`; grid via VirtuosoGrid | 6 | Only masonry needed a new dep; aspect ratios from Item.width/height (square fallback); 60fps@50k still to be measured |
+| Hover preview (GIF animate / video inline-play) in the shared grid/masonry Cell, hover-intent ~180ms, reuses imgman://original | 6 | No CSP/IPC/dep change; scroll/sweep-safe; List rows + a disable-toggle deferred |
 
 ## Reference
 
@@ -90,4 +95,4 @@ Full design doc (architecture, data model, library format, risks): see root `PRO
 
 ---
 *Created: 2026-06-23*
-*Last updated: 2026-06-24 after Phase 5 — design system & shell complete (v1.0 Eagle Parity in progress)*
+*Last updated: 2026-06-24 after Phase 6 — Eagle grid & content area complete (v1.0 Eagle Parity 2/5)*

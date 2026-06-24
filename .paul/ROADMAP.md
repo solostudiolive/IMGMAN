@@ -8,7 +8,7 @@ A local-first desktop asset manager built in stages: stand up the Electron/React
 
 **v1.0 — Eagle Parity** (v1.0.0)
 Status: 🚧 In Progress (started 2026-06-24)
-Phases: 1 of 5 complete (Phases 5–9)
+Phases: 2 of 5 complete (Phases 5–9)
 Focus: Transform the functional v0.1 MVP into a polished, Eagle-class desktop asset
 manager — look, feel, and feature parity — reusing the proven SQLite/IPC backend.
 
@@ -29,7 +29,7 @@ manager — look, feel, and feature parity — reusing the proven SQLite/IPC bac
 | 3 | Browse (grid + inspector) | 2 | ✅ Complete | 2026-06-23 |
 | 4 | Organize & search | 4 | ✅ Complete | 2026-06-23 |
 | 5 | Design system & shell | 4 | ✅ Complete | 2026-06-24 |
-| 6 | Eagle grid & content area | TBD | Not started | - |
+| 6 | Eagle grid & content area | 4 | ✅ Complete | 2026-06-24 |
 | 7 | Selection & interaction | TBD | Not started | - |
 | 8 | Organize power features | TBD | Not started | - |
 | 9 | Browser-extension collecting | TBD | Not started | - |
@@ -105,8 +105,13 @@ multiple view modes (grid/masonry/list), a sort + view-controls toolbar, and hov
 for GIF/video. Must hold 60fps scroll at 50k items.
 **Depends on:** Phase 5 (shell + tokens)
 **Research:** Likely (virtualized masonry at scale)
-**Status:** Not started
-**Plans:** TBD (defined during `/paul:plan`)
+**Status:** ✅ Complete (2026-06-24) — see the four `phases/06-grid-content-area/06-0N-SUMMARY.md`
+**Decisions:** renderer-side view-state (useGridView) + one sort comparator across scopes (no IPC); `@virtuoso.dev/masonry` for the virtualized waterfall (aspect ratios from Item.width/height); list view via react-virtuoso `Virtuoso`; hover preview (GIF animate / video play) in the shared Cell reusing imgman://original (no CSP/dep/IPC change). 60fps @ 50k not yet measured.
+**Plans:**
+- [x] 06-01: View toolbar — thumbnail-size slider + sort control (renderer-side; no IPC) — see `phases/06-grid-content-area/06-01-SUMMARY.md`
+- [x] 06-02: Masonry/waterfall layout + view-mode switch (grid ↔ masonry) — @virtuoso.dev/masonry — see `phases/06-grid-content-area/06-02-SUMMARY.md`
+- [x] 06-03: List view mode (virtualized Virtuoso details list) — see `phases/06-grid-content-area/06-03-SUMMARY.md`
+- [x] 06-04: Hover preview for GIF/video (hover-intent in shared Cell) — see `phases/06-grid-content-area/06-04-SUMMARY.md`
 
 ### Phase 7: Selection & interaction
 **Goal:** Make it feel like a real desktop app — multi-select (shift-range, ctrl-toggle,
@@ -140,4 +145,4 @@ endpoint that sends images/URLs into the active library.
 
 ---
 *Roadmap created: 2026-06-23*
-*Last updated: 2026-06-24 — Phase 5 (Design system & shell) complete; next: Phase 6*
+*Last updated: 2026-06-24 — Phase 6 (Eagle grid & content area) complete; next: Phase 7*
