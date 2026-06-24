@@ -30,6 +30,10 @@ A fast, offline-first local "second brain" — collect, organize, search, and br
 - ✓ Content-area view toolbar: thumbnail-size slider + sort (imported/created/name/rating/size × asc/desc) — Phase 6
 - ✓ Multiple view modes: grid (uniform), masonry/waterfall (virtualized, aspect-ratio), list (virtualized details) — Phase 6
 - ✓ Hover preview for GIF/video (animate / inline play on hover-intent) — Phase 6
+- ✓ Multi-select (click / ctrl-toggle / shift-range / rubber-band marquee) + keyboard navigation (arrows/Shift/Ctrl+A/Home/End) — Phase 7
+- ✓ Right-click context menus (items / folders / tags) via a reusable portal menu — Phase 7
+- ✓ Batch operations over a selection: delete, add-tag, add-to-folder, rename (pattern + find/replace) — atomic main-side IPC — Phase 7
+- ✓ Editable inspector — single-item (rating/tags/folders) + multi-item (aggregate header + batch rating/tags/folders over the intersection) — Phase 7
 
 ### Must Have (MVP)
 - Cross-platform (Windows + macOS) — Windows verified; macOS build unverified (see Constraints/packaging)
@@ -38,7 +42,7 @@ A fast, offline-first local "second brain" — collect, organize, search, and br
 - Smart folders + saved searches
 - Color extraction + color search
 - Hover preview for audio (GIF/video shipped — Phase 6)
-- Batch rename / batch tag, notes/annotations
+- Notes/annotations editing (batch rename / batch tag shipped — Phase 7)
 - Signed builds + auto-update
 
 ### Nice to Have (Later)
@@ -88,6 +92,8 @@ A fast, offline-first local "second brain" — collect, organize, search, and br
 | Grid view-state (size/sort/viewMode) in a persisted useGridView hook; sort applied renderer-side via one comparator over the loaded scope | 6 | No IPC/SQL change; one path covers all-items/folder/search; later sort/view options just extend the hook |
 | `@virtuoso.dev/masonry` for the virtualized waterfall; list view via react-virtuoso `Virtuoso`; grid via VirtuosoGrid | 6 | Only masonry needed a new dep; aspect ratios from Item.width/height (square fallback); 60fps@50k still to be measured |
 | Hover preview (GIF animate / video inline-play) in the shared grid/masonry Cell, hover-intent ~180ms, reuses imgman://original | 6 | No CSP/IPC/dep change; scroll/sweep-safe; List rows + a disable-toggle deferred |
+| Selection model in a renderer `useSelection` hook (click/ctrl/shift + marquee + keyboard), batch ops as atomic main-side IPC (one txn, returns count), context menu via reusable portal `ContextMenu` | 7 | Renderer owns selection; batch mutations bypass single-item channels; menu escapes pane overflow via createPortal |
+| Multi-item inspector reads the INTERSECTION (`HAVING COUNT(DISTINCT item_id)=N`); header aggregates computed renderer-side; new channels only (single Inspector untouched) | 7 | "Common" = on all selected; no tri-state UI; edits apply to whole selection atomically |
 
 ## Reference
 
@@ -95,4 +101,4 @@ Full design doc (architecture, data model, library format, risks): see root `PRO
 
 ---
 *Created: 2026-06-23*
-*Last updated: 2026-06-24 after Phase 6 — Eagle grid & content area complete (v1.0 Eagle Parity 2/5)*
+*Last updated: 2026-06-24 after Phase 7 — Selection & interaction complete (v1.0 Eagle Parity 3/5)*

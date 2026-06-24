@@ -1,4 +1,7 @@
+import { rmSync } from 'fs'
+import { join } from 'path'
 import { isDatabaseOpen, getDb } from '../db'
+import { getActiveLibrary, imagesDir } from './library'
 import type { ItemType } from './import'
 
 // A row projected for the grid (subset of the items table).
@@ -84,4 +87,79 @@ export function updateItem(id: string, patch: ItemPatch): FullItem | null {
   }
 
   return getItem(id)
+}
+
+/**
+ * Permanently delete a batch of items: their item_tags + item_folders links and the items rows
+ * (in one transaction — FKs are not ON DELETE CASCADE, so links must go first), then their on-disk
+ * `images/<id>/` folders (originals + thumbnails). File removal is best-effort after the DB commits
+ * (the DB is the source of truth; a leftover dir is harmless). Returns the number of rows deleted.
+ */
+export function deleteItems(ids: string[]): number {
+  if (!isDatabaseOpen() || ids.length === 0) return 0
+  const db = getDb()
+
+  const run = db.transaction((ids: string[]): number => {
+    const delTags = db.prepare('DELETE FROM item_tags WHERE item_id = ?')
+    const delFolders = db.prepare('DELETE FROM item_folders WHERE item_id = ?')
+    const delItem = db.prepare('DELETE FROM items WHERE id = ?')
+    let n = 0
+    for (const id of ids) {
+      delTags.run(id)
+      delFolders.run(id)
+      n += delItem.run(id).changes
+    }
+    return n
+  })
+  const deleted = run(ids)
+
+  const lib = getActiveLibrary()
+  if (lib) {
+    const root = imagesDir(lib.path)
+    for (const id of ids) {
+      try {
+        rmSync(join(root, id), { recursive: true, force: true })
+      } catch {
+        /* best-effort: the DB row is already gone */
+      }
+    }
+  }
+  return deleted
+}
+
+/**
+ * Set the same rating (clamped 0..5) on a batch of items in one transaction. Returns rows changed.
+ */
+export function rateItems(ids: string[], rating: number): number {
+  if (!isDatabaseOpen() || ids.length === 0) return 0
+  const value = Math.max(0, Math.min(5, Math.round(rating)))
+  const db = getDb()
+  const run = db.transaction((ids: string[]): number => {
+    const stmt = db.prepare('UPDATE items SET rating = ? WHERE id = ?')
+    let n = 0
+    for (const id of ids) n += stmt.run(value, id).changes
+    return n
+  })
+  return run(ids)
+}
+
+/**
+ * Rename a batch of items in one transaction (metadata only — updates the `name` column; the on-disk
+ * `images/<id>/original.<ext>` file and the `ext` are never touched). Trimmed; blank names are
+ * skipped. Returns the number of rows changed.
+ */
+export function renameItems(renames: { id: string; name: string }[]): number {
+  if (!isDatabaseOpen() || renames.length === 0) return 0
+  const db = getDb()
+  const run = db.transaction((renames: { id: string; name: string }[]): number => {
+    const stmt = db.prepare('UPDATE items SET name = ? WHERE id = ?')
+    let n = 0
+    for (const { id, name } of renames) {
+      const trimmed = name.trim()
+      if (!trimmed) continue
+      n += stmt.run(trimmed, id).changes
+    }
+    return n
+  })
+  return run(renames)
 }

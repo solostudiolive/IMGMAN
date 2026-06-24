@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import type { Folder } from '../../preload/types'
+import ContextMenu, { type MenuNode } from './components/ContextMenu'
 
 // Left-sidebar folder tree: an "All items" root plus the nested folders, with
 // inline create / rename / delete. Built from the flat folders list (grouped by
@@ -20,6 +21,8 @@ export default function FolderTree({
   const [addingParent, setAddingParent] = useState<string | null | undefined>(undefined)
   const [renamingId, setRenamingId] = useState<string | null>(null)
   const [draft, setDraft] = useState('')
+  // Open right-click folder context menu (null = closed).
+  const [menu, setMenu] = useState<{ x: number; y: number; items: MenuNode[] } | null>(null)
 
   useEffect(() => {
     let cancelled = false
@@ -99,6 +102,28 @@ export default function FolderTree({
             />
           ) : (
             <div
+              onContextMenu={(e) => {
+                e.preventDefault()
+                setMenu({
+                  x: e.clientX,
+                  y: e.clientY,
+                  items: [
+                    { kind: 'action', label: 'New subfolder', icon: '＋', onSelect: () => startAdd(folder.id) },
+                    {
+                      kind: 'action',
+                      label: 'Rename',
+                      icon: '✎',
+                      onSelect: () => {
+                        setRenamingId(folder.id)
+                        setAddingParent(undefined)
+                        setDraft(folder.name)
+                      }
+                    },
+                    { kind: 'separator' },
+                    { kind: 'action', label: 'Delete', icon: '🗑', danger: true, onSelect: () => void remove(folder) }
+                  ]
+                })
+              }}
               style={{
                 ...ROW_STYLE,
                 paddingLeft: 6 + depth * 12,
@@ -187,6 +212,14 @@ export default function FolderTree({
       <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
         <li>
           <div
+            onContextMenu={(e) => {
+              e.preventDefault()
+              setMenu({
+                x: e.clientX,
+                y: e.clientY,
+                items: [{ kind: 'action', label: 'New folder', icon: '＋', onSelect: () => startAdd(null) }]
+              })
+            }}
             style={{
               ...ROW_STYLE,
               paddingLeft: 6,
@@ -203,6 +236,9 @@ export default function FolderTree({
         {renderRows(null, 0)}
         {addingParent === null && renderAddInput(null, 0)}
       </ul>
+      {menu && (
+        <ContextMenu x={menu.x} y={menu.y} items={menu.items} onClose={() => setMenu(null)} />
+      )}
     </nav>
   )
 }

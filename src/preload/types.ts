@@ -112,6 +112,12 @@ export interface IpcApi {
     list: () => Promise<Item[]>
     get: (id: string) => Promise<FullItem | null>
     update: (id: string, patch: ItemPatch) => Promise<FullItem | null>
+    // Permanently delete a batch of items (rows + on-disk files). Returns rows deleted.
+    delete: (ids: string[]) => Promise<number>
+    // Rename a batch (metadata `name` only). Returns rows changed.
+    renameMany: (renames: { id: string; name: string }[]) => Promise<number>
+    // Set the same rating (0..5) on a batch of items. Returns rows changed.
+    rateMany: (ids: string[], rating: number) => Promise<number>
     count: () => Promise<number>
     search: (criteria: SearchCriteria) => Promise<Item[]>
   }
@@ -119,7 +125,13 @@ export interface IpcApi {
     listAll: () => Promise<Tag[]>
     listForItem: (itemId: string) => Promise<Tag[]>
     add: (itemId: string, name: string) => Promise<Tag[]>
+    // Add a tag (by name) to many items at once. Returns new links created.
+    addToMany: (itemIds: string[], name: string) => Promise<number>
     remove: (itemId: string, tagId: string) => Promise<Tag[]>
+    // Tags present on EVERY selected item (the intersection) — for the multi-item inspector.
+    commonForItems: (ids: string[]) => Promise<Tag[]>
+    // Unlink a tag from many items at once. Returns links removed.
+    removeFromMany: (ids: string[], tagId: string) => Promise<number>
   }
   folders: {
     list: () => Promise<Folder[]>
@@ -129,6 +141,12 @@ export interface IpcApi {
     itemsIn: (folderId: string) => Promise<Item[]>
     forItem: (itemId: string) => Promise<Folder[]>
     assign: (itemId: string, folderId: string) => Promise<Folder[]>
+    // Assign many items to a folder at once. Returns new links created.
+    assignMany: (itemIds: string[], folderId: string) => Promise<number>
     unassign: (itemId: string, folderId: string) => Promise<Folder[]>
+    // Folders containing EVERY selected item (the intersection) — for the multi-item inspector.
+    commonForItems: (ids: string[]) => Promise<Folder[]>
+    // Remove many items from a folder at once (items kept). Returns links removed.
+    unassignMany: (ids: string[], folderId: string) => Promise<number>
   }
 }

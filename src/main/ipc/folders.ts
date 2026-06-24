@@ -7,7 +7,10 @@ import {
   listItemsInFolder,
   listFoldersForItem,
   assignItemToFolder,
+  assignManyToFolder,
   removeItemFromFolder,
+  commonFoldersForItems,
+  unassignManyFromFolder,
   type Folder
 } from '../services/folders'
 import type { Item } from '../services/items'
@@ -26,7 +29,16 @@ export function registerFoldersIpc(): void {
   ipcMain.handle('folders:assign', (_e, itemId: string, folderId: string): Folder[] =>
     assignItemToFolder(itemId, folderId)
   )
+  ipcMain.handle('folders:assignMany', (_e, itemIds: string[], folderId: string): number =>
+    assignManyToFolder(itemIds, folderId)
+  )
   ipcMain.handle('folders:unassign', (_e, itemId: string, folderId: string): Folder[] =>
     removeItemFromFolder(itemId, folderId)
+  )
+  ipcMain.handle('folders:commonForItems', (_e, ids: string[]): Folder[] =>
+    commonFoldersForItems(ids)
+  )
+  ipcMain.handle('folders:unassignMany', (_e, ids: string[], folderId: string): number =>
+    unassignManyFromFolder(ids, folderId)
   )
 }

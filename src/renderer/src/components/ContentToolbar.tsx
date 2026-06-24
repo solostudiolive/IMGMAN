@@ -26,6 +26,7 @@ export default function ContentToolbar({
   sortDir,
   viewMode,
   count,
+  selectedCount = 0,
   onThumbSize,
   onSortField,
   onSortDir,
@@ -36,6 +37,7 @@ export default function ContentToolbar({
   sortDir: SortDir
   viewMode: ViewMode
   count: number
+  selectedCount?: number
   onThumbSize: (n: number) => void
   onSortField: (f: SortField) => void
   onSortDir: (d: SortDir) => void
@@ -71,7 +73,9 @@ export default function ContentToolbar({
       </div>
 
       <span className="content-toolbar__count">
-        {count} {count === 1 ? 'item' : 'items'}
+        {selectedCount > 1
+          ? `${selectedCount} selected`
+          : `${count} ${count === 1 ? 'item' : 'items'}`}
       </span>
 
       <div className="content-toolbar__group content-toolbar__group--end">

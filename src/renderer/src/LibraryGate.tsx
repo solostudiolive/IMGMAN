@@ -1,7 +1,7 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { Item, LibraryInfo, LibraryResult, SearchCriteria } from '../../preload/types'
 import ImportZone from './ImportZone'
-import Grid from './Grid'
+import Grid, { type GridHandle } from './Grid'
 import Inspector from './Inspector'
 import QuickPreview from './QuickPreview'
 import FolderTree from './FolderTree'
@@ -9,7 +9,13 @@ import SearchBar from './SearchBar'
 import AppShell from './components/AppShell'
 import ContentToolbar from './components/ContentToolbar'
 import SettingsModal from './components/SettingsModal'
+import ContextMenu, { type MenuNode } from './components/ContextMenu'
+import BatchTagDialog from './components/BatchTagDialog'
+import BatchRenameDialog from './components/BatchRenameDialog'
+import MultiInspector from './components/MultiInspector'
+import type { RenameInput } from './components/renameItems'
 import { useGridView, compareItems } from './hooks/useGridView'
+import { useSelection } from './hooks/useSelection'
 
 // True when any search field constrains the results.
 function isSearchActive(c: SearchCriteria): boolean {
@@ -33,7 +39,8 @@ export default function LibraryGate() {
   const [name, setName] = useState('')
   // Browse state for the active library.
   const [items, setItems] = useState<Item[]>([])
-  const [selectedId, setSelectedId] = useState<string | null>(null)
+  // Multi-select model; `primary` (last-clicked) drives the inspector + quick preview.
+  const sel = useSelection()
   const [previewOpen, setPreviewOpen] = useState(false)
   // Active folder filter: null = "All items"; otherwise show that folder's items.
   const [selectedFolderId, setSelectedFolderId] = useState<string | null>(null)
@@ -41,6 +48,12 @@ export default function LibraryGate() {
   const [searchCriteria, setSearchCriteria] = useState<SearchCriteria>({})
   // Settings modal visibility (Appearance + About).
   const [settingsOpen, setSettingsOpen] = useState(false)
+  // Open right-click item context menu (null = closed).
+  const [itemMenu, setItemMenu] = useState<{ x: number; y: number; items: MenuNode[] } | null>(null)
+  // Batch "Add tag…" dialog: the target item ids (null = closed).
+  const [tagDialog, setTagDialog] = useState<string[] | null>(null)
+  // Batch "Rename…" dialog: the target items (id/name/ext, in display order; null = closed).
+  const [renameDialog, setRenameDialog] = useState<RenameInput[] | null>(null)
   // Persisted grid view-state: thumbnail size + sort field/direction.
   const {
     thumbSize,
@@ -59,6 +72,16 @@ export default function LibraryGate() {
     () => [...items].sort((a, b) => compareItems(a, b, sortField, sortDir)),
     [items, sortField, sortDir]
   )
+  // Current render order — range selection (shift-click) + keyboard nav walk this list.
+  const orderedIds = useMemo(() => sortedItems.map((it) => it.id), [sortedItems])
+  // The selected rows (display order) — drives the multi-item inspector.
+  const selectedItems = useMemo(
+    () => sortedItems.filter((it) => sel.selected.has(it.id)),
+    [sortedItems, sel.selected]
+  )
+  // Imperative grid handle (scroll active into view) + latest column count for 2D nav.
+  const gridRef = useRef<GridHandle>(null)
+  const columnsRef = useRef(1)
 
   const refresh = useCallback(async () => {
     setActive(await window.api.library.getActive())
@@ -84,6 +107,99 @@ export default function LibraryGate() {
     setSelectedFolderId(id)
   }, [])
 
+  // Permanently delete a batch (with confirm), then reload + clear selection. The prune effect
+  // drops any stale ids; the inspector empties when primary is cleared.
+  const deleteTargets = useCallback(
+    async (ids: string[]): Promise<void> => {
+      if (ids.length === 0) return
+      const ok = window.confirm(
+        `Delete ${ids.length} item${ids.length > 1 ? 's' : ''}? This removes the file${
+          ids.length > 1 ? 's' : ''
+        } from the library and cannot be undone.`
+      )
+      if (!ok) return
+      await window.api.items.delete(ids)
+      sel.clear()
+      reloadItems()
+    },
+    [sel, reloadItems]
+  )
+
+  // Build + open the item right-click menu. Selection-aware: when the right-clicked item is part of
+  // a multi-selection, batch actions act on the WHOLE selection; otherwise the item becomes the
+  // single selection and actions act on just it. Batch ops use atomic main-side IPC.
+  const openItemMenu = useCallback(
+    async (id: string, x: number, y: number): Promise<void> => {
+      const multi = sel.selected.has(id) && sel.selected.size > 1
+      const targets = multi ? Array.from(sel.selected) : [id]
+      if (!multi) sel.handleSelect(id, orderedIds, { ctrl: false, shift: false })
+
+      const folders = await window.api.folders.list()
+      const folderNodes: MenuNode[] = folders.length
+        ? folders.map((f) => ({
+            kind: 'action',
+            label: f.name,
+            icon: '📁',
+            onSelect: () => {
+              void window.api.folders.assignMany(targets, f.id).then(reloadItems)
+            }
+          }))
+        : [{ kind: 'action', label: 'No folders', disabled: true, onSelect: () => {} }]
+
+      const menu: MenuNode[] = []
+      if (targets.length === 1) {
+        const only = targets[0]
+        const rate = async (n: number): Promise<void> => {
+          await window.api.items.update(only, { rating: n })
+          reloadItems()
+        }
+        menu.push(
+          { kind: 'action', label: 'Quick preview', icon: '👁', onSelect: () => setPreviewOpen(true) },
+          {
+            kind: 'submenu',
+            label: 'Rating',
+            icon: '★',
+            items: [
+              { kind: 'action', label: 'Clear', onSelect: () => void rate(0) },
+              { kind: 'action', label: '★', onSelect: () => void rate(1) },
+              { kind: 'action', label: '★★', onSelect: () => void rate(2) },
+              { kind: 'action', label: '★★★', onSelect: () => void rate(3) },
+              { kind: 'action', label: '★★★★', onSelect: () => void rate(4) },
+              { kind: 'action', label: '★★★★★', onSelect: () => void rate(5) }
+            ]
+          }
+        )
+      }
+      menu.push(
+        { kind: 'action', label: 'Add tag…', icon: '🏷', onSelect: () => setTagDialog(targets) },
+        {
+          kind: 'action',
+          label: 'Rename…',
+          icon: '✎',
+          onSelect: () => {
+            const tset = new Set(targets)
+            setRenameDialog(
+              sortedItems
+                .filter((it) => tset.has(it.id))
+                .map((it) => ({ id: it.id, name: it.name, ext: it.ext }))
+            )
+          }
+        },
+        { kind: 'submenu', label: 'Add to folder', icon: '🗂', items: folderNodes },
+        { kind: 'separator' },
+        {
+          kind: 'action',
+          label: targets.length > 1 ? `Delete ${targets.length} items` : 'Delete item',
+          icon: '🗑',
+          danger: true,
+          onSelect: () => void deleteTargets(targets)
+        }
+      )
+      setItemMenu({ x, y, items: menu })
+    },
+    [sel, orderedIds, sortedItems, reloadItems, deleteTargets]
+  )
+
   useEffect(() => {
     refresh()
   }, [refresh])
@@ -97,7 +213,7 @@ export default function LibraryGate() {
   // Load (or clear) items whenever the active library or folder scope changes;
   // reset selection (reloadItems identity changes with selectedFolderId).
   useEffect(() => {
-    setSelectedId(null)
+    sel.clear()
     setPreviewOpen(false)
     if (active) reloadItems()
     else setItems([])
@@ -105,31 +221,85 @@ export default function LibraryGate() {
 
   // A cleared selection can't have a preview open.
   useEffect(() => {
-    if (!selectedId) setPreviewOpen(false)
-  }, [selectedId])
+    if (!sel.primary) setPreviewOpen(false)
+  }, [sel.primary])
 
-  // If the selected item is no longer in the (filtered) list, clear the selection.
+  // Drop any selected ids that are no longer in the (filtered) list.
   useEffect(() => {
-    if (selectedId && !items.some((it) => it.id === selectedId)) setSelectedId(null)
-  }, [items, selectedId])
+    sel.prune(orderedIds)
+  }, [orderedIds])
 
-  // Space toggles the quick preview of the selected item; Escape closes it.
-  // Suppressed while the Settings modal is open (it owns the keyboard then).
+  // Keyboard: Space/Enter toggle the primary's quick preview; Escape closes it (else clears
+  // selection); Delete removes the selection; arrows navigate + select (2D in grid, 1D in
+  // list/masonry); Shift+arrows extend; Ctrl/Cmd+A selects all; Home/End jump. Suppressed while
+  // typing, the Settings modal is open, or a context menu / batch dialog owns the keyboard.
   useEffect(() => {
-    if (!active || settingsOpen) return
+    if (!active || settingsOpen || tagDialog || renameDialog || itemMenu) return
+    const clamp = (n: number, lo: number, hi: number): number => Math.min(hi, Math.max(lo, n))
     const onKey = (e: KeyboardEvent): void => {
       const t = e.target as HTMLElement | null
       if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable)) return
-      if (e.code === 'Space') {
+
+      // Select all
+      if ((e.ctrlKey || e.metaKey) && (e.key === 'a' || e.key === 'A')) {
         e.preventDefault()
-        if (selectedId) setPreviewOpen((open) => !open)
-      } else if (e.key === 'Escape') {
-        setPreviewOpen(false)
+        if (orderedIds.length) sel.selectAll(orderedIds)
+        return
       }
+      if (e.ctrlKey || e.metaKey) return // leave other ctrl/cmd combos alone
+
+      if (e.code === 'Space' || e.key === 'Enter') {
+        e.preventDefault()
+        if (sel.primary) setPreviewOpen((open) => !open)
+        return
+      }
+      if (e.key === 'Escape') {
+        if (previewOpen) setPreviewOpen(false)
+        else sel.clear()
+        return
+      }
+      if (e.key === 'Delete') {
+        e.preventDefault()
+        if (sel.selected.size > 0) void deleteTargets(Array.from(sel.selected))
+        return
+      }
+
+      if (!orderedIds.length) return
+      const cols = columnsRef.current
+      const idx = sel.primary ? orderedIds.indexOf(sel.primary) : -1
+
+      let next: number | null = null
+      switch (e.key) {
+        case 'ArrowLeft':
+          next = idx === -1 ? 0 : clamp(idx - 1, 0, orderedIds.length - 1)
+          break
+        case 'ArrowRight':
+          next = idx === -1 ? 0 : clamp(idx + 1, 0, orderedIds.length - 1)
+          break
+        case 'ArrowUp':
+          next = idx === -1 ? 0 : clamp(idx - (viewMode === 'grid' ? cols : 1), 0, orderedIds.length - 1)
+          break
+        case 'ArrowDown':
+          next = idx === -1 ? 0 : clamp(idx + (viewMode === 'grid' ? cols : 1), 0, orderedIds.length - 1)
+          break
+        case 'Home':
+          next = 0
+          break
+        case 'End':
+          next = orderedIds.length - 1
+          break
+        default:
+          return
+      }
+
+      e.preventDefault()
+      const nextId = orderedIds[next]
+      sel.handleSelect(nextId, orderedIds, { ctrl: false, shift: e.shiftKey })
+      gridRef.current?.scrollToId(nextId)
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [active, selectedId, settingsOpen])
+  }, [active, sel, orderedIds, viewMode, previewOpen, settingsOpen, tagDialog, renameDialog, itemMenu, deleteTargets])
 
   // Apply a library:* result: update state on success, surface errors, ignore cancels.
   const apply = useCallback(
@@ -165,7 +335,7 @@ export default function LibraryGate() {
   }
 
   const previewItem =
-    previewOpen && selectedId ? sortedItems.find((it) => it.id === selectedId) : null
+    previewOpen && sel.primary ? sortedItems.find((it) => it.id === sel.primary) : null
 
   if (active) {
     return (
@@ -230,7 +400,13 @@ export default function LibraryGate() {
             </div>
           }
           toolbar={<SearchBar criteria={searchCriteria} onChange={applySearch} />}
-          inspector={<Inspector selectedId={selectedId} />}
+          inspector={
+            sel.selected.size > 1 ? (
+              <MultiInspector items={selectedItems} onChanged={reloadItems} />
+            ) : (
+              <Inspector selectedId={sel.primary} />
+            )
+          }
         >
           <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
             {error && (
@@ -248,24 +424,62 @@ export default function LibraryGate() {
                 sortDir={sortDir}
                 viewMode={viewMode}
                 count={sortedItems.length}
+                selectedCount={sel.selected.size}
                 onThumbSize={setThumbSize}
                 onSortField={setSortField}
                 onSortDir={setSortDir}
                 onViewMode={setViewMode}
               />
             </div>
+            {/* Empty-space clear + rubber-band marquee are owned by Grid's background pointer
+                handler (so a drag and a click don't conflict). */}
             <div style={{ flex: '1 1 auto', minHeight: 0 }}>
               <Grid
+                ref={gridRef}
                 items={sortedItems}
-                selectedId={selectedId}
+                selectedIds={sel.selected}
                 thumbSize={thumbSize}
                 viewMode={viewMode}
-                onSelect={setSelectedId}
+                onColumns={(n) => (columnsRef.current = n)}
+                onSelect={(id, mods) => sel.handleSelect(id, orderedIds, mods)}
+                onMarqueeSelect={(ids, additive) => sel.applyMarquee(ids, additive)}
+                onBackgroundClick={() => sel.clear()}
+                onItemContextMenu={openItemMenu}
               />
             </div>
           </div>
         </AppShell>
         {previewItem && <QuickPreview item={previewItem} onClose={() => setPreviewOpen(false)} />}
+        {itemMenu && (
+          <ContextMenu
+            x={itemMenu.x}
+            y={itemMenu.y}
+            items={itemMenu.items}
+            onClose={() => setItemMenu(null)}
+          />
+        )}
+        {tagDialog && (
+          <BatchTagDialog
+            count={tagDialog.length}
+            onSubmit={async (name) => {
+              await window.api.tags.addToMany(tagDialog, name)
+              reloadItems()
+            }}
+            onClose={() => setTagDialog(null)}
+          />
+        )}
+        {renameDialog && (
+          <BatchRenameDialog
+            items={renameDialog}
+            onApply={async (renames) => {
+              if (renames.length) {
+                await window.api.items.renameMany(renames)
+                reloadItems()
+              }
+            }}
+            onClose={() => setRenameDialog(null)}
+          />
+        )}
         <SettingsModal open={settingsOpen} onClose={() => setSettingsOpen(false)} />
       </>
     )

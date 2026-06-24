@@ -8,7 +8,7 @@ A local-first desktop asset manager built in stages: stand up the Electron/React
 
 **v1.0 — Eagle Parity** (v1.0.0)
 Status: 🚧 In Progress (started 2026-06-24)
-Phases: 2 of 5 complete (Phases 5–9)
+Phases: 3 of 5 complete (Phases 5–9)
 Focus: Transform the functional v0.1 MVP into a polished, Eagle-class desktop asset
 manager — look, feel, and feature parity — reusing the proven SQLite/IPC backend.
 
@@ -30,7 +30,7 @@ manager — look, feel, and feature parity — reusing the proven SQLite/IPC bac
 | 4 | Organize & search | 4 | ✅ Complete | 2026-06-23 |
 | 5 | Design system & shell | 4 | ✅ Complete | 2026-06-24 |
 | 6 | Eagle grid & content area | 4 | ✅ Complete | 2026-06-24 |
-| 7 | Selection & interaction | TBD | Not started | - |
+| 7 | Selection & interaction | 7 | ✅ Complete | 2026-06-24 |
 | 8 | Organize power features | TBD | Not started | - |
 | 9 | Browser-extension collecting | TBD | Not started | - |
 
@@ -120,8 +120,16 @@ operations (rename/tag/move/delete), and a polished editable collapsible inspect
 (single + multi-item).
 **Depends on:** Phase 6 (grid is the selection surface); batch ops depend on multi-select
 **Research:** Unlikely
-**Status:** Not started
-**Plans:** TBD (defined during `/paul:plan`)
+**Status:** ✅ Complete (2026-06-24) — see the seven `phases/07-selection-interaction/07-0N-SUMMARY.md`
+**Decisions:** selection model in a renderer `useSelection` hook (click/ctrl/shift + marquee + keyboard); batch ops are atomic main-side IPC (one txn, returns count); reusable portal `ContextMenu`; multi-item inspector reads the INTERSECTION (`HAVING COUNT(DISTINCT item_id)=N`) with header aggregates computed renderer-side; new channels only (single Inspector untouched); no schema change, no new deps.
+**Plans:**
+- [x] 07-01: Multi-select model (mouse: click/ctrl-toggle/shift-range) + primary/anchor — see `phases/07-selection-interaction/07-01-SUMMARY.md`
+- [x] 07-02: Keyboard navigation (arrows/shift/Ctrl+A/Home/End/Enter + scroll-into-view) — see `phases/07-selection-interaction/07-02-SUMMARY.md`
+- [x] 07-03: Rubber-band marquee selection (drag-rect over mounted cells) — see `phases/07-selection-interaction/07-03-SUMMARY.md`
+- [x] 07-04: Context menus (items / folders / tags) — see `phases/07-selection-interaction/07-04-SUMMARY.md`
+- [x] 07-05: Batch operations — delete + add-tag + add-to-folder (atomic main-side IPC) — see `phases/07-selection-interaction/07-05-SUMMARY.md`
+- [x] 07-06: Batch rename (full find/replace + pattern: {n}/{name}/{ext}) — see `phases/07-selection-interaction/07-06-SUMMARY.md`
+- [x] 07-07: Editable multi-item inspector (aggregate header + batch rating/tags/folders, common-value intersection) — see `phases/07-selection-interaction/07-07-SUMMARY.md`
 
 ### Phase 8: Organize power features
 **Goal:** The heavier backend work — smart folders / saved searches (persisted,
@@ -145,4 +153,4 @@ endpoint that sends images/URLs into the active library.
 
 ---
 *Roadmap created: 2026-06-23*
-*Last updated: 2026-06-24 — Phase 6 (Eagle grid & content area) complete; next: Phase 7*
+*Last updated: 2026-06-24 — Phase 7 (Selection & interaction) complete; next: Phase 8*

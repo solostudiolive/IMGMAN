@@ -9,27 +9,38 @@ See: .paul/PROJECT.md (updated 2026-06-23)
 
 ## Current Position
 
-Milestone: v1.0 — Eagle Parity 🚧 In Progress (2 of 5 phases complete)
-Phase: 7 of 9 (Selection & interaction) — Not started
+Milestone: v1.0 — Eagle Parity 🚧 In Progress (3 of 5 phases complete)
+Phase: 8 of 9 (Organize power features) — Not started (ready to plan)
 Plan: Not started
-Status: Phase 6 complete + committed; ready to plan Phase 7
-Last activity: 2026-06-24 — Closed Plan 06-04 loop and ran Phase 6 transition: created 06-04-SUMMARY; evolved PROJECT.md (3 Phase-6 requirements validated + 3 key decisions); marked ROADMAP Phase 6 ✅; committed feat(06-grid-content-area). Phase 6 (Eagle grid & content area) is feature-complete.
+Status: Ready to plan Phase 8
+Last activity: 2026-06-24 — Phase 7 (Selection & interaction) COMPLETE + transitioned to Phase 8. Closed Plan 07-07 (editable multi-item inspector — FINAL): MultiInspector (selection > 1) with renderer-side aggregate header + Mixed-aware batch rating + common-tags/folders (INTERSECTION) chips; five new batch/aggregate IPC channels wired end-to-end. PROJECT.md + ROADMAP evolved; single feat(07-selection-interaction) commit created bundling 07-01…07-07.
 
 Progress:
-- v1.0 Eagle Parity: [████░░░░░░] 40% (2 of 5 phases complete; Phase 7 next)
-- Phase 6: [██████████] 100% (4 of 4 plans complete — UNIFY closed)
+- v1.0 Eagle Parity: [██████░░░░] 60% (3 of 5 phases complete; Phase 8 next)
+- Phase 7: [██████████] 100% (7 of 7 plans complete) ✅
 
 ## Loop Position
 
 Current loop state:
 ```
 PLAN ──▶ APPLY ──▶ UNIFY
-  ✓        ✓        ✓     [Phase 6 complete + committed; ready to PLAN Phase 7]
+  ✓        ✓        ✓     [Phase 7 complete — loop closed; ready to PLAN Phase 8]
 ```
+
+Note: Phase 7 COMPLETE (7/7): 07-01 multi-select ✓, 07-02 keyboard nav ✓, 07-03 marquee ✓, 07-04
+context menus ✓, 07-05 batch delete/tag/move ✓, 07-06 batch rename ✓, 07-07 multi-item inspector ✓.
+Single `feat(07-selection-interaction): …` commit bundled all seven plans (first Phase-7 commit).
+Next: /paul:plan for Phase 8 (Organize power features — smart folders / saved searches, color
+extraction + color search, find duplicates; scans run in workers).
 
 ## Accumulated Context
 
 ### Decisions
+- 2026-06-24: Multi-item inspector (07-07) — a NEW `components/MultiInspector` (shown when `sel.selected.size > 1`, gated in LibraryGate via a `selectedItems` memo) editing the WHOLE selection. Header aggregates (count · total size · per-type breakdown · common-rating) are computed RENDERER-side from the already-loaded `Item[]` (free); only the shared tag/folder lists are fetched. "Common" = the strict INTERSECTION via a dynamic `IN (?,?,…)` + `HAVING COUNT(DISTINCT item_id) = ids.length` (no tri-state/partial chips, no per-item drill-down). FIVE new channels (service→ipc→preload→IpcApi): `items:rateMany(ids,rating)` (clamp 0..5, one txn), `tags:commonForItems(ids)`/`tags:removeFromMany(ids,tagId)`, `folders:commonForItems(ids)`/`folders:unassignMany(ids,folderId)` — each batch mutation one `db.transaction` returning a count; the "add" side REUSES existing `tags:addToMany`/`folders:assignMany` (07-05). StarRating shows "Mixed" when ratings differ (commonRating null), sets all on click. After any edit: refetch the common lists + `onChanged()` (reload grid). Token-styled (no legacy hex). Single Inspector / TagEditor / FolderAssigner untouched; no schema change; no new deps. | Phase 7 (07-07) | FINAL Phase-7 plan — triggered the transition + the single `feat(07-selection-interaction)` commit. Intersection-read + atomic-batch-mutate pair reusable for Phase 8 selection-driven surfaces.
+- 2026-06-24: Batch rename (07-06) — new atomic IPC `items:renameMany({id,name}[])` (one `db.transaction` of `UPDATE items SET name`, trimmed/non-empty only, returns count) — a DEDICATED channel, NOT ItemPatch/items:update (which is rating-only). Rename is METADATA-ONLY: writes the `name` column; the on-disk `images/<id>/original.<ext>` file and `ext` are never touched (re-rename to revert; no undo). New names are computed RENDERER-side for an instant preview via a pure helper `components/renameItems.ts` (`computeName`/`computeRenames`/`specError`): Pattern mode replaces tokens `{name}`/`{ext}`/`{n}` (with a start number + zero-pad), Find&Replace mode does literal (split/join or escaped regex) or JS-`RegExp` replace with a case-sensitive toggle; invalid regex → `specError` message → dialog disables Apply (computeName falls back to the original). `BatchRenameDialog` (token modal mirroring BatchTagDialog, self-owns Escape) shows a live old→new preview (capped 50 rows) and applies only changed/non-blank names. "Rename…" added to the item menu (single + multi), mapping target ids → sorted Item rows so the sequence follows display order. No schema change; no new deps. | Phase 7 (07-06) | Completes the batch-action set (delete/tag/move/rename); pure-helper + token-modal + atomic-persist shape reusable for future bulk edits. 07-07 multi-item inspector is the FINAL plan.
+- 2026-06-24: Batch operations (07-05) — three ATOMIC main-side batch IPC channels, each one `db.transaction(...)` returning a count, mirroring the existing service→ipc→preload→IpcApi triad: `items:delete(ids)` (deleteItems: delete item_tags + item_folders links THEN items rows in the txn — FKs are NOT ON DELETE CASCADE — then best-effort `rmSync(images/<id>, {recursive,force})` AFTER commit; permanent, confirm-only, no trash/undo; items_fts left alone as it's unwired), `tags:addToMany(ids,name)` (lookup-or-insert tag once + INSERT OR IGNORE links), `folders:assignMany(ids,folderId)` (INSERT OR IGNORE). NO schema change (reuses tables). Renderer: the 07-04 item menu is now SELECTION-AWARE — right-click an item that's in a multi-selection acts on the WHOLE selection (labels show count), else it selects + acts on the single item; added Delete-key (with window.confirm) and a token-styled `BatchTagDialog` (mirrors SettingsModal, self-owns Escape). Folder batch op is ADD/assign-many (true move/unassign deferred — multi-folder membership). items.ts now imports services/library (imagesDir/getActiveLibrary) — no import cycle (library → ../db only). | Phase 7 (07-05) | Atomic batch-IPC pattern reused by 07-06 rename; full find/replace+pattern rename split into its OWN 07-06, multi-item inspector → 07-07.
+- 2026-06-24: Context menus (07-04) — ONE reusable presentational `ContextMenu` (components/ContextMenu.tsx) rendered via `createPortal(document.body)` (escapes the three-pane/scroller overflow), `position:fixed` at clientX/clientY with a `useLayoutEffect` viewport-flip, dismiss on Escape (capture + stopPropagation so the global grid key handler never sees it) / outside mousedown / scroll / resize / blur. Node model `MenuNode = action | submenu(ONE level flyout) | separator`. Each surface holds its own `{x,y,items}|null` state and an `onContextMenu` handler; the menu is otherwise logic-free. Wired to: grid/masonry/list ITEMS (Grid gained `onItemContextMenu(id,x,y)` on every cell button → LibraryGate builds Quick preview · Rating ▸ · Add to folder ▸ acting on the SINGLE right-clicked item via existing items.update/folders.assign), sidebar FOLDERS (FolderTree row → New subfolder/Rename/Delete reusing its handlers; All items → New folder), inspector TAG chips (Remove from item via tags.remove). Renderer-only; no new IPC/deps. Scope: multi-item batch + items:delete deferred to 07-05; tags menu = remove-from-item only (no tag rename/delete IPC). | Phase 7 (07-04) | Menu infra + per-surface pattern that 07-05 extends with batch actions (incl. Delete).
+- 2026-06-24: Rubber-band marquee (07-03) — Grid owns ALL background pointer interaction: a left-button mousedown on empty space (guarded by `closest('[data-item-id]')` so cells never start a marquee) attaches document-level mousemove/mouseup; a 4px threshold splits a click (→ onBackgroundClick → clear) from a drag (→ token `.marquee` overlay + live client-rect hit-test of mounted `[data-item-id]` cells → onMarqueeSelect). useSelection.applyMarquee unions (Shift/Ctrl/Cmd) or replaces. The 07-01 empty-click clear was REMOVED from LibraryGate's wrapper onClick and absorbed here to kill the click/drag race. Renderer-only; no IPC/main/SQL. Scope limit: only on-screen (mounted) cells hit-test, no auto-scroll during drag (deferred). | Phase 7 (07-03) | Completes the selection surface (click+keyboard+marquee); reusable threshold-gated drag-gesture pattern for 07-04 context menus / future drag-to-move.
 - 2026-06-24: Content-area view bar (06-01) — `useGridView` hook holds persisted {thumbSize, sortField, sortDir, viewMode} (localStorage); sort is renderer-side via one `compareItems` over the already-loaded scope list (covers all-items/folder/search, NO IPC/SQL change); thumbnail size drives VirtuosoGrid columns via a `--imgman-thumb` custom property (no scroller remount). View controls live in a NEW content-area sub-toolbar (ContentToolbar), not the 05-03 shell toolbar. | Phase 6 (06-01) | 06-02/03/04 extend useGridView + ContentToolbar.
 - 2026-06-24: List view (06-03) = react-virtuoso `Virtuoso` (already a dep, no new package); details row = thumb + name + type·ext + W×H + formatBytes(size) + ★rating; row styles in Grid.css (hover/selected/ellipsis). Hover preview (06-04) lives in the shared grid/masonry Cell: hover-intent ~180ms timer → GIF animates (imgman://original <img>) / video plays (`<video muted loop autoPlay playsInline>`); timer cleared on leave/unmount (scroll/sweep-safe); reuses existing CSP (img-src + media-src imgman:). List rows + a disable-toggle deferred. | Phase 6 (06-03/04) | Phase 7 selection/context-menus build on these view modes.
 - 2026-06-24: Masonry engine (06-02) = `@virtuoso.dev/masonry` (VirtuosoMasonry), one new runtime dep. Chosen over custom windowed masonry (more code/risk) and CSS-columns (not virtualized → fails 60fps@50k). Pure JS (no native rebuild), bundled by Vite (no CSP change). Masonry tile aspect ratio from Item.width/height (square fallback when null, i.e. non-images); columnCount = floor((containerW+gap)/(thumbSize+gap)) via a ResizeObserver hook. viewMode added to useGridView; Grid/Masonry segmented control fills ContentToolbar's reserved right slot. | Phase 6 (06-02) | Grid-mode VirtuosoGrid + --imgman-thumb (06-01) untouched; 06-03 list view is a 3rd mode on the same switch.
@@ -63,13 +74,13 @@ None logged.
 - No real thumbnails for video/audio/pdf/font — grid uses type-based placeholder icons until V1 media thumbnails.
 - Import runs sequentially on the main process; revisit the deferred worker pool if 10k+ imports stutter.
 - Renderer bundle ~752 kB (react + react-virtuoso + @virtuoso.dev/masonry + shell/theming) — fine for desktop; revisit if cold start regresses.
-- No arrow-key navigation in grid/quick-preview yet — likely expected UX; consider in a V1 polish pass.
 - items_fts (FTS5) declared in schema but UNWIRED — search is LIKE-based; wire triggers+backfill in a V1 perf pass if LIKE misses <0.5s @ 50k.
 - Performance targets (<0.5s search @ 50k, 60fps scroll) not yet measured against a real 50k-item library.
 
 ### Git State
 - Repository initialized 2026-06-23 (branch: main).
-- Last commit: 2190713 — feat(05-design-system-shell): theming, chrome-less shell, and settings (Phase 5 — v1.0 Eagle Parity 1/5).
+- Last commit: 8f39198 — feat(06-grid-content-area): view toolbar, view modes, and hover preview (Phase 6 — v1.0 Eagle Parity 2/5).
+- Prior: 2190713 — feat(05-design-system-shell): theming, chrome-less shell, and settings (Phase 5).
 - Prior: 40770ca — feat(04-organize-search): ratings, tags, folders, and keyword search (Phase 4 — v0.1 MVP complete).
 - Prior: 6dd5bf1 — feat(03-browse): virtualized grid, inspector, and spacebar quick preview (Phase 3).
 - Prior: e1fa1b7 — feat(02-library-import): portable library + import pipeline (Phase 1 + Phase 2).
@@ -88,16 +99,19 @@ None logged.
 ## Session Continuity
 
 Last session: 2026-06-24
-Stopped at: Phase 6 complete (all 4 plans unified) + committed; transition done
-Next action: /paul:plan for Phase 7 (Selection & interaction)
+Stopped at: Phase 7 (Selection & interaction) COMPLETE — loop closed, transitioned to Phase 8
+Next action: /paul:plan for Phase 8 (Organize power features)
 Resume file: .paul/ROADMAP.md
 
-Phase 7 status: Not started. Goal — multi-select (shift-range/ctrl-toggle/rubber-band),
-right-click context menus (items/folders/tags), keyboard navigation, batch ops
-(rename/tag/move/delete), and a polished editable collapsible inspector. Builds on the
-Phase 6 grid/masonry/list surface. The 05-04 modal keyboard-ownership pattern applies to
-context menus / batch dialogs.
-60fps @ 50k still unmeasured — consider a perf pass before milestone close.
+Phase 7 COMPLETE (7/7): 07-01 multi-select ✓ → 07-02 keyboard nav ✓ → 07-03 marquee ✓ → 07-04
+context menus ✓ → 07-05 batch delete/add-tag/add-to-folder ✓ → 07-06 batch rename ✓ → 07-07 editable
+multi-item inspector ✓. Bundled into one `feat(07-selection-interaction)` commit.
+
+Phase 8 (Organize power features) — provisional scope from ROADMAP: smart folders / saved searches
+(persisted, re-runnable SearchCriteria — reuses Phase-4 search), color extraction (worker) + color
+search, find duplicates (content hashing). Scans run in workers, non-blocking. Research likely
+(color quantization/search, perceptual vs exact hashing). 60fps @ 50k still unmeasured — consider a
+perf pass before milestone close.
 
 ---
 *STATE.md — Updated after every significant action*

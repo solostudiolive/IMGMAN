@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import type { Tag } from '../../preload/types'
+import ContextMenu, { type MenuNode } from './components/ContextMenu'
 
 // A unique datalist id is fine as a constant — only one TagEditor renders at a time
 // (it lives in the single inspector). Suggestions are scoped by the input's `list`.
@@ -12,6 +13,8 @@ export default function TagEditor({ itemId }: { itemId: string }): React.JSX.Ele
   const [tags, setTags] = useState<Tag[]>([])
   const [allTags, setAllTags] = useState<Tag[]>([])
   const [draft, setDraft] = useState('')
+  // Open right-click tag-chip context menu (null = closed).
+  const [menu, setMenu] = useState<{ x: number; y: number; items: MenuNode[] } | null>(null)
 
   // (Re)load this item's tags and the suggestion pool when the selection changes.
   useEffect(() => {
@@ -61,7 +64,26 @@ export default function TagEditor({ itemId }: { itemId: string }): React.JSX.Ele
       {tags.length > 0 && (
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 8 }}>
           {tags.map((tag) => (
-            <span key={tag.id} style={CHIP_STYLE}>
+            <span
+              key={tag.id}
+              style={CHIP_STYLE}
+              onContextMenu={(e) => {
+                e.preventDefault()
+                setMenu({
+                  x: e.clientX,
+                  y: e.clientY,
+                  items: [
+                    {
+                      kind: 'action',
+                      label: 'Remove from item',
+                      icon: '×',
+                      danger: true,
+                      onSelect: () => void remove(tag.id)
+                    }
+                  ]
+                })
+              }}
+            >
               {tag.name}
               <button
                 type="button"
@@ -95,6 +117,9 @@ export default function TagEditor({ itemId }: { itemId: string }): React.JSX.Ele
           <option key={tag.id} value={tag.name} />
         ))}
       </datalist>
+      {menu && (
+        <ContextMenu x={menu.x} y={menu.y} items={menu.items} onClose={() => setMenu(null)} />
+      )}
     </div>
   )
 }

@@ -1,4 +1,17 @@
 /*
+ * Rubber-band marquee overlay (Phase 7, Plan 07-03). Positioned relative to the grid wrapper;
+ * never intercepts pointer events so the drag keeps hitting the cells underneath.
+ */
+.marquee {
+  position: absolute;
+  z-index: 5;
+  pointer-events: none;
+  border: 1px solid var(--color-accent);
+  background: color-mix(in srgb, var(--color-accent) 18%, transparent);
+  border-radius: 2px;
+}
+
+/*
  * List view rows (Phase 6, Plan 06-03). Grid + Masonry cells use inline styles; list rows live
  * here because they need hover/selected pseudo-classes and ellipsis truncation.
  */

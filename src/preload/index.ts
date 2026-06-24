@@ -43,6 +43,10 @@ const api: IpcApi = {
     list: () => ipcRenderer.invoke('items:list'),
     get: (id: string) => ipcRenderer.invoke('items:get', id),
     update: (id: string, patch: ItemPatch) => ipcRenderer.invoke('items:update', id, patch),
+    delete: (ids: string[]) => ipcRenderer.invoke('items:delete', ids),
+    renameMany: (renames: { id: string; name: string }[]) =>
+      ipcRenderer.invoke('items:renameMany', renames),
+    rateMany: (ids: string[], rating: number) => ipcRenderer.invoke('items:rateMany', ids, rating),
     count: () => ipcRenderer.invoke('items:count'),
     search: (criteria: SearchCriteria) => ipcRenderer.invoke('items:search', criteria)
   },
@@ -50,7 +54,12 @@ const api: IpcApi = {
     listAll: () => ipcRenderer.invoke('tags:listAll'),
     listForItem: (itemId: string) => ipcRenderer.invoke('tags:listForItem', itemId),
     add: (itemId: string, name: string) => ipcRenderer.invoke('tags:add', itemId, name),
-    remove: (itemId: string, tagId: string) => ipcRenderer.invoke('tags:remove', itemId, tagId)
+    addToMany: (itemIds: string[], name: string) =>
+      ipcRenderer.invoke('tags:addToMany', itemIds, name),
+    remove: (itemId: string, tagId: string) => ipcRenderer.invoke('tags:remove', itemId, tagId),
+    commonForItems: (ids: string[]) => ipcRenderer.invoke('tags:commonForItems', ids),
+    removeFromMany: (ids: string[], tagId: string) =>
+      ipcRenderer.invoke('tags:removeFromMany', ids, tagId)
   },
   folders: {
     list: () => ipcRenderer.invoke('folders:list'),
@@ -62,8 +71,13 @@ const api: IpcApi = {
     forItem: (itemId: string) => ipcRenderer.invoke('folders:forItem', itemId),
     assign: (itemId: string, folderId: string) =>
       ipcRenderer.invoke('folders:assign', itemId, folderId),
+    assignMany: (itemIds: string[], folderId: string) =>
+      ipcRenderer.invoke('folders:assignMany', itemIds, folderId),
     unassign: (itemId: string, folderId: string) =>
-      ipcRenderer.invoke('folders:unassign', itemId, folderId)
+      ipcRenderer.invoke('folders:unassign', itemId, folderId),
+    commonForItems: (ids: string[]) => ipcRenderer.invoke('folders:commonForItems', ids),
+    unassignMany: (ids: string[], folderId: string) =>
+      ipcRenderer.invoke('folders:unassignMany', ids, folderId)
   }
 }
 

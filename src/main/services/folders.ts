@@ -121,6 +121,55 @@ export function assignItemToFolder(itemId: string, folderId: string): Folder[] {
   return listFoldersForItem(itemId)
 }
 
+/**
+ * Assign MANY items to a folder in one transaction (each INSERT OR IGNORE, so re-assigning is a
+ * no-op). Empty ids → no-op. Returns the number of NEW links created.
+ */
+export function assignManyToFolder(itemIds: string[], folderId: string): number {
+  if (!isDatabaseOpen() || itemIds.length === 0) return 0
+  const db = getDb()
+  const run = db.transaction((itemIds: string[], folderId: string): number => {
+    const link = db.prepare('INSERT OR IGNORE INTO item_folders (item_id, folder_id) VALUES (?, ?)')
+    let n = 0
+    for (const itemId of itemIds) n += link.run(itemId, folderId).changes
+    return n
+  })
+  return run(itemIds, folderId)
+}
+
+/**
+ * Folders that contain EVERY one of the given items (the intersection) — for the multi-item
+ * inspector. Empty ids → []. Ordered by name.
+ */
+export function commonFoldersForItems(ids: string[]): Folder[] {
+  if (!isDatabaseOpen() || ids.length === 0) return []
+  const ph = ids.map(() => '?').join(',')
+  return getDb()
+    .prepare(
+      `SELECT fo.id, fo.name, fo.parent_id, fo.sort_order
+       FROM folders fo
+       JOIN item_folders f ON f.folder_id = fo.id
+       WHERE f.item_id IN (${ph})
+       GROUP BY fo.id
+       HAVING COUNT(DISTINCT f.item_id) = ?
+       ORDER BY fo.name COLLATE NOCASE`
+    )
+    .all(...ids, ids.length) as Folder[]
+}
+
+/** Remove MANY items from a folder in one transaction (folder + items kept). Returns links removed. */
+export function unassignManyFromFolder(ids: string[], folderId: string): number {
+  if (!isDatabaseOpen() || ids.length === 0) return 0
+  const db = getDb()
+  const run = db.transaction((ids: string[], folderId: string): number => {
+    const stmt = db.prepare('DELETE FROM item_folders WHERE item_id = ? AND folder_id = ?')
+    let n = 0
+    for (const id of ids) n += stmt.run(id, folderId).changes
+    return n
+  })
+  return run(ids, folderId)
+}
+
 /** Unassign an item from a folder (folder + item both kept). Returns the item's folders. */
 export function removeItemFromFolder(itemId: string, folderId: string): Folder[] {
   if (!isDatabaseOpen()) return []
