@@ -48,8 +48,14 @@
 
 .context-menu__icon {
   flex: 0 0 auto;
+  display: grid;
+  place-items: center;
   width: 16px;
-  text-align: center;
+  color: var(--color-text-muted);
+}
+
+.context-menu__item--danger .context-menu__icon {
+  color: var(--color-danger);
 }
 
 .context-menu__label {

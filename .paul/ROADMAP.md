@@ -31,7 +31,8 @@ manager — look, feel, and feature parity — reusing the proven SQLite/IPC bac
 | 5 | Design system & shell | 4 | ✅ Complete | 2026-06-24 |
 | 6 | Eagle grid & content area | 4 | ✅ Complete | 2026-06-24 |
 | 7 | Selection & interaction | 7 | ✅ Complete | 2026-06-24 |
-| 8 | Organize power features | TBD | Not started | - |
+| 8 | Organize power features | 4 | In Progress | - |
+| 8.1 | UI polish & Inter [INSERTED] | 2 | ✅ Complete | 2026-06-26 |
 | 9 | Browser-extension collecting | TBD | Not started | - |
 
 ## Phase Details
@@ -137,8 +138,35 @@ re-runnable `SearchCriteria`), color extraction (worker) + color search, and fin
 duplicates (content hashing). Scans run in workers, non-blocking.
 **Depends on:** Phase 4 search/data layer; Phase 7 (UI surfaces to invoke from)
 **Research:** Likely (color quantization/search, perceptual vs exact hashing)
-**Status:** Not started
-**Plans:** TBD (defined during `/paul:plan`)
+**Status:** In Progress (08-01 complete; 08-02 in planning, 2026-06-24)
+**Decisions:** smart folders reuse the existing smart_folders table (no schema change, no deps);
+color extraction uses a NO-dep custom quantizer over sharp pixels with NO worker (sharp decode is
+off-thread), reusing the pre-existing items.palette column; color extraction and color SEARCH split
+into separate slices.
+**Plans:** (independent vertical slices)
+- [x] 08-01: Saved searches / smart folders (persist SearchCriteria in the existing smart_folders table; sidebar section + click-to-apply + rename/delete; reuses items:search, no schema change, no deps) — see `phases/08-organize-power/08-01-SUMMARY.md`
+- [x] 08-02: Color extraction + backfill + inspector swatches (no-dep quantizer on sharp pixels; stores #rrggbb JSON in items.palette; no worker, no schema change) — see `phases/08-organize-power/08-02-SUMMARY.md`
+- [ ] 08-03: Color SEARCH (nearest-color filter over stored palettes + SearchCriteria + color picker) — TBD
+- [ ] 08-04: Find duplicates (content hashing) — TBD
+
+### Phase 8.1: UI polish & Inter [INSERTED 2026-06-24]
+**Goal:** A design-system refresh — bundle the **Inter** typeface and refine the look across the app:
+typography & spacing scale, dark/light color & contrast tokens, and component density/layout (sidebar,
+toolbar, grid cards, inspector). Pure front-end polish; no backend/IPC/schema change.
+**Why inserted:** User-requested mid-Phase-8 (font swap + UI polish). It's design-system work (Phase-5
+lineage), not "organize power features", so it's a decimal insertion with its own commit
+(`feat(8.1-ui-polish): …`) rather than folded into the Phase-8 bundle.
+**Depends on:** Phase 5 design tokens (extends `--font-*` / `--color-*` / `--space-*`); touches all UI.
+**Research:** Unlikely (centralized tokens; @fontsource/inter is well-known).
+**Decisions:** bundle Inter via the `@fontsource/inter` npm package (self-hosted woff2, CSP/offline-safe
+— no CDN; `default-src 'self'` covers fonts); `--font-sans = 'Inter', system-ui, sans-serif`. Typography
+is centralized (one `--font-sans` token in styles/tokens.css applied in styles/base.css), so the swap is
+one token + the @fontsource import in the renderer entry; the rest is token/component refinement.
+**Status:** ✅ Complete (2026-06-26) — see `phases/08.1-ui-polish/08.1-01-SUMMARY.md`, `08.1-02-SUMMARY.md`; committed `feat(8.1-ui-polish)`
+**Outcome note:** 8.1-02 landed an Eagle "flat near-black" dark palette (near-uniform panes, neutral-grey selection with blue accent reserved for grid tiles, restrained radii md=6/lg=10) — a human-verify reinterpretation of the plan's suggested layered-grey/8–12px values. Added `--shadow-3` + `--ring` + accent `:focus-visible` ring.
+**Plans:** (each ended at a visual human-verify checkpoint)
+- [x] 8.1-01: Inter bundling (@fontsource/inter) + typography & spacing scale (token + entry only) — see `phases/08.1-ui-polish/08.1-01-SUMMARY.md`
+- [x] 8.1-02: "Refined dark, Eagle-like" restyle — color/contrast token refresh + component density/layout polish (cards/sidebar/toolbar/menus/modal) + focus ring — see `phases/08.1-ui-polish/08.1-02-SUMMARY.md`
 
 ### Phase 9: Browser-extension collecting
 **Goal:** External capture surface — a companion browser extension plus a local receiver
@@ -153,4 +181,4 @@ endpoint that sends images/URLs into the active library.
 
 ---
 *Roadmap created: 2026-06-23*
-*Last updated: 2026-06-24 — Phase 7 (Selection & interaction) complete; next: Phase 8*
+*Last updated: 2026-06-26 — Inserted Phase 8.1 (UI polish & Inter) ✅ complete + committed (feat(8.1-ui-polish)); resume Phase 8 at 08-03 (color search)*

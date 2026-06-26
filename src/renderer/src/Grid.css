@@ -12,6 +12,28 @@
 }
 
 /*
+ * Grid/Masonry cell hover-lift (cells are inline-styled in Grid.tsx; hover needs a pseudo-class).
+ * Cheap GPU-friendly properties only (transform/box-shadow) so 50k-item scroll stays smooth.
+ * Scoped to grid cells — list rows are also [data-item-id] but carry .list-row.
+ */
+.grid-cell {
+  /* Constant 2px border (transparent) reserves space so selection never shifts layout. */
+  border: 2px solid transparent;
+  border-radius: var(--radius-md);
+  transition: border-color var(--dur-fast) var(--ease-out);
+}
+
+/* Eagle keeps tiles flat — a faint border tint on hover is the only affordance for unselected. */
+.grid-cell:hover {
+  border-color: var(--color-border-strong);
+}
+
+.grid-cell--selected,
+.grid-cell--selected:hover {
+  border-color: var(--color-accent);
+}
+
+/*
  * List view rows (Phase 6, Plan 06-03). Grid + Masonry cells use inline styles; list rows live
  * here because they need hover/selected pseudo-classes and ellipsis truncation.
  */
@@ -24,11 +46,14 @@
   padding: var(--space-1) var(--space-3);
   border: 0;
   border-bottom: 1px solid var(--color-border);
+  /* Accent marker reserved on the left; transparent until selected. */
+  border-left: 2px solid transparent;
   background: none;
   color: var(--color-text);
   font-family: inherit;
   text-align: left;
   cursor: pointer;
+  transition: background var(--dur-fast) var(--ease-out);
 }
 
 .list-row:hover {
@@ -38,6 +63,7 @@
 .list-row--selected,
 .list-row--selected:hover {
   background: var(--color-surface-selected);
+  border-left-color: var(--color-accent);
 }
 
 .list-row__thumb {

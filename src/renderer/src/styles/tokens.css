@@ -9,31 +9,38 @@
 
 :root {
   /* ---- Color (light theme defaults) ---- */
-  --color-bg-app: #ffffff;
-  --color-bg-panel: #f4f4f5;
-  --color-bg-content: #fafafa;
+  --color-bg-app: #f6f6f7;
+  --color-bg-panel: #eeeef0;
+  --color-bg-content: #fbfbfc;
   --color-bg-elevated: #ffffff;
 
-  --color-surface-hover: rgba(0, 0, 0, 0.05);
-  --color-surface-selected: rgba(74, 158, 255, 0.18);
+  --color-surface-hover: rgba(15, 23, 42, 0.06);
+  --color-surface-selected: rgba(15, 23, 42, 0.08);
 
-  --color-border: rgba(0, 0, 0, 0.1);
-  --color-border-strong: rgba(0, 0, 0, 0.18);
+  --color-border: rgba(15, 23, 42, 0.09);
+  --color-border-strong: rgba(15, 23, 42, 0.18);
 
-  --color-text: #1a1a1c;
-  --color-text-muted: #5f6368;
-  --color-text-faint: #9aa0a6;
+  --color-text: #18181b;
+  --color-text-muted: #565b62;
+  --color-text-faint: #8a9099;
 
-  --color-accent: #1473e6;
-  --color-accent-hover: #2f86f0;
+  /* Eagle blue accent. */
+  --color-accent: #2563eb;
+  --color-accent-hover: #3b82f6;
   --color-accent-contrast: #ffffff;
 
-  --color-danger: #d93838;
+  --color-danger: #dc2626;
 
-  --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.1);
-  --shadow-2: 0 6px 24px rgba(0, 0, 0, 0.16);
+  /* Soft, layered elevation. shadow-3 for the modal / large popovers. */
+  --shadow-1: 0 1px 2px rgba(15, 23, 42, 0.08), 0 1px 1px rgba(15, 23, 42, 0.04);
+  --shadow-2: 0 4px 16px rgba(15, 23, 42, 0.12), 0 1px 3px rgba(15, 23, 42, 0.08);
+  --shadow-3: 0 16px 48px rgba(15, 23, 42, 0.18), 0 4px 12px rgba(15, 23, 42, 0.1);
+
+  /* Accent focus ring (keyboard :focus-visible). */
+  --ring: 0 0 0 2px color-mix(in srgb, var(--color-accent) 55%, transparent);
 
   /* ---- Spacing scale ---- */
+  --space-0: 2px;
   --space-1: 4px;
   --space-2: 8px;
   --space-3: 12px;
@@ -41,23 +48,30 @@
   --space-5: 24px;
   --space-6: 32px;
 
-  /* ---- Radius ---- */
-  --radius-sm: 4px;
+  /* ---- Radius (Eagle-style restrained corners) ---- */
+  --radius-sm: 3px;
   --radius-md: 6px;
   --radius-lg: 10px;
   --radius-pill: 999px;
 
   /* ---- Typography ---- */
-  --font-sans: system-ui, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-sans: 'Inter', system-ui, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   --font-mono: ui-monospace, "Cascadia Code", "Consolas", "Courier New", monospace;
   --fs-xs: 11px;
   --fs-sm: 12px;
   --fs-md: 13px;
   --fs-lg: 15px;
   --fs-xl: 20px;
+  --fs-2xl: 26px;
   --lh: 1.45;
+  --lh-tight: 1.25;
+  --fw-regular: 400;
   --fw-medium: 500;
   --fw-semibold: 600;
+  --fw-bold: 700;
+  /* Inter reads better with slight negative tracking at UI/heading sizes. */
+  --ls-tight: -0.011em;
+  --ls-normal: 0;
 
   /* ---- Layout (reserved for later Phase 5 plans: title bar, shell) ---- */
   --titlebar-h: 36px;
@@ -72,27 +86,33 @@
 
 /* ---- Dark theme (the Eagle-matched default visual target) ---- */
 :root[data-theme="dark"] {
-  --color-bg-app: #1b1b1d;
-  --color-bg-panel: #232325;
-  --color-bg-content: #1e1e20;
-  --color-bg-elevated: #2a2a2d;
+  /* Neutral layered-grey ramp with clearer step separation: app darkest → elevated lightest. */
+  /* Eagle-style flat near-black: panes nearly uniform; elevated only for inputs/fields. */
+  --color-bg-app: #1a1a1a;
+  --color-bg-panel: #1a1a1a;
+  --color-bg-content: #1d1d1d;
+  --color-bg-elevated: #2a2a2a;
 
   --color-surface-hover: rgba(255, 255, 255, 0.06);
-  --color-surface-selected: rgba(74, 158, 255, 0.22);
+  /* Sidebar/list selected = subtle neutral grey (NOT accent-tinted) — Eagle reserves blue for the grid. */
+  --color-surface-selected: rgba(255, 255, 255, 0.09);
 
-  --color-border: rgba(255, 255, 255, 0.09);
-  --color-border-strong: rgba(255, 255, 255, 0.16);
+  --color-border: rgba(255, 255, 255, 0.07);
+  --color-border-strong: rgba(255, 255, 255, 0.13);
 
-  --color-text: #e6e6e8;
-  --color-text-muted: #9aa0a6;
-  --color-text-faint: #6b7075;
+  --color-text: #e4e4e6;
+  --color-text-muted: #9a9a9e;
+  --color-text-faint: #6a6a6e;
 
-  --color-accent: #4a9eff;
-  --color-accent-hover: #62acff;
+  /* Eagle blue accent, used sparingly (grid selection, focus). */
+  --color-accent: #3b82f6;
+  --color-accent-hover: #5a9bff;
   --color-accent-contrast: #ffffff;
 
-  --color-danger: #f06a6a;
+  --color-danger: #f0686a;
 
+  /* Flat aesthetic — shadows only for floating surfaces (menus/modal), kept restrained. */
   --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.4);
-  --shadow-2: 0 6px 24px rgba(0, 0, 0, 0.45);
+  --shadow-2: 0 8px 24px rgba(0, 0, 0, 0.5);
+  --shadow-3: 0 16px 40px rgba(0, 0, 0, 0.6);
 }

@@ -17,6 +17,7 @@ import type { Item } from '../../preload/types'
 import type { ViewMode } from './hooks/useGridView'
 import type { SelectMods } from './hooks/useSelection'
 import { useElementWidth } from './hooks/useElementWidth'
+import { TypeIcon } from './components/icons'
 import './Grid.css'
 
 // Imperative handle the container (LibraryGate) uses to scroll the keyboard-active item
@@ -441,15 +442,14 @@ function Cell({
       onMouseEnter={onEnter}
       onMouseLeave={onLeave}
       title={item.name}
+      className={`grid-cell${selected ? ' grid-cell--selected' : ''}`}
       style={{
         display: 'flex',
         flexDirection: 'column',
-        gap: 4,
+        gap: 5,
         padding: 4,
         width: '100%',
         background: 'none',
-        border: `2px solid ${selected ? 'var(--color-accent)' : 'transparent'}`,
-        borderRadius: 8,
         cursor: 'pointer',
         textAlign: 'center'
       }}
@@ -458,9 +458,9 @@ function Cell({
         style={{
           width: '100%',
           aspectRatio,
-          borderRadius: 6,
+          borderRadius: 'var(--radius-sm)',
           overflow: 'hidden',
-          background: selected ? 'var(--color-surface-selected)' : 'var(--color-bg-elevated)',
+          background: 'var(--color-bg-elevated)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center'
@@ -484,7 +484,11 @@ function Cell({
       <span
         style={{
           fontSize: 11,
-          color: 'var(--color-text-muted)',
+          // Eagle highlights the selected filename with a blue pill; others are muted.
+          color: selected ? 'var(--color-accent-contrast)' : 'var(--color-text-muted)',
+          background: selected ? 'var(--color-accent)' : 'transparent',
+          borderRadius: 'var(--radius-sm)',
+          padding: '1px 6px',
           whiteSpace: 'nowrap',
           overflow: 'hidden',
           textOverflow: 'ellipsis',
@@ -500,18 +504,9 @@ function Cell({
 function Placeholder({ item }: { item: Item }) {
   const label = (item.ext || item.type).toUpperCase()
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, color: 'var(--color-text-faint)' }}>
-      <span style={{ fontSize: 22 }}>{TYPE_GLYPH[item.type]}</span>
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, color: 'var(--color-text-faint)' }}>
+      <TypeIcon type={item.type} size={28} />
       <span style={{ fontSize: 11, fontWeight: 600, letterSpacing: 0.5 }}>{label}</span>
     </div>
   )
-}
-
-const TYPE_GLYPH: Record<Item['type'], string> = {
-  image: '🖼️',
-  video: '🎬',
-  audio: '🎵',
-  font: '🔤',
-  doc: '📄',
-  other: '📦'
 }

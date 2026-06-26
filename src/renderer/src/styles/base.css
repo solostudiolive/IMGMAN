@@ -22,6 +22,9 @@ body {
   font-family: var(--font-sans);
   font-size: var(--fs-md);
   line-height: var(--lh);
+  letter-spacing: var(--ls-normal);
+  /* Inter: enable standard ligatures + contextual alternates. */
+  font-feature-settings: 'liga' 1, 'calt' 1;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
 }
@@ -33,6 +36,29 @@ body {
 ::selection {
   background: var(--color-accent);
   color: var(--color-accent-contrast);
+}
+
+/* Sidebar nav rows (FolderTree / SmartFolders) are inline-styled; hover needs a pseudo-class.
+   Selected rows set their background inline, which correctly overrides this hover. */
+.nav-row {
+  transition: background var(--dur-fast) var(--ease-out);
+}
+
+.nav-row:hover {
+  background: var(--color-surface-hover);
+}
+
+/* Modern keyboard focus affordance: an accent ring on interactive elements only when focus is
+   keyboard-driven (mouse clicks don't show it). Components can override per-shape as needed. */
+button:focus-visible,
+[role='button']:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: none;
+  box-shadow: var(--ring);
+  border-radius: var(--radius-sm);
 }
 
 /* Themed scrollbars so dark mode doesn't get bright native bars (WebKit/Chromium). */

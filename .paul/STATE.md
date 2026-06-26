@@ -10,32 +10,40 @@ See: .paul/PROJECT.md (updated 2026-06-23)
 ## Current Position
 
 Milestone: v1.0 — Eagle Parity 🚧 In Progress (3 of 5 phases complete)
-Phase: 8 of 9 (Organize power features) — Not started (ready to plan)
-Plan: Not started
-Status: Ready to plan Phase 8
-Last activity: 2026-06-24 — Phase 7 (Selection & interaction) COMPLETE + transitioned to Phase 8. Closed Plan 07-07 (editable multi-item inspector — FINAL): MultiInspector (selection > 1) with renderer-side aggregate header + Mixed-aware batch rating + common-tags/folders (INTERSECTION) chips; five new batch/aggregate IPC channels wired end-to-end. PROJECT.md + ROADMAP evolved; single feat(07-selection-interaction) commit created bundling 07-01…07-07.
+Phase: 8.1 (UI polish & Inter) [INSERTED] — ✅ COMPLETE (2 of 2 plans); parent Phase 8 paused at 2/~4 (resume at 08-03)
+Plan: 8.1-02 UNIFIED — Phase 8.1 loop closed. Both deferred SUMMARYs (08.1-01, 08.1-02) written.
+Status: Phase 8.1 complete + committed (feat(8.1-ui-polish)); ready to resume Phase 8 → PLAN 08-03 (color SEARCH)
+Last activity: 2026-06-26 — Closed Phase 8.1. Verified both slices applied (typecheck + build clean; Inter woff2 bundled): 8.1-01 (Inter + type/spacing tokens) and 8.1-02 ("Refined dark, Eagle-like" restyle). NOTE: 8.1-02 landed an EAGLE "FLAT NEAR-BLACK" dark palette (near-uniform #1a1a1a panes, #1d1d1d content, #2a2a2a elevated for inputs only), NEUTRAL-grey selection in sidebar/list with blue accent RESERVED for grid tiles, and restrained radii (md=6/lg=10, NOT the plan's 8/12) — a human-verify reinterpretation of the plan's suggested layered-grey/8–12 values. Added --shadow-3 + --ring; accent :focus-visible ring in base.css. AppShell.css listed in the plan but NOT edited (token propagation covered it). Wrote both SUMMARYs, updated ROADMAP, committed feat(8.1-ui-polish).
 
 Progress:
-- v1.0 Eagle Parity: [██████░░░░] 60% (3 of 5 phases complete; Phase 8 next)
-- Phase 7: [██████████] 100% (7 of 7 plans complete) ✅
+- v1.0 Eagle Parity: [██████░░░░] 60% (3 of 5 phases complete; Phase 8 in progress, inserted 8.1 complete)
+- Phase 8.1: [██████████] 100% (8.1-01 + 8.1-02 applied, unified, committed)
 
 ## Loop Position
 
 Current loop state:
 ```
+Phase 8.1 — both plans:
 PLAN ──▶ APPLY ──▶ UNIFY
-  ✓        ✓        ✓     [Phase 7 complete — loop closed; ready to PLAN Phase 8]
+  ✓        ✓        ✓     [8.1-01 + 8.1-02 — loop complete, Phase 8.1 closed + committed]
+
+Next loop: Phase 8 (organize power) resumes at PLAN 08-03 (color SEARCH).
 ```
 
-Note: Phase 7 COMPLETE (7/7): 07-01 multi-select ✓, 07-02 keyboard nav ✓, 07-03 marquee ✓, 07-04
-context menus ✓, 07-05 batch delete/tag/move ✓, 07-06 batch rename ✓, 07-07 multi-item inspector ✓.
-Single `feat(07-selection-interaction): …` commit bundled all seven plans (first Phase-7 commit).
-Next: /paul:plan for Phase 8 (Organize power features — smart folders / saved searches, color
-extraction + color search, find duplicates; scans run in workers).
+Note: Phase 7 COMPLETE (7/7), bundled into one `feat(07-selection-interaction)` commit (c8e1477).
+Phase 8 (Organize power features) breakdown (revised — color split into extract/search): 08-01 saved
+searches / smart folders [✓] → 08-02 color extraction + backfill + swatches [created] → 08-03 color
+SEARCH (nearest-color filter + SearchCriteria + picker) [TBD] → 08-04 find duplicates (content
+hashing) [TBD]. 08-02 chosen NO-dep / NO-worker (custom quantizer on sharp pixels). 08-04 (and any
+heavy scan) may still warrant a worker — revisit then. Phase-8 source is UNCOMMITTED until the phase
+completes (one feat(08-organize-power) commit).
 
 ## Accumulated Context
 
 ### Decisions
+- 2026-06-24: Inserted Phase 8.1 (UI polish & Inter) — user requested a UI polish pass + Inter font mid-Phase-8. Handled as a DECIMAL insertion ([INSERTED], dir `.paul/phases/08.1-ui-polish/`) between 08-02 and 08-03, NOT a Phase-8 plan, because it's design-system work (Phase-5 lineage) — gets its OWN `feat(8.1-ui-polish)` commit. Decisions: bundle Inter via `@fontsource/inter` (self-hosted woff2, CSP/offline-safe — `default-src 'self'` covers fonts, no CDN); `--font-sans='Inter', system-ui, sans-serif`. Scope = typography & spacing scale + dark/light color & contrast tokens + component density/layout. Typography centralized (one `--font-sans` in styles/tokens.css applied in styles/base.css) → font swap is one token + the @fontsource import in the renderer entry; rest is token/component refinement. Likely split into 8.1-01 (Inter + type/spacing foundation) and 8.1-02 (color/contrast + component density); each ends at a visual human-verify checkpoint. Milestone still framed as 5 phases (8.1 is an inserted sub-phase). | Phase 8 (inserted 8.1) | Resume Phase 8 at 08-03 (color search) after 8.1.
+- 2026-06-24: Color extraction (08-02) — a NO-dependency dominant-color quantizer in `services/palette.ts`: `extractPalette(input)` does `sharp(input).resize(64).raw()`, skips (near-)transparent pixels (alpha<128 when 4ch), buckets each pixel to 4-bits/channel (16 levels), averages the true colors within the top-`PALETTE_SIZE`(5) buckets by count → `#rrggbb` (lowercase), most-dominant first; never throws (→ []). `paletteToJson` → JSON string or null. Extraction PIGGYBACKS the existing import sharp decode: importFile + importImageBuffer compute palette inside the SAME try as the thumbnail (failure leaves palette null alongside width/height, never aborts import) and store it to BOTH the existing `items.palette` column (insertItem now binds `@palette`) and metadata.json. NO worker (sharp off-thread, per Phase-2 precedent). `items:backfillPalettes()` (async) fills `type='image' AND palette IS NULL` rows — reads `images/<id>/original.<ext>` (fallback thumbnail.webp), idempotent, returns count; triggered by a "Extract colors" button in SettingsModal (Library maintenance section, busy state + "Done — N updated"). Inspector renders a Colors swatch row from defensively-parsed `FullItem.palette` (already returned by items:get — no new channel); omitted when empty. NO schema change (items.palette pre-existed), no new dep. | Phase 8 (08-02) | Palette `#rrggbb` JSON (most-dominant first) is the contract 08-03 color SEARCH will query. Scope was extraction+backfill+swatches only; color search → 08-03, find-dupes → 08-04.
+- 2026-06-24: Saved searches / smart folders (08-01) — a saved search is a persisted `SearchCriteria` re-applied through the EXISTING Phase-4 search scope (NOT a new query path). Stored in the pre-existing, previously-unused `smart_folders(id,name,rules)` table — `rules` holds `JSON.stringify(criteria)`, read back via a defensive `JSON.parse` (bad row → `{}`) → NO schema change. New `smartFolders:*` IPC (list/create/rename/delete) mirrors `folders:*` (each mutation returns the canonical `SmartFolder[]`; ids via randomUUID; order by name COLLATE NOCASE; isDatabaseOpen guard). Renderer: a PRESENTATIONAL `SmartFolders.tsx` sidebar section (mirrors FolderTree — 🔍 rows, click → `onSelect(criteria)`, active highlight via best-effort `JSON.stringify` match, inline rename, ContextMenu Rename/Delete) rendered below FolderTree; a "Save search" control added to `SearchBar` (`onSave` prop, shown only when a search is active, inline name input). LibraryGate OWNS the `smartFolders` list (so the toolbar Save control + sidebar stay in sync): `reloadSmartFolders` on `active?.path` change, `saveCurrentSearch(name)` → create → setSmartFolders, selecting one routes through `applySearch` (already clears the folder scope → mutual exclusivity for free). No new deps, no worker. | Phase 8 (08-01) | First Phase-8 slice; persisted-criteria + sidebar-section + reuse-existing-scope shape. 08-02 color search + 08-03 find-duplicates are the heavier worker/schema slices next.
 - 2026-06-24: Multi-item inspector (07-07) — a NEW `components/MultiInspector` (shown when `sel.selected.size > 1`, gated in LibraryGate via a `selectedItems` memo) editing the WHOLE selection. Header aggregates (count · total size · per-type breakdown · common-rating) are computed RENDERER-side from the already-loaded `Item[]` (free); only the shared tag/folder lists are fetched. "Common" = the strict INTERSECTION via a dynamic `IN (?,?,…)` + `HAVING COUNT(DISTINCT item_id) = ids.length` (no tri-state/partial chips, no per-item drill-down). FIVE new channels (service→ipc→preload→IpcApi): `items:rateMany(ids,rating)` (clamp 0..5, one txn), `tags:commonForItems(ids)`/`tags:removeFromMany(ids,tagId)`, `folders:commonForItems(ids)`/`folders:unassignMany(ids,folderId)` — each batch mutation one `db.transaction` returning a count; the "add" side REUSES existing `tags:addToMany`/`folders:assignMany` (07-05). StarRating shows "Mixed" when ratings differ (commonRating null), sets all on click. After any edit: refetch the common lists + `onChanged()` (reload grid). Token-styled (no legacy hex). Single Inspector / TagEditor / FolderAssigner untouched; no schema change; no new deps. | Phase 7 (07-07) | FINAL Phase-7 plan — triggered the transition + the single `feat(07-selection-interaction)` commit. Intersection-read + atomic-batch-mutate pair reusable for Phase 8 selection-driven surfaces.
 - 2026-06-24: Batch rename (07-06) — new atomic IPC `items:renameMany({id,name}[])` (one `db.transaction` of `UPDATE items SET name`, trimmed/non-empty only, returns count) — a DEDICATED channel, NOT ItemPatch/items:update (which is rating-only). Rename is METADATA-ONLY: writes the `name` column; the on-disk `images/<id>/original.<ext>` file and `ext` are never touched (re-rename to revert; no undo). New names are computed RENDERER-side for an instant preview via a pure helper `components/renameItems.ts` (`computeName`/`computeRenames`/`specError`): Pattern mode replaces tokens `{name}`/`{ext}`/`{n}` (with a start number + zero-pad), Find&Replace mode does literal (split/join or escaped regex) or JS-`RegExp` replace with a case-sensitive toggle; invalid regex → `specError` message → dialog disables Apply (computeName falls back to the original). `BatchRenameDialog` (token modal mirroring BatchTagDialog, self-owns Escape) shows a live old→new preview (capped 50 rows) and applies only changed/non-blank names. "Rename…" added to the item menu (single + multi), mapping target ids → sorted Item rows so the sequence follows display order. No schema change; no new deps. | Phase 7 (07-06) | Completes the batch-action set (delete/tag/move/rename); pure-helper + token-modal + atomic-persist shape reusable for future bulk edits. 07-07 multi-item inspector is the FINAL plan.
 - 2026-06-24: Batch operations (07-05) — three ATOMIC main-side batch IPC channels, each one `db.transaction(...)` returning a count, mirroring the existing service→ipc→preload→IpcApi triad: `items:delete(ids)` (deleteItems: delete item_tags + item_folders links THEN items rows in the txn — FKs are NOT ON DELETE CASCADE — then best-effort `rmSync(images/<id>, {recursive,force})` AFTER commit; permanent, confirm-only, no trash/undo; items_fts left alone as it's unwired), `tags:addToMany(ids,name)` (lookup-or-insert tag once + INSERT OR IGNORE links), `folders:assignMany(ids,folderId)` (INSERT OR IGNORE). NO schema change (reuses tables). Renderer: the 07-04 item menu is now SELECTION-AWARE — right-click an item that's in a multi-selection acts on the WHOLE selection (labels show count), else it selects + acts on the single item; added Delete-key (with window.confirm) and a token-styled `BatchTagDialog` (mirrors SettingsModal, self-owns Escape). Folder batch op is ADD/assign-many (true move/unassign deferred — multi-folder membership). items.ts now imports services/library (imagesDir/getActiveLibrary) — no import cycle (library → ../db only). | Phase 7 (07-05) | Atomic batch-IPC pattern reused by 07-06 rename; full find/replace+pattern rename split into its OWN 07-06, multi-item inspector → 07-07.
@@ -79,7 +87,9 @@ None logged.
 
 ### Git State
 - Repository initialized 2026-06-23 (branch: main).
-- Last commit: 8f39198 — feat(06-grid-content-area): view toolbar, view modes, and hover preview (Phase 6 — v1.0 Eagle Parity 2/5).
+- Last commit: feat(8.1-ui-polish) — Inter typeface + "Refined dark, Eagle-like" restyle (inserted Phase 8.1; bundles 8.1-01 + 8.1-02). Committed 2026-06-26. NOTE: staged ONLY the 8.1 design files (tokens/base/main.tsx/Grid.tsx + the polished component CSS + package.json/-lock for Inter) + the 8.1 phase docs + STATE/ROADMAP — Phase 8 source (08-01, 08-02) remains intentionally UNCOMMITTED for the future feat(08-organize-power) bundle.
+- Prior: c8e1477 — feat(07-selection-interaction): multi-select, context menus, batch ops, and editable inspectors (Phase 7 — v1.0 Eagle Parity 3/5; bundles 07-01…07-07).
+- Prior: 8f39198 — feat(06-grid-content-area): view toolbar, view modes, and hover preview (Phase 6 — v1.0 Eagle Parity 2/5).
 - Prior: 2190713 — feat(05-design-system-shell): theming, chrome-less shell, and settings (Phase 5).
 - Prior: 40770ca — feat(04-organize-search): ratings, tags, folders, and keyword search (Phase 4 — v0.1 MVP complete).
 - Prior: 6dd5bf1 — feat(03-browse): virtualized grid, inspector, and spacebar quick preview (Phase 3).
@@ -98,20 +108,27 @@ None logged.
 
 ## Session Continuity
 
-Last session: 2026-06-24
-Stopped at: Phase 7 (Selection & interaction) COMPLETE — loop closed, transitioned to Phase 8
-Next action: /paul:plan for Phase 8 (Organize power features)
-Resume file: .paul/ROADMAP.md
+Last session: 2026-06-26
+Stopped at: Phase 8.1 UNIFIED + committed (feat(8.1-ui-polish)) — both SUMMARYs written, loop closed
+Next action: /paul:plan for Phase 8 plan 08-03 (color SEARCH — nearest-color filter over stored palettes + SearchCriteria + color picker)
+Resume file: .paul/phases/08.1-ui-polish/08.1-02-SUMMARY.md
+Done this session: verified both 8.1 slices applied (typecheck + build clean), wrote 08.1-01-SUMMARY.md + 08.1-02-SUMMARY.md, updated ROADMAP (8.1 → ✅), committed feat(8.1-ui-polish) with selective staging (8.1 files only; Phase 8 source left uncommitted).
 
-Phase 7 COMPLETE (7/7): 07-01 multi-select ✓ → 07-02 keyboard nav ✓ → 07-03 marquee ✓ → 07-04
-context menus ✓ → 07-05 batch delete/add-tag/add-to-folder ✓ → 07-06 batch rename ✓ → 07-07 editable
-multi-item inspector ✓. Bundled into one `feat(07-selection-interaction)` commit.
+Phase 8 breakdown: 08-01 saved searches [✓] → 08-02 color extraction + backfill + swatches [✓] →
+[INSERTED 8.1 — UI polish & Inter, next] → 08-03 color SEARCH [TBD] → 08-04 find duplicates [TBD].
+Phase-8 source UNCOMMITTED until the phase completes (one feat(08-organize-power) commit). NOTE: the
+inserted 8.1 design work should get its OWN commit (feat(8.1-ui-polish): …) since it's a distinct
+design-system concern, not part of the Phase-8 organize-power bundle. 60fps @ 50k still unmeasured.
 
-Phase 8 (Organize power features) — provisional scope from ROADMAP: smart folders / saved searches
-(persisted, re-runnable SearchCriteria — reuses Phase-4 search), color extraction (worker) + color
-search, find duplicates (content hashing). Scans run in workers, non-blocking. Research likely
-(color quantization/search, perceptual vs exact hashing). 60fps @ 50k still unmeasured — consider a
-perf pass before milestone close.
+NEW REQUEST (2026-06-24, post-08-02-approval): a UI polish pass + switch the app font to Inter. This
+is DESIGN-SYSTEM work (Phase-5 territory), to be handled as its own slice AFTER 08-02 closes — likely
+an INSERTED decimal phase (e.g. 8.1 — UI polish & Inter) rather than a Phase-8 "organize power" plan.
+User decisions: (1) bundle Inter via the @fontsource/inter npm package (self-hosted woff2, CSP/offline
+safe — NO CDN; default-src 'self' covers font-src); set --font-sans = 'Inter', system-ui, sans-serif.
+(2) Scope = ALL THREE: typography & spacing scale (tune for Inter), color & contrast token polish
+(dark+light), and component density/layout (sidebar/toolbar/grid cards/inspector). Typography is
+centralized: --font-sans token in styles/tokens.css applied in styles/base.css; components use the
+token or inherit — so the font swap is one token + the @fontsource import in the renderer entry.
 
 ---
 *STATE.md — Updated after every significant action*
