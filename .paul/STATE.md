@@ -94,7 +94,8 @@ None logged.
 
 ### Git State
 - Repository initialized 2026-06-23 (branch: main).
-- Last commit: 3cf919b — feat(08-organize-power): saved searches, color palette, sidebar tags + UI polish pass (2026-06-26). 47 files, +2700/-292. Committed at user request via /paul:progress → "commit this". DEVIATION from the prior plan: this folds the previously-held-back Phase-8 source (08-01 saved searches + 08-02 color palette) into the bundle EARLY (before 08-03/08-04 complete) AND includes the off-loop UI-polish session (Tags sidebar, library rename, lightbox, modern selects, ImportZone restyle, compact toolbar, theme dev-port fix, min window) + the app icons (build/icon.png, resources/icon.png|svg). NOT pushed. Phase 8 is therefore PARTIALLY shipped on main while 08-03 (color search) + 08-04 (dupes) are still pending — those will be follow-on commits, not a single phase bundle.
+- Last commit: 73f37a1 — feat(08-organize-power): color search + find duplicates (Phase 8 complete) (2026-06-26). 22 files, +1305/-48. Closes Phase 8: bundles 08-03 (color search) + 08-04 (find duplicates: content_hash via the project's FIRST schema migration, DuplicatesModal) + the folder-delete FK-order bugfix + theme default dark→light. NOT pushed. Phase 8 source is now fully committed across 3cf919b (08-01/08-02 + off-loop Tags/rename/UI) and this commit (08-03/08-04).
+- Prior: 3cf919b — feat(08-organize-power): saved searches, color palette, sidebar tags + UI polish pass (2026-06-26). 47 files, +2700/-292. Committed at user request via /paul:progress → "commit this". DEVIATION from the prior plan: this folds the previously-held-back Phase-8 source (08-01 saved searches + 08-02 color palette) into the bundle EARLY (before 08-03/08-04 complete) AND includes the off-loop UI-polish session (Tags sidebar, library rename, lightbox, modern selects, ImportZone restyle, compact toolbar, theme dev-port fix, min window) + the app icons (build/icon.png, resources/icon.png|svg). NOT pushed. Phase 8 is therefore PARTIALLY shipped on main while 08-03 (color search) + 08-04 (dupes) are still pending — those will be follow-on commits, not a single phase bundle.
 - Prior: 5fccb09 — feat(8.1-ui-polish): Inter typeface + "Refined dark, Eagle-like" restyle (inserted Phase 8.1; bundles 8.1-01 + 8.1-02). Committed 2026-06-26.
 - Prior: c8e1477 — feat(07-selection-interaction): multi-select, context menus, batch ops, and editable inspectors (Phase 7 — v1.0 Eagle Parity 3/5; bundles 07-01…07-07).
 - Prior: 8f39198 — feat(06-grid-content-area): view toolbar, view modes, and hover preview (Phase 6 — v1.0 Eagle Parity 2/5).
@@ -116,12 +117,12 @@ None logged.
 
 ## Session Continuity
 
-Last session: 2026-06-26 — applied + verified Plan 08-03 (color SEARCH); loop closed, SUMMARY written.
-Stopped at: 08-03 ✅ complete (human-verify approved). Working tree DIRTY: 08-03 source (search.ts, preload/types.ts, SearchBar.tsx/.css, LibraryGate.tsx) + STATE/ROADMAP + 08-03-SUMMARY.md uncommitted. Dev server running on 5273.
-Next action: /paul:plan 08-04 (find duplicates) — the FINAL Phase-8 slice. (Optionally commit 08-03 first: `feat(08-03-color-search)` or fold into the 08-04 close.)
-Resume file: .paul/phases/08-organize-power/08-03-SUMMARY.md
-After 08-04: phase transition (evolve PROJECT/ROADMAP, phase commit) then route to Phase 9 (browser-extension collecting), the last milestone phase.
-SearchCriteria extension point now carries: query/types/ext/rating/date/tagIds/color/colorTolerance — 08-04 dupes is a DIFFERENT surface (content hashing), not a SearchCriteria field.
+Last session: 2026-06-26 — applied + verified 08-03 (color search) AND 08-04 (find duplicates); Phase 8 closed + committed (73f37a1). Also fixed folder-delete FK bug + theme default→light.
+Stopped at: Phase 8 ✅ COMPLETE. Working tree clean except STATE.md (this reconciliation). Dev server running on 5273.
+Next action: Start Phase 9 (browser-extension collecting) — `/paul:discuss` to shape it (Research likely: extension ↔ desktop local-endpoint handshake + security), then `/paul:plan`.
+Resume file: .paul/phases/08-organize-power/08-04-SUMMARY.md
+Phase 9 is the LAST v1.0 milestone phase; after it, the milestone can ship (/paul:complete-milestone). Per ROADMAP, an optional descope could defer Phase 9 to v1.1 — confirm with user before starting.
+SearchCriteria extension point carries: query/types/ext/rating/date/tagIds/color/colorTolerance. NEW reusable infra from Phase 8: services/hash.ts (streamed SHA-256) + the first schema-migration pattern (schema.sql + table_info-guarded ALTER, user_version) in db/index.ts.
 
 Phase 8 breakdown: 08-01 saved searches [✓] → 08-02 color extraction + backfill + swatches [✓] →
 [INSERTED 8.1 — UI polish & Inter, next] → 08-03 color SEARCH [TBD] → 08-04 find duplicates [TBD].
