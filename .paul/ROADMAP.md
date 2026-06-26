@@ -8,7 +8,7 @@ A local-first desktop asset manager built in stages: stand up the Electron/React
 
 **v1.0 — Eagle Parity** (v1.0.0)
 Status: 🚧 In Progress (started 2026-06-24)
-Phases: 3 of 5 complete (Phases 5–9)
+Phases: 4 of 5 complete (Phases 5–9) — only Phase 9 (browser-extension collecting) remains
 Focus: Transform the functional v0.1 MVP into a polished, Eagle-class desktop asset
 manager — look, feel, and feature parity — reusing the proven SQLite/IPC backend.
 
@@ -31,7 +31,7 @@ manager — look, feel, and feature parity — reusing the proven SQLite/IPC bac
 | 5 | Design system & shell | 4 | ✅ Complete | 2026-06-24 |
 | 6 | Eagle grid & content area | 4 | ✅ Complete | 2026-06-24 |
 | 7 | Selection & interaction | 7 | ✅ Complete | 2026-06-24 |
-| 8 | Organize power features | 4 | In Progress | - |
+| 8 | Organize power features | 4 | ✅ Complete | 2026-06-26 |
 | 8.1 | UI polish & Inter [INSERTED] | 2 | ✅ Complete | 2026-06-26 |
 | 9 | Browser-extension collecting | TBD | Not started | - |
 
@@ -138,7 +138,7 @@ re-runnable `SearchCriteria`), color extraction (worker) + color search, and fin
 duplicates (content hashing). Scans run in workers, non-blocking.
 **Depends on:** Phase 4 search/data layer; Phase 7 (UI surfaces to invoke from)
 **Research:** Likely (color quantization/search, perceptual vs exact hashing)
-**Status:** In Progress (08-01 ✓, 08-02 ✓; 08-03 color search planned 2026-06-26; 08-04 TBD)
+**Status:** ✅ Complete (2026-06-26) — all 4 plans shipped (saved searches, color extraction, color search, find duplicates) + the off-loop sidebar Tags section. See the four `phases/08-organize-power/08-0N-SUMMARY.md`.
 **Decisions:** smart folders reuse the existing smart_folders table (no schema change, no deps);
 color extraction uses a NO-dep custom quantizer over sharp pixels with NO worker (sharp decode is
 off-thread), reusing the pre-existing items.palette column; color extraction and color SEARCH split
@@ -146,8 +146,8 @@ into separate slices.
 **Plans:** (independent vertical slices)
 - [x] 08-01: Saved searches / smart folders (persist SearchCriteria in the existing smart_folders table; sidebar section + click-to-apply + rename/delete; reuses items:search, no schema change, no deps) — see `phases/08-organize-power/08-01-SUMMARY.md`
 - [x] 08-02: Color extraction + backfill + inspector swatches (no-dep quantizer on sharp pixels; stores #rrggbb JSON in items.palette; no worker, no schema change) — see `phases/08-organize-power/08-02-SUMMARY.md`
-- [ ] 08-03: Color SEARCH (nearest-color filter over stored palettes + SearchCriteria + color picker) — planned 2026-06-26, see `phases/08-organize-power/08-03-PLAN.md`
-- [ ] 08-04: Find duplicates (content hashing) — TBD
+- [x] 08-03: Color SEARCH (nearest-color filter over stored palettes; `color`/`colorTolerance` on SearchCriteria + JS post-filter in searchItems; SearchBar color picker + tolerance + Clear; no new IPC/schema/dep/worker) — see `phases/08-organize-power/08-03-SUMMARY.md`
+- [x] 08-04: Find duplicates (SHA-256 content_hash via the project's first schema migration; hash at import + backfill; DuplicatesModal keep-newest delete reusing items:delete; no dep, no worker) — see `phases/08-organize-power/08-04-SUMMARY.md`
 
 ### Phase 8.1: UI polish & Inter [INSERTED 2026-06-24]
 **Goal:** A design-system refresh — bundle the **Inter** typeface and refine the look across the app:
@@ -181,4 +181,4 @@ endpoint that sends images/URLs into the active library.
 
 ---
 *Roadmap created: 2026-06-23*
-*Last updated: 2026-06-26 — Inserted Phase 8.1 (UI polish & Inter) ✅ complete + committed (feat(8.1-ui-polish)); resume Phase 8 at 08-03 (color search)*
+*Last updated: 2026-06-26 — Phase 8 (Organize power features) ✅ COMPLETE (08-01..08-04 + off-loop Tags); milestone v1.0 now 4/5, only Phase 9 (browser-extension collecting) remains*

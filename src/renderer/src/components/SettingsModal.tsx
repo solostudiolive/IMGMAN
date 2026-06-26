@@ -13,10 +13,13 @@ const THEME_OPTIONS: { value: ThemePreference; label: string }[] = [
 // Mirrors QuickPreview's overlay/close pattern but self-owns its Escape handler.
 export default function SettingsModal({
   open,
-  onClose
+  onClose,
+  onFindDuplicates
 }: {
   open: boolean
   onClose: () => void
+  // Open the Find-duplicates dialog (owned by the parent, which also reloads the grid after deletes).
+  onFindDuplicates?: () => void
 }): React.JSX.Element | null {
   const { preference, resolved, setPreference } = useTheme()
   const [version, setVersion] = useState<string | null>(null)
@@ -119,6 +122,16 @@ export default function SettingsModal({
           {colorResult !== null && (
             <p className="settings__caption">Done — {colorResult} updated</p>
           )}
+          <div className="settings__row">
+            <span className="settings__label">Duplicates</span>
+            <button
+              type="button"
+              className="settings__segment-btn"
+              onClick={() => onFindDuplicates?.()}
+            >
+              Find duplicates…
+            </button>
+          </div>
         </section>
 
         <section className="settings__section">

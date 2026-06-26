@@ -49,6 +49,8 @@ const api: IpcApi = {
       ipcRenderer.invoke('items:renameMany', renames),
     rateMany: (ids: string[], rating: number) => ipcRenderer.invoke('items:rateMany', ids, rating),
     backfillPalettes: () => ipcRenderer.invoke('items:backfillPalettes'),
+    backfillHashes: () => ipcRenderer.invoke('items:backfillHashes'),
+    findDuplicates: () => ipcRenderer.invoke('items:findDuplicates'),
     count: () => ipcRenderer.invoke('items:count'),
     search: (criteria: SearchCriteria) => ipcRenderer.invoke('items:search', criteria)
   },

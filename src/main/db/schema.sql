@@ -12,6 +12,7 @@ CREATE TABLE IF NOT EXISTS items (
   height       INTEGER,
   duration_ms  INTEGER,        -- for video/audio
   palette      TEXT,           -- JSON array of dominant colors
+  content_hash TEXT,           -- SHA-256 hex of original bytes (duplicate detection)
   rating       INTEGER DEFAULT 0,
   source_url   TEXT,           -- where it was collected from
   note         TEXT,

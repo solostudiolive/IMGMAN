@@ -8,7 +8,7 @@ export type ThemePreference = 'dark' | 'light' | 'system'
 export type ResolvedTheme = 'dark' | 'light'
 
 const STORAGE_KEY = 'imgman.theme'
-const DEFAULT_PREFERENCE: ThemePreference = 'dark'
+const DEFAULT_PREFERENCE: ThemePreference = 'light'
 
 const DARK_QUERY = '(prefers-color-scheme: dark)'
 

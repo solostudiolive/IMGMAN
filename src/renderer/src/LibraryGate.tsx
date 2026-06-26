@@ -11,6 +11,7 @@ import SearchBar from './SearchBar'
 import AppShell from './components/AppShell'
 import ContentToolbar from './components/ContentToolbar'
 import SettingsModal from './components/SettingsModal'
+import DuplicatesModal from './components/DuplicatesModal'
 import ContextMenu, { type MenuNode } from './components/ContextMenu'
 import BatchTagDialog from './components/BatchTagDialog'
 import BatchRenameDialog from './components/BatchRenameDialog'
@@ -29,7 +30,8 @@ function isSearchActive(c: SearchCriteria): boolean {
     !!c.minRating ||
     c.from != null ||
     c.to != null ||
-    !!c.tagIds?.length
+    !!c.tagIds?.length ||
+    !!c.color
   )
 }
 
@@ -61,6 +63,8 @@ export default function LibraryGate() {
   const [allTags, setAllTags] = useState<Tag[]>([])
   // Settings modal visibility (Appearance + About).
   const [settingsOpen, setSettingsOpen] = useState(false)
+  // Find-duplicates modal visibility (launched from Settings → Library maintenance).
+  const [duplicatesOpen, setDuplicatesOpen] = useState(false)
   // Open right-click item context menu (null = closed).
   const [itemMenu, setItemMenu] = useState<{ x: number; y: number; items: MenuNode[] } | null>(null)
   // Batch "Add tag…" dialog: the target item ids (null = closed).
@@ -293,7 +297,7 @@ export default function LibraryGate() {
   // list/masonry); Shift+arrows extend; Ctrl/Cmd+A selects all; Home/End jump. Suppressed while
   // typing, the Settings modal is open, or a context menu / batch dialog owns the keyboard.
   useEffect(() => {
-    if (!active || settingsOpen || tagDialog || renameDialog || itemMenu) return
+    if (!active || settingsOpen || duplicatesOpen || tagDialog || renameDialog || itemMenu) return
     const clamp = (n: number, lo: number, hi: number): number => Math.min(hi, Math.max(lo, n))
     const onKey = (e: KeyboardEvent): void => {
       const t = e.target as HTMLElement | null
@@ -358,7 +362,7 @@ export default function LibraryGate() {
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [active, sel, orderedIds, viewMode, previewOpen, settingsOpen, tagDialog, renameDialog, itemMenu, deleteTargets])
+  }, [active, sel, orderedIds, viewMode, previewOpen, settingsOpen, duplicatesOpen, tagDialog, renameDialog, itemMenu, deleteTargets])
 
   // Apply a library:* result: update state on success, surface errors, ignore cancels.
   const apply = useCallback(
@@ -609,7 +613,19 @@ export default function LibraryGate() {
             onClose={() => setRenameDialog(null)}
           />
         )}
-        <SettingsModal open={settingsOpen} onClose={() => setSettingsOpen(false)} />
+        <SettingsModal
+          open={settingsOpen}
+          onClose={() => setSettingsOpen(false)}
+          onFindDuplicates={() => {
+            setSettingsOpen(false)
+            setDuplicatesOpen(true)
+          }}
+        />
+        <DuplicatesModal
+          open={duplicatesOpen}
+          onClose={() => setDuplicatesOpen(false)}
+          onChanged={reloadItems}
+        />
       </>
     )
   }

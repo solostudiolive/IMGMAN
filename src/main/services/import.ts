@@ -5,6 +5,7 @@ import sharp from 'sharp'
 import { getDb } from '../db'
 import { getActiveLibrary, imagesDir } from './library'
 import { extractPalette, paletteToJson } from './palette'
+import { hashFile, hashBuffer } from './hash'
 
 export type ItemType = 'image' | 'video' | 'audio' | 'font' | 'doc' | 'other'
 
@@ -50,15 +51,15 @@ function imagesRoot(): string {
 function insertItem(item: {
   id: string; name: string; ext: string; type: ItemType
   size_bytes: number; width: number | null; height: number | null
-  palette: string | null
+  palette: string | null; content_hash: string | null
   created_at: number; imported_at: number; source_url: string | null
 }): void {
   getDb()
     .prepare(
       `INSERT INTO items
-        (id, name, ext, type, size_bytes, width, height, duration_ms, palette, rating, source_url, note, created_at, imported_at)
+        (id, name, ext, type, size_bytes, width, height, duration_ms, palette, content_hash, rating, source_url, note, created_at, imported_at)
        VALUES
-        (@id, @name, @ext, @type, @size_bytes, @width, @height, NULL, @palette, 0, @source_url, NULL, @created_at, @imported_at)`
+        (@id, @name, @ext, @type, @size_bytes, @width, @height, NULL, @palette, @content_hash, 0, @source_url, NULL, @created_at, @imported_at)`
     )
     .run(item)
 }
@@ -109,6 +110,15 @@ export async function importFile(absPath: string): Promise<ImportedItem> {
     }
   }
 
+  // Content hash of the ORIGINAL bytes (all types), for duplicate detection. Streamed; a failure
+  // leaves it NULL and never aborts the import (mirrors the palette's defensive handling).
+  let contentHash: string | null = null
+  try {
+    contentHash = await hashFile(join(dir, originalName))
+  } catch {
+    contentHash = null
+  }
+
   const createdAt = Math.floor(stats.birthtimeMs || stats.mtimeMs)
   const importedAt = Date.now()
   const record = {
@@ -117,6 +127,7 @@ export async function importFile(absPath: string): Promise<ImportedItem> {
     width, height,
     duration_ms: null,
     palette,
+    content_hash: contentHash,
     rating: 0,
     source_url: null,
     note: null,
@@ -129,6 +140,7 @@ export async function importFile(absPath: string): Promise<ImportedItem> {
     size_bytes: stats.size,
     width, height,
     palette,
+    content_hash: contentHash,
     created_at: createdAt,
     imported_at: importedAt,
     source_url: null
@@ -168,6 +180,7 @@ export async function importImageBuffer(buf: Buffer, suggestedName?: string): Pr
     palette = null
   }
 
+  const contentHash = hashBuffer(buf)
   const now = Date.now()
   const record = {
     id, name, ext, type,
@@ -175,6 +188,7 @@ export async function importImageBuffer(buf: Buffer, suggestedName?: string): Pr
     width, height,
     duration_ms: null,
     palette,
+    content_hash: contentHash,
     rating: 0,
     source_url: null,
     note: null,
@@ -187,6 +201,7 @@ export async function importImageBuffer(buf: Buffer, suggestedName?: string): Pr
     size_bytes: buf.length,
     width, height,
     palette,
+    content_hash: contentHash,
     created_at: now,
     imported_at: now,
     source_url: null

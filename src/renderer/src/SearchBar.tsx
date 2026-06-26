@@ -81,7 +81,8 @@ export default function SearchBar({
     (criteria.ext?.trim() ? 1 : 0) +
     (criteria.minRating ? 1 : 0) +
     (criteria.from != null ? 1 : 0) +
-    (criteria.to != null ? 1 : 0)
+    (criteria.to != null ? 1 : 0) +
+    (criteria.color ? 1 : 0)
 
   const typeCount = criteria.types?.length ?? 0
   const anyActive = !!criteria.query?.trim() || typeCount > 0 || advCount > 0
@@ -203,6 +204,40 @@ export default function SearchBar({
                   onChange={(e) => onChange({ ...criteria, to: parseDate(e.target.value, true) })}
                   title="Imported to"
                 />
+              </div>
+            </div>
+
+            <div className="searchbar__group">
+              <span className="searchbar__label">Color</span>
+              <div className="searchbar__row searchbar__color-row">
+                <input
+                  className="searchbar__color"
+                  type="color"
+                  value={criteria.color ?? '#000000'}
+                  onChange={(e) => onChange({ ...criteria, color: e.target.value.toLowerCase() })}
+                  title="Filter by color"
+                />
+                <select
+                  className="searchbar__input searchbar__select"
+                  value={criteria.colorTolerance ?? 60}
+                  aria-label="Color match tolerance"
+                  onChange={(e) => onChange({ ...criteria, colorTolerance: Number(e.target.value) })}
+                >
+                  <option value={25}>Exact</option>
+                  <option value={60}>Close</option>
+                  <option value={110}>Loose</option>
+                </select>
+                {criteria.color && (
+                  <button
+                    type="button"
+                    className="searchbar__color-clear"
+                    onClick={() =>
+                      onChange({ ...criteria, color: undefined, colorTolerance: undefined })
+                    }
+                  >
+                    Clear
+                  </button>
+                )}
               </div>
             </div>
           </div>

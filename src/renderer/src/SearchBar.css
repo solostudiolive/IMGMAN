@@ -248,6 +248,37 @@
   gap: var(--space-2);
 }
 
+/* Color filter row: fixed swatch + flexible tolerance select + Clear. */
+.searchbar__color-row {
+  align-items: center;
+}
+
+/* Scoped to the row (specificity beats `.searchbar__row > *` flex:1 1 0, regardless of order). */
+.searchbar__row > .searchbar__color {
+  flex: 0 0 auto;
+  width: 36px;
+  height: 30px;
+  padding: 2px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-bg-app);
+  cursor: pointer;
+}
+
+.searchbar__row > .searchbar__color-clear {
+  flex: 0 0 auto;
+  background: none;
+  border: none;
+  padding: 0 var(--space-1);
+  color: var(--color-text-muted);
+  font-size: var(--fs-xs);
+  cursor: pointer;
+}
+
+.searchbar__color-clear:hover {
+  color: var(--color-text);
+}
+
 .searchbar__row > * {
   flex: 1 1 0;
   min-width: 0;

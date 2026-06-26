@@ -7,9 +7,12 @@ import {
   renameItems,
   rateItems,
   backfillPalettes,
+  backfillHashes,
+  findDuplicateGroups,
   type Item,
   type FullItem,
-  type ItemPatch
+  type ItemPatch,
+  type DuplicateGroup
 } from '../services/items'
 import { searchItems, type SearchCriteria } from '../services/search'
 
@@ -28,4 +31,6 @@ export function registerItemsIpc(): void {
   )
   ipcMain.handle('items:search', (_e, criteria: SearchCriteria): Item[] => searchItems(criteria))
   ipcMain.handle('items:backfillPalettes', (): Promise<number> => backfillPalettes())
+  ipcMain.handle('items:backfillHashes', (): Promise<number> => backfillHashes())
+  ipcMain.handle('items:findDuplicates', (): DuplicateGroup[] => findDuplicateGroups())
 }

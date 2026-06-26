@@ -3,7 +3,7 @@ import Database from 'better-sqlite3'
 // bundle — no separate asset to copy into the packaged app.
 import schema from './schema.sql?raw'
 
-const SCHEMA_VERSION = 1
+const SCHEMA_VERSION = 2
 
 // A single active connection: exactly one library is open at a time.
 let db: Database.Database | null = null
@@ -42,7 +42,17 @@ export function closeDatabase(): void {
 }
 
 function runMigrations(database: Database.Database): void {
-  // schema.sql uses CREATE ... IF NOT EXISTS, so exec is a no-op on later runs.
+  // schema.sql uses CREATE ... IF NOT EXISTS, so exec is a no-op on later runs. Fresh DBs get every
+  // column from the CREATE; existing DBs need explicit ALTERs for columns added after their creation.
   database.exec(schema)
+
+  // v2: items.content_hash (duplicate detection). CREATE ... IF NOT EXISTS won't add a column to an
+  // already-existing items table, so add it idempotently — guarded on table_info, not user_version,
+  // so it self-heals regardless of how the DB got to its current shape.
+  const cols = database.prepare('PRAGMA table_info(items)').all() as Array<{ name: string }>
+  if (!cols.some((c) => c.name === 'content_hash')) {
+    database.exec('ALTER TABLE items ADD COLUMN content_hash TEXT')
+  }
+
   database.pragma(`user_version = ${SCHEMA_VERSION}`)
 }

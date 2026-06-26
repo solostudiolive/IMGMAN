@@ -9,24 +9,32 @@ See: .paul/PROJECT.md (updated 2026-06-23)
 
 ## Current Position
 
-Milestone: v1.0 — Eagle Parity 🚧 In Progress (3 of 5 phases complete)
-Phase: 8 (Organize power features) — In Progress (08-01 ✓, 08-02 ✓, 08-03 PLAN created; 08-04 TBD). Inserted 8.1 ✅ complete + committed.
-Plan: 08-03 created, awaiting approval — Color SEARCH (nearest-color filter over stored palettes + color picker).
-Status: PLAN created, ready for APPLY
-Last activity: 2026-06-26 — Created Plan 08-03 (color SEARCH). Reuse-existing-scope design: add `color?` + `colorTolerance?` to SearchCriteria (services/search.ts + preload/types.ts mirror); searchItems does a NEAREST-COLOR JS post-filter over the stored items.palette (#rrggbb JSON from 08-02) — when color unset the query is byte-identical to before. SearchBar filters popover gains a native `<input type=color>` + tolerance select (Exact 25 / Close 60 / Loose 110, RGB Euclidean) + Clear; advCount counts color; LibraryGate isSearchActive adds `|| !!c.color`. NO new IPC channel (items:search forwards whole criteria), NO schema change, NO dep, NO worker (palettes pre-extracted). Color persists into saved searches (08-01) for free. Ends at a human-verify checkpoint.
+Milestone: v1.0 — Eagle Parity 🚧 In Progress (4 of 5 phases complete — only Phase 9 remains)
+Phase: 8 (Organize power features) — ✅ COMPLETE (08-01 ✓, 08-02 ✓, 08-03 ✓, 08-04 ✓). Inserted 8.1 ✅. Phase transition done.
+Plan: 08-04 ✅ COMPLETE — Find duplicates applied, human-verify APPROVED, SUMMARY written; phase transition executed.
+Status: Phase 8 closed. Ready to start Phase 9 (browser-extension collecting) — /paul:discuss or /paul:plan. 08-03 + 08-04 source committed in the feat(08-organize-power) phase commit.
+Last activity: 2026-06-26 — Off-loop UI/feature session (no PLAN/SUMMARY) then committed everything in `3cf919b` (feat(08-organize-power)). Shipped: sidebar TAGS section (lists all tags; click filters via new `SearchCriteria.tagIds` exact item_tags AND-match; collapsible header toggle); inline LIBRARY RENAME (`library:rename` → settings.json name only, path untouched; listRecent now reads settings name via `readLibraryName`); Inspector hover-zoom LIGHTBOX (reuses QuickPreview) + smaller meta font + Type/Format split + Folders-before-Tags + bold section headings; modern custom-chevron `<select>` via shared `--select-chevron` token (FolderAssigner/MultiInspector/ContentToolbar/SearchBar rating); ImportZone restyle (UploadIcon badge + primary/secondary buttons, compact, full-width); modern "Switch / Open…" button; ContentToolbar compact + "Sort:" moved into dropdown + item-count text removed (kept "N selected"); min window size 900×560 (main/index.ts). FIX: theme preference "not saved" in dev was an origin-scoped-localStorage artifact — PINNED the renderer dev port (strictPort 5273) in electron.vite.config.ts so the origin stays stable across `npm run dev`. Typecheck clean. 08-03 PLAN still unstarted.
 
 Progress:
-- v1.0 Eagle Parity: [██████░░░░] 60% (3 of 5 phases complete; Phase 8 in progress, inserted 8.1 complete)
-- Phase 8: [█████░░░░░] ~50% (08-01 ✓, 08-02 ✓ applied; 08-03 planned; 08-04 TBD)
+- v1.0 Eagle Parity: [████████░░] 80% (4 of 5 phases complete; only Phase 9 remains)
+- Phase 8: [██████████] 100% COMPLETE (08-01 ✓, 08-02 ✓, 08-03 ✓, 08-04 ✓)
 
 ## Loop Position
 
 Current loop state:
 ```
-Phase 8 — Plan 08-03 (color SEARCH):
-PLAN ──▶ APPLY ──▶ UNIFY
-  ✓        ○        ○     [Plan 08-03 created, awaiting approval]
+Phase 8 — Plan 08-04 (find duplicates) — FINAL Phase-8 plan:
+PLAN ──▶ APPLY ──▶ UNIFY ──▶ TRANSITION
+  ✓        ✓        ✓          ✓     [Phase 8 COMPLETE 2026-06-26]
 ```
+Next: Phase 9 (browser-extension collecting) — the last v1.0 milestone phase. Start with /paul:discuss or /paul:plan.
+
+⚠️ OFF-LOOP WORK (2026-06-26): A UI-polish + small-feature session ran WITHOUT PLAN/SUMMARY files
+(sidebar Tags, library rename, lightbox, modern selects, ImportZone restyle, compact toolbar, theme
+dev-port fix, min window). It was committed in 3cf919b alongside the Phase-8 source. This bypassed the
+PLAN→APPLY→UNIFY loop — acceptable as ad-hoc polish, but it means those features have no SUMMARY. The
+NEW backend surface from that session that LATER plans must know about: `SearchCriteria.tagIds`
+(exact-tag filter, reused by the Tags sidebar) and `library:rename` / `readLibraryName`.
 
 Note: Phase 7 COMPLETE (7/7), bundled into one `feat(07-selection-interaction)` commit (c8e1477).
 Phase 8 (Organize power features) breakdown (revised — color split into extract/search): 08-01 saved
@@ -39,6 +47,7 @@ completes (one feat(08-organize-power) commit).
 ## Accumulated Context
 
 ### Decisions
+- 2026-06-26: Off-loop UI/feature polish session + EARLY Phase-8 commit (3cf919b). A long ad-hoc, user-directed polish session ran OUTSIDE the PLAN→APPLY→UNIFY loop (no plan/summary), then the user said "commit this" — so the previously-held Phase-8 source (08-01/08-02) was committed EARLY together with the polish, superseding the "one feat(08-organize-power) bundle when the phase closes" strategy. New durable surface added off-loop (future plans must respect): (1) `SearchCriteria.tagIds?: string[]` — exact-tag filter, `id IN (SELECT item_id FROM item_tags WHERE tag_id IN (…) GROUP BY item_id HAVING COUNT(DISTINCT tag_id)=N)` AND-semantics in services/search.ts; mirrored in preload/types.ts; counted by LibraryGate `isSearchActive`. Drives a presentational `TagsList.tsx` sidebar section (LibraryGate owns the list via `reloadTags`, refreshed on library change + batch-tag dialog + multi-inspector edits; single-inspector tag adds are the known stale gap). (2) `library:rename(name)` → `renameActiveLibrary` writes settings.json `name` ONLY (folder path/DB untouched); `readLibraryName(libPath)` (settings name → basename fallback) now also backs `library:listRecent`. (3) Shared `--select-chevron` token + `.modern-select` (appearance:none custom-chevron selects). (4) Inspector preview hover-zoom reuses QuickPreview as a lightbox. (5) DEV-ONLY FIX: pinned renderer dev server to strictPort 5273 (electron.vite.config.ts) so origin-scoped localStorage (theme pref) stays stable across restarts — production (file://) was never affected. (6) BrowserWindow minWidth 900 / minHeight 560. | Off-loop (committed in Phase 8) | Lesson: rapid UI iteration is fine off-loop, but it leaves no SUMMARY — capture durable backend surface here in STATE so later plans don't clobber it.
 - 2026-06-24: Inserted Phase 8.1 (UI polish & Inter) — user requested a UI polish pass + Inter font mid-Phase-8. Handled as a DECIMAL insertion ([INSERTED], dir `.paul/phases/08.1-ui-polish/`) between 08-02 and 08-03, NOT a Phase-8 plan, because it's design-system work (Phase-5 lineage) — gets its OWN `feat(8.1-ui-polish)` commit. Decisions: bundle Inter via `@fontsource/inter` (self-hosted woff2, CSP/offline-safe — `default-src 'self'` covers fonts, no CDN); `--font-sans='Inter', system-ui, sans-serif`. Scope = typography & spacing scale + dark/light color & contrast tokens + component density/layout. Typography centralized (one `--font-sans` in styles/tokens.css applied in styles/base.css) → font swap is one token + the @fontsource import in the renderer entry; rest is token/component refinement. Likely split into 8.1-01 (Inter + type/spacing foundation) and 8.1-02 (color/contrast + component density); each ends at a visual human-verify checkpoint. Milestone still framed as 5 phases (8.1 is an inserted sub-phase). | Phase 8 (inserted 8.1) | Resume Phase 8 at 08-03 (color search) after 8.1.
 - 2026-06-24: Color extraction (08-02) — a NO-dependency dominant-color quantizer in `services/palette.ts`: `extractPalette(input)` does `sharp(input).resize(64).raw()`, skips (near-)transparent pixels (alpha<128 when 4ch), buckets each pixel to 4-bits/channel (16 levels), averages the true colors within the top-`PALETTE_SIZE`(5) buckets by count → `#rrggbb` (lowercase), most-dominant first; never throws (→ []). `paletteToJson` → JSON string or null. Extraction PIGGYBACKS the existing import sharp decode: importFile + importImageBuffer compute palette inside the SAME try as the thumbnail (failure leaves palette null alongside width/height, never aborts import) and store it to BOTH the existing `items.palette` column (insertItem now binds `@palette`) and metadata.json. NO worker (sharp off-thread, per Phase-2 precedent). `items:backfillPalettes()` (async) fills `type='image' AND palette IS NULL` rows — reads `images/<id>/original.<ext>` (fallback thumbnail.webp), idempotent, returns count; triggered by a "Extract colors" button in SettingsModal (Library maintenance section, busy state + "Done — N updated"). Inspector renders a Colors swatch row from defensively-parsed `FullItem.palette` (already returned by items:get — no new channel); omitted when empty. NO schema change (items.palette pre-existed), no new dep. | Phase 8 (08-02) | Palette `#rrggbb` JSON (most-dominant first) is the contract 08-03 color SEARCH will query. Scope was extraction+backfill+swatches only; color search → 08-03, find-dupes → 08-04.
 - 2026-06-24: Saved searches / smart folders (08-01) — a saved search is a persisted `SearchCriteria` re-applied through the EXISTING Phase-4 search scope (NOT a new query path). Stored in the pre-existing, previously-unused `smart_folders(id,name,rules)` table — `rules` holds `JSON.stringify(criteria)`, read back via a defensive `JSON.parse` (bad row → `{}`) → NO schema change. New `smartFolders:*` IPC (list/create/rename/delete) mirrors `folders:*` (each mutation returns the canonical `SmartFolder[]`; ids via randomUUID; order by name COLLATE NOCASE; isDatabaseOpen guard). Renderer: a PRESENTATIONAL `SmartFolders.tsx` sidebar section (mirrors FolderTree — 🔍 rows, click → `onSelect(criteria)`, active highlight via best-effort `JSON.stringify` match, inline rename, ContextMenu Rename/Delete) rendered below FolderTree; a "Save search" control added to `SearchBar` (`onSave` prop, shown only when a search is active, inline name input). LibraryGate OWNS the `smartFolders` list (so the toolbar Save control + sidebar stay in sync): `reloadSmartFolders` on `active?.path` change, `saveCurrentSearch(name)` → create → setSmartFolders, selecting one routes through `applySearch` (already clears the folder scope → mutual exclusivity for free). No new deps, no worker. | Phase 8 (08-01) | First Phase-8 slice; persisted-criteria + sidebar-section + reuse-existing-scope shape. 08-02 color search + 08-03 find-duplicates are the heavier worker/schema slices next.
@@ -85,7 +94,8 @@ None logged.
 
 ### Git State
 - Repository initialized 2026-06-23 (branch: main).
-- Last commit: 5fccb09 — feat(8.1-ui-polish): Inter typeface + "Refined dark, Eagle-like" restyle (inserted Phase 8.1; bundles 8.1-01 + 8.1-02). Committed 2026-06-26. NOTE: staged ONLY the 8.1 design files (tokens/base/main.tsx/Grid.tsx + the polished component CSS + package.json/-lock for Inter) + the 8.1 phase docs + STATE/ROADMAP — Phase 8 source (08-01, 08-02) remains intentionally UNCOMMITTED for the future feat(08-organize-power) bundle.
+- Last commit: 3cf919b — feat(08-organize-power): saved searches, color palette, sidebar tags + UI polish pass (2026-06-26). 47 files, +2700/-292. Committed at user request via /paul:progress → "commit this". DEVIATION from the prior plan: this folds the previously-held-back Phase-8 source (08-01 saved searches + 08-02 color palette) into the bundle EARLY (before 08-03/08-04 complete) AND includes the off-loop UI-polish session (Tags sidebar, library rename, lightbox, modern selects, ImportZone restyle, compact toolbar, theme dev-port fix, min window) + the app icons (build/icon.png, resources/icon.png|svg). NOT pushed. Phase 8 is therefore PARTIALLY shipped on main while 08-03 (color search) + 08-04 (dupes) are still pending — those will be follow-on commits, not a single phase bundle.
+- Prior: 5fccb09 — feat(8.1-ui-polish): Inter typeface + "Refined dark, Eagle-like" restyle (inserted Phase 8.1; bundles 8.1-01 + 8.1-02). Committed 2026-06-26.
 - Prior: c8e1477 — feat(07-selection-interaction): multi-select, context menus, batch ops, and editable inspectors (Phase 7 — v1.0 Eagle Parity 3/5; bundles 07-01…07-07).
 - Prior: 8f39198 — feat(06-grid-content-area): view toolbar, view modes, and hover preview (Phase 6 — v1.0 Eagle Parity 2/5).
 - Prior: 2190713 — feat(05-design-system-shell): theming, chrome-less shell, and settings (Phase 5).
@@ -106,11 +116,12 @@ None logged.
 
 ## Session Continuity
 
-Last session: 2026-06-26
-Stopped at: Plan 08-03 (color SEARCH) created, awaiting approval
-Next action: Review/approve, then /paul:apply .paul/phases/08-organize-power/08-03-PLAN.md
-Resume file: .paul/phases/08-organize-power/08-03-PLAN.md
-After 08-03 verifies: plan 08-04 (find duplicates). Phase-8 source stays UNCOMMITTED until 08-04 closes the phase (one feat(08-organize-power) commit).
+Last session: 2026-06-26 — applied + verified Plan 08-03 (color SEARCH); loop closed, SUMMARY written.
+Stopped at: 08-03 ✅ complete (human-verify approved). Working tree DIRTY: 08-03 source (search.ts, preload/types.ts, SearchBar.tsx/.css, LibraryGate.tsx) + STATE/ROADMAP + 08-03-SUMMARY.md uncommitted. Dev server running on 5273.
+Next action: /paul:plan 08-04 (find duplicates) — the FINAL Phase-8 slice. (Optionally commit 08-03 first: `feat(08-03-color-search)` or fold into the 08-04 close.)
+Resume file: .paul/phases/08-organize-power/08-03-SUMMARY.md
+After 08-04: phase transition (evolve PROJECT/ROADMAP, phase commit) then route to Phase 9 (browser-extension collecting), the last milestone phase.
+SearchCriteria extension point now carries: query/types/ext/rating/date/tagIds/color/colorTolerance — 08-04 dupes is a DIFFERENT surface (content hashing), not a SearchCriteria field.
 
 Phase 8 breakdown: 08-01 saved searches [✓] → 08-02 color extraction + backfill + swatches [✓] →
 [INSERTED 8.1 — UI polish & Inter, next] → 08-03 color SEARCH [TBD] → 08-04 find duplicates [TBD].

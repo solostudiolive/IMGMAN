@@ -1,8 +1,9 @@
-import { rmSync, existsSync } from 'fs'
+import { rmSync, existsSync, readdirSync } from 'fs'
 import { join } from 'path'
 import { isDatabaseOpen, getDb } from '../db'
 import { getActiveLibrary, imagesDir } from './library'
 import { extractPalette, paletteToJson } from './palette'
+import { hashFile } from './hash'
 import type { ItemType } from './import'
 
 // A row projected for the grid (subset of the items table).
@@ -162,6 +163,86 @@ export async function backfillPalettes(): Promise<number> {
     }
   }
   return n
+}
+
+// Resolve an item's stored ORIGINAL file (images/<id>/original.<ext>, or an `original*` fallback when
+// no ext was recorded). Returns null when nothing matches. Hashing must use the original bytes — never
+// the thumbnail — so this never falls back to thumbnail.webp.
+function originalPath(dir: string, ext: string | null): string | null {
+  if (ext) {
+    const p = join(dir, `original.${ext}`)
+    return existsSync(p) ? p : null
+  }
+  try {
+    const f = readdirSync(dir).find((n) => n === 'original' || n.startsWith('original.'))
+    return f ? join(dir, f) : null
+  } catch {
+    return null
+  }
+}
+
+/**
+ * Backfill SHA-256 content hashes for items that don't have one yet (ALL types, not just images).
+ * Streams each stored original; per-item failures (missing/unreadable file) are skipped, never fatal.
+ * Idempotent (only touches content_hash IS NULL rows). Returns the number populated. Async (file IO).
+ */
+export async function backfillHashes(): Promise<number> {
+  if (!isDatabaseOpen()) return 0
+  const lib = getActiveLibrary()
+  if (!lib) return 0
+  const root = imagesDir(lib.path)
+  const db = getDb()
+  const rows = db
+    .prepare('SELECT id, ext FROM items WHERE content_hash IS NULL')
+    .all() as { id: string; ext: string | null }[]
+  const update = db.prepare('UPDATE items SET content_hash = ? WHERE id = ?')
+
+  let n = 0
+  for (const row of rows) {
+    try {
+      const path = originalPath(join(root, row.id), row.ext)
+      if (!path) continue
+      update.run(await hashFile(path), row.id)
+      n++
+    } catch {
+      // Missing/unreadable file — leave content_hash NULL and move on.
+    }
+  }
+  return n
+}
+
+// A set of items sharing one content hash (i.e. byte-identical duplicates).
+export interface DuplicateGroup {
+  hash: string
+  items: Item[]
+}
+
+/**
+ * Duplicate groups: items sharing a non-NULL content_hash, only where 2+ items share it. Each group's
+ * items are oldest-first (imported_at ASC) so the UI can default to "keep the newest, delete the rest".
+ * Empty when no library / no duplicates. (Run backfillHashes first to cover pre-hash rows.)
+ */
+export function findDuplicateGroups(): DuplicateGroup[] {
+  if (!isDatabaseOpen()) return []
+  const rows = getDb()
+    .prepare(
+      `SELECT id, name, ext, type, size_bytes, width, height, rating, created_at, imported_at, content_hash
+       FROM items
+       WHERE content_hash IN (
+         SELECT content_hash FROM items WHERE content_hash IS NOT NULL
+         GROUP BY content_hash HAVING COUNT(*) > 1
+       )
+       ORDER BY content_hash, imported_at ASC`
+    )
+    .all() as Array<Item & { content_hash: string }>
+
+  const groups: DuplicateGroup[] = []
+  for (const { content_hash, ...item } of rows) {
+    const last = groups[groups.length - 1]
+    if (last && last.hash === content_hash) last.items.push(item as Item)
+    else groups.push({ hash: content_hash, items: [item as Item] })
+  }
+  return groups
 }
 
 /**

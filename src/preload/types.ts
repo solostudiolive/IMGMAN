@@ -50,6 +50,12 @@ export interface ItemPatch {
   rating?: number
 }
 
+// A set of byte-identical items sharing one content hash (mirrors items.ts DuplicateGroup).
+export interface DuplicateGroup {
+  hash: string
+  items: Item[]
+}
+
 // Search/filter criteria (mirrors src/main/services/search.ts SearchCriteria).
 // Absent fields impose no constraint; query matches name/note/tag-name.
 export interface SearchCriteria {
@@ -61,6 +67,9 @@ export interface SearchCriteria {
   to?: number | null
   // Exact tag filter (item must carry ALL listed tags). Driven by the sidebar Tags section.
   tagIds?: string[]
+  // Nearest-color filter: target `#rrggbb` + max RGB Euclidean distance (service supplies a default).
+  color?: string
+  colorTolerance?: number
 }
 
 // A tag row (mirrors src/main/services/tags.ts Tag).
@@ -131,6 +140,10 @@ export interface IpcApi {
     rateMany: (ids: string[], rating: number) => Promise<number>
     // Backfill dominant-color palettes for image items missing one. Returns count populated.
     backfillPalettes: () => Promise<number>
+    // Backfill SHA-256 content hashes for items missing one (all types). Returns count populated.
+    backfillHashes: () => Promise<number>
+    // Groups of byte-identical items (2+ sharing a content hash), oldest-first within each group.
+    findDuplicates: () => Promise<DuplicateGroup[]>
     count: () => Promise<number>
     search: (criteria: SearchCriteria) => Promise<Item[]>
   }

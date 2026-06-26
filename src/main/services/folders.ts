@@ -71,10 +71,12 @@ export function deleteFolder(id: string): Folder[] {
   const run = db.transaction((ids: string[]) => {
     const delLinks = db.prepare('DELETE FROM item_folders WHERE folder_id = ?')
     const delFolder = db.prepare('DELETE FROM folders WHERE id = ?')
-    for (const fid of ids) {
-      delLinks.run(fid)
-      delFolder.run(fid)
-    }
+    // `ids` is parent-before-children (DFS pushes a node before its descendants). Links can clear in
+    // any order, but folder rows MUST be deleted children-first — with foreign_keys = ON a parent
+    // can't be removed while a child still references it via parent_id. So delete folders in REVERSE
+    // (every node after its descendants), else the FK constraint aborts the whole transaction.
+    for (const fid of ids) delLinks.run(fid)
+    for (let i = ids.length - 1; i >= 0; i--) delFolder.run(ids[i])
   })
   run(toDelete)
   return listFolders()
