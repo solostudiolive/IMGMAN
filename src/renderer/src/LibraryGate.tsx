@@ -16,7 +16,15 @@ import ContextMenu, { type MenuNode } from './components/ContextMenu'
 import BatchTagDialog from './components/BatchTagDialog'
 import BatchRenameDialog from './components/BatchRenameDialog'
 import MultiInspector from './components/MultiInspector'
-import { EyeIcon, StarIcon, TagIcon, PencilIcon, FolderIcon, TrashIcon } from './components/icons'
+import {
+  EyeIcon,
+  StarIcon,
+  TagIcon,
+  PencilIcon,
+  FolderIcon,
+  TrashIcon,
+  PlusIcon
+} from './components/icons'
 import type { RenameInput } from './components/renameItems'
 import { useGridView, compareItems } from './hooks/useGridView'
 import { useSelection } from './hooks/useSelection'
@@ -488,6 +496,36 @@ export default function LibraryGate() {
                   <FolderIcon size={14} style={{ color: 'var(--color-accent)' }} />
                   Switch / Open…
                 </button>
+                {creating ? (
+                  <input
+                    autoFocus
+                    value={name}
+                    placeholder="New library name — press Enter"
+                    disabled={busy}
+                    onChange={(e) => setName(e.target.value)}
+                    onBlur={() => {
+                      if (!name.trim()) setCreating(false)
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') void submitCreate()
+                      if (e.key === 'Escape') {
+                        setCreating(false)
+                        setName('')
+                      }
+                    }}
+                    style={{ ...INPUT_STYLE, width: '100%', marginTop: 'var(--space-2)' }}
+                  />
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => setCreating(true)}
+                    disabled={busy}
+                    className="sidebar-switch-btn"
+                  >
+                    <PlusIcon size={14} style={{ color: 'var(--color-accent)' }} />
+                    New Library…
+                  </button>
+                )}
                 <Recents
                   recents={recents}
                   active={active}
