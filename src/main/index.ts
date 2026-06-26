@@ -4,7 +4,13 @@ import { closeActiveLibrary, openLibrary } from './services/library'
 import { getLastOpened } from './config'
 import { registerIpcHandlers } from './ipc'
 import { registerImgmanScheme, registerImgmanProtocol } from './protocol'
-import appIcon from '../../resources/icon.png?asset'
+
+// Window icon. In dev, resolve from the project's resources/ (relative to out/main).
+// When packaged, electron-builder copies it via `extraResources` to process.resourcesPath
+// (resources/ is NOT inside the asar, so the old __dirname-relative path failed in prod).
+const appIcon = app.isPackaged
+  ? join(process.resourcesPath, 'icon.png')
+  : join(__dirname, '../../resources/icon.png')
 
 // Privileged scheme must be registered before the app is ready.
 registerImgmanScheme()

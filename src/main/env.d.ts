@@ -3,9 +3,3 @@ declare module '*.sql?raw' {
   const content: string
   export default content
 }
-
-// electron-vite ?asset imports resolve to the emitted file path at runtime (used for the window icon).
-declare module '*?asset' {
-  const src: string
-  export default src
-}

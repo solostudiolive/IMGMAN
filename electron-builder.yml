@@ -8,11 +8,21 @@ files:
   - out/**/*
   - package.json
 
-# better-sqlite3 is a native module: keep it unpacked from the asar so its
-# .node binary is loadable at runtime. install-app-deps (postinstall) /
-# electron-rebuild build it against Electron's ABI.
+# The window icon lives outside the asar so the main process can load it at runtime
+# from process.resourcesPath (see src/main/index.ts). resources/ is the buildResources
+# dir, not auto-bundled into the app, so copy the icon explicitly.
+extraResources:
+  - from: resources/icon.png
+    to: icon.png
+
+# better-sqlite3 and sharp are native modules: keep them unpacked from the asar
+# so their .node binaries are loadable at runtime. install-app-deps (postinstall) /
+# electron-rebuild build better-sqlite3 against Electron's ABI; sharp ships prebuilt
+# platform binaries under @img/sharp-*.
 asarUnpack:
   - node_modules/better-sqlite3/**/*
+  - node_modules/sharp/**/*
+  - node_modules/@img/**/*
 
 win:
   target:
