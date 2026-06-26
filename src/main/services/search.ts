@@ -11,6 +11,7 @@ export interface SearchCriteria {
   minRating?: number // rating >= this
   from?: number | null // imported_at >= from (ms epoch)
   to?: number | null // imported_at <= to (ms epoch)
+  tagIds?: string[] // exact tag filter (item must carry ALL listed tags)
 }
 
 // Escape LIKE wildcards so user input is matched literally (paired with ESCAPE '\').
@@ -54,6 +55,16 @@ export function searchItems(criteria: SearchCriteria): Item[] {
   if (criteria.minRating && criteria.minRating > 0) {
     conds.push('rating >= ?')
     values.push(criteria.minRating)
+  }
+
+  // Exact tag filter (sidebar Tags section). AND semantics: the item must carry every listed
+  // tag — a GROUP BY / HAVING count over item_tags. For a single tag this is plain membership.
+  if (criteria.tagIds && criteria.tagIds.length > 0) {
+    conds.push(
+      `id IN (SELECT item_id FROM item_tags WHERE tag_id IN (${criteria.tagIds.map(() => '?').join(',')})
+         GROUP BY item_id HAVING COUNT(DISTINCT tag_id) = ?)`
+    )
+    values.push(...criteria.tagIds, criteria.tagIds.length)
   }
 
   if (criteria.from != null) {

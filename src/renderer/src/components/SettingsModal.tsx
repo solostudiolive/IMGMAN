@@ -20,6 +20,19 @@ export default function SettingsModal({
 }): React.JSX.Element | null {
   const { preference, resolved, setPreference } = useTheme()
   const [version, setVersion] = useState<string | null>(null)
+  // Color backfill ("Extract colors") state: busy while running, then the populated count.
+  const [colorBusy, setColorBusy] = useState(false)
+  const [colorResult, setColorResult] = useState<number | null>(null)
+
+  const extractColors = async (): Promise<void> => {
+    setColorBusy(true)
+    setColorResult(null)
+    try {
+      setColorResult(await window.api.items.backfillPalettes())
+    } finally {
+      setColorBusy(false)
+    }
+  }
 
   // Load the app version when the modal opens.
   useEffect(() => {
@@ -87,6 +100,24 @@ export default function SettingsModal({
           </div>
           {preference === 'system' && (
             <p className="settings__caption">Following system · currently {resolved}</p>
+          )}
+        </section>
+
+        <section className="settings__section">
+          <h3 className="settings__section-title">Library maintenance</h3>
+          <div className="settings__row">
+            <span className="settings__label">Colors</span>
+            <button
+              type="button"
+              className="settings__segment-btn"
+              disabled={colorBusy}
+              onClick={() => void extractColors()}
+            >
+              {colorBusy ? 'Extracting…' : 'Extract colors for existing items'}
+            </button>
+          </div>
+          {colorResult !== null && (
+            <p className="settings__caption">Done — {colorResult} updated</p>
           )}
         </section>
 

@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import type { ImportResult } from '../../preload/types'
+import { UploadIcon } from './components/icons'
+import './ImportZone.css'
 
 export default function ImportZone({ onChanged }: { onChanged?: () => void } = {}) {
   const [count, setCount] = useState<number | null>(null)
@@ -62,6 +64,7 @@ export default function ImportZone({ onChanged }: { onChanged?: () => void } = {
       <div
         ref={zoneRef}
         tabIndex={0}
+        className={`import-zone${dragging ? ' import-zone--dragging' : ''}`}
         onDragOver={(e) => {
           e.preventDefault()
           setDragging(true)
@@ -69,50 +72,46 @@ export default function ImportZone({ onChanged }: { onChanged?: () => void } = {
         onDragLeave={() => setDragging(false)}
         onDrop={onDrop}
         onPaste={onPaste}
-        style={{
-          margin: 'var(--space-3)',
-          padding: 'var(--space-3) var(--space-4)',
-          border: `2px dashed ${dragging ? 'var(--color-accent)' : 'var(--color-border-strong)'}`,
-          borderRadius: 8,
-          background: dragging ? 'var(--color-surface-selected)' : 'transparent',
-          textAlign: 'center',
-          color: 'var(--color-text-muted)',
-          outline: 'none',
-          transition: 'background 0.1s, border-color 0.1s'
-        }}
       >
-        <p style={{ margin: '0 0 6px', fontSize: 13, color: 'var(--color-text)' }}>
-          {count === null ? '…' : count} item{count === 1 ? '' : 's'} in this library
+        <span className="import-zone__badge">
+          <UploadIcon size={17} />
+        </span>
+        <p className="import-zone__title">Drop files to import</p>
+        <p className="import-zone__hint">
+          Drag files or folders here, paste an image (<kbd>Ctrl/Cmd</kbd> + <kbd>V</kbd>), or import a
+          folder.
         </p>
-        <p style={{ margin: '0 0 10px', fontSize: 12 }}>
-          Drag files or folders here, paste an image (Ctrl/Cmd+V), or import a folder.
-        </p>
-        <div style={{ display: 'flex', gap: 8, justifyContent: 'center' }}>
-          <button onClick={() => run(() => window.api.import.folder())} disabled={busy}>
+        <div className="import-zone__actions">
+          <button
+            type="button"
+            className="import-btn import-btn--primary"
+            onClick={() => run(() => window.api.import.folder())}
+            disabled={busy}
+          >
+            <UploadIcon size={14} />
             Import folder…
           </button>
-          <button onClick={onPaste} disabled={busy}>
+          <button
+            type="button"
+            className="import-btn import-btn--secondary"
+            onClick={onPaste}
+            disabled={busy}
+          >
             Paste image
           </button>
         </div>
+        <p className="import-zone__count">
+          {count === null ? '…' : count} item{count === 1 ? '' : 's'} in this library
+        </p>
       </div>
 
       {progress && (
-        <p style={{ color: 'var(--color-accent)', fontSize: 13, margin: '0 var(--space-3) var(--space-2)' }}>
+        <p className="import-status import-status--progress">
           Importing {progress.done}/{progress.total}…
         </p>
       )}
-      {status && !progress && (
-        // Status-green is an intentional fixed affordance color.
-        <p style={{ color: '#16a34a', fontSize: 13, margin: '0 var(--space-3) var(--space-2)' }}>
-          {status}
-        </p>
-      )}
-      {error && (
-        <p style={{ color: 'var(--color-danger)', fontSize: 13, margin: '0 var(--space-3) var(--space-2)' }}>
-          {error}
-        </p>
-      )}
+      {status && !progress && <p className="import-status import-status--ok">{status}</p>}
+      {error && <p className="import-status import-status--error">{error}</p>}
     </div>
   )
 }

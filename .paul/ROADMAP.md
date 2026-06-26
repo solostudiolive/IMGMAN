@@ -138,7 +138,7 @@ re-runnable `SearchCriteria`), color extraction (worker) + color search, and fin
 duplicates (content hashing). Scans run in workers, non-blocking.
 **Depends on:** Phase 4 search/data layer; Phase 7 (UI surfaces to invoke from)
 **Research:** Likely (color quantization/search, perceptual vs exact hashing)
-**Status:** In Progress (08-01 complete; 08-02 in planning, 2026-06-24)
+**Status:** In Progress (08-01 ✓, 08-02 ✓; 08-03 color search planned 2026-06-26; 08-04 TBD)
 **Decisions:** smart folders reuse the existing smart_folders table (no schema change, no deps);
 color extraction uses a NO-dep custom quantizer over sharp pixels with NO worker (sharp decode is
 off-thread), reusing the pre-existing items.palette column; color extraction and color SEARCH split
@@ -146,7 +146,7 @@ into separate slices.
 **Plans:** (independent vertical slices)
 - [x] 08-01: Saved searches / smart folders (persist SearchCriteria in the existing smart_folders table; sidebar section + click-to-apply + rename/delete; reuses items:search, no schema change, no deps) — see `phases/08-organize-power/08-01-SUMMARY.md`
 - [x] 08-02: Color extraction + backfill + inspector swatches (no-dep quantizer on sharp pixels; stores #rrggbb JSON in items.palette; no worker, no schema change) — see `phases/08-organize-power/08-02-SUMMARY.md`
-- [ ] 08-03: Color SEARCH (nearest-color filter over stored palettes + SearchCriteria + color picker) — TBD
+- [ ] 08-03: Color SEARCH (nearest-color filter over stored palettes + SearchCriteria + color picker) — planned 2026-06-26, see `phases/08-organize-power/08-03-PLAN.md`
 - [ ] 08-04: Find duplicates (content hashing) — TBD
 
 ### Phase 8.1: UI polish & Inter [INSERTED 2026-06-24]

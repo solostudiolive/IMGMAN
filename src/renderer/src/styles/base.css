@@ -61,6 +61,116 @@ textarea:focus-visible {
   border-radius: var(--radius-sm);
 }
 
+/* Modern full-width <select>: native arrow stripped for a custom token chevron. Self-contained
+   (border/bg/radius/padding) for block selects in the inspector (FolderAssigner / MultiInspector).
+   The 28px right padding leaves room for the chevron so long option text never overlaps it. */
+.modern-select {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 7px 28px 7px 10px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  font-family: inherit;
+  font-size: var(--fs-sm);
+  color: var(--color-text);
+  color-scheme: light dark;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-color: var(--color-bg-elevated);
+  background-image: var(--select-chevron);
+  background-repeat: no-repeat;
+  background-position: right 9px center;
+  background-size: 13px;
+  transition: border-color var(--dur-fast) var(--ease-out);
+}
+
+.modern-select:hover:not(:disabled) {
+  border-color: var(--color-border-strong);
+}
+
+.modern-select:focus {
+  outline: none;
+  border-color: var(--color-accent);
+}
+
+.modern-select:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+/* Inspector preview thumbnail: hover gives a subtle zoom-in (within the clipped frame) plus a
+   magnifier hint, signalling it's clickable to open the full-size lightbox. */
+.inspector-thumb__img {
+  transition: transform 220ms var(--ease-out);
+}
+
+.inspector-thumb:hover .inspector-thumb__img {
+  transform: scale(1.06);
+}
+
+.inspector-thumb__hint {
+  position: absolute;
+  right: 8px;
+  bottom: 8px;
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: var(--radius-sm);
+  background: rgba(0, 0, 0, 0.55);
+  color: #fff;
+  font-size: 15px;
+  line-height: 1;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--dur-fast) var(--ease-out);
+}
+
+.inspector-thumb:hover .inspector-thumb__hint {
+  opacity: 1;
+}
+
+/* Sidebar "Switch / Open…" library action — a modern elevated button with icon + hover lift.
+   Inline-styled neighbours (Recents/Settings) keep SECONDARY_BTN; this is the primary library action. */
+.sidebar-switch-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  width: 100%;
+  margin-top: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-md);
+  font-family: inherit;
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-medium);
+  cursor: pointer;
+  color: var(--color-text);
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border-strong);
+  box-shadow: var(--shadow-1);
+  transition: background var(--dur-fast) var(--ease-out), border-color var(--dur-fast) var(--ease-out),
+    box-shadow var(--dur-fast) var(--ease-out);
+}
+
+.sidebar-switch-btn:hover:not(:disabled) {
+  background: var(--color-surface-hover);
+  border-color: var(--color-text-faint);
+  box-shadow: var(--shadow-2);
+}
+
+.sidebar-switch-btn:disabled {
+  opacity: 0.55;
+  cursor: default;
+  box-shadow: none;
+}
+
+.sidebar-switch-btn__icon {
+  color: var(--color-accent);
+}
+
 /* Themed scrollbars so dark mode doesn't get bright native bars (WebKit/Chromium). */
 ::-webkit-scrollbar {
   width: 12px;

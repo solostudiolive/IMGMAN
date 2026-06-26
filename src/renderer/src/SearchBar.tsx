@@ -11,13 +11,19 @@ const TYPES: ItemType[] = ['image', 'video', 'audio', 'font', 'doc', 'other']
 // toolbar stays compact.
 export default function SearchBar({
   criteria,
-  onChange
+  onChange,
+  onSave
 }: {
   criteria: SearchCriteria
   onChange: (c: SearchCriteria) => void
+  // When provided and a search is active, shows a "Save search" control that saves the
+  // current criteria under the given name (used to create a smart folder).
+  onSave?: (name: string) => void
 }): React.JSX.Element {
   const [text, setText] = useState(criteria.query ?? '')
   const [menu, setMenu] = useState<'type' | 'filters' | null>(null)
+  // Inline save-name input: null = hidden, string = the in-progress name.
+  const [saveName, setSaveName] = useState<string | null>(null)
   const typeRef = useRef<HTMLDivElement>(null)
   const filtersRef = useRef<HTMLDivElement>(null)
 
@@ -165,7 +171,7 @@ export default function SearchBar({
               </label>
               <select
                 id="filter-rating"
-                className="searchbar__input"
+                className="searchbar__input searchbar__select"
                 value={criteria.minRating ?? 0}
                 onChange={(e) =>
                   onChange({ ...criteria, minRating: Number(e.target.value) || undefined })
@@ -202,6 +208,32 @@ export default function SearchBar({
           </div>
         )}
       </div>
+
+      {onSave && anyActive && (
+        saveName === null ? (
+          <button type="button" className="searchbar__clearall" onClick={() => setSaveName('')}>
+            Save search
+          </button>
+        ) : (
+          <input
+            autoFocus
+            className="searchbar__input"
+            type="text"
+            value={saveName}
+            placeholder="Name this search…"
+            onChange={(e) => setSaveName(e.target.value)}
+            onBlur={() => setSaveName(null)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                const name = saveName.trim()
+                if (name) onSave(name)
+                setSaveName(null)
+              }
+              if (e.key === 'Escape') setSaveName(null)
+            }}
+          />
+        )
+      )}
 
       {anyActive && (
         <button type="button" className="searchbar__clearall" onClick={() => onChange({})}>

@@ -1,0 +1,144 @@
+/*
+ * Import dropzone (Phase 8.x restyle). Token-driven, Eagle-like: a soft dashed card with a tinted
+ * upload badge, a clear primary/secondary action pair, and the library count as a quiet caption.
+ * Hover/drag states need real pseudo-classes, so the zone lives here rather than inline styles.
+ */
+
+.import-zone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-1);
+  margin: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border: 1.5px dashed var(--color-border-strong);
+  border-radius: var(--radius-lg);
+  background: var(--color-bg-content);
+  color: var(--color-text-muted);
+  text-align: center;
+  outline: none;
+  transition: background var(--dur-fast) var(--ease-out), border-color var(--dur-fast) var(--ease-out);
+}
+
+.import-zone:hover {
+  border-color: var(--color-text-faint);
+}
+
+.import-zone--dragging {
+  border-color: var(--color-accent);
+  border-style: solid;
+  background: var(--color-surface-selected);
+}
+
+/* Circular tinted badge holding the upload glyph. */
+.import-zone__badge {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-pill);
+  background: color-mix(in srgb, var(--color-accent) 14%, transparent);
+  color: var(--color-accent);
+  transition: transform var(--dur-fast) var(--ease-out);
+}
+
+.import-zone--dragging .import-zone__badge {
+  transform: translateY(-2px) scale(1.06);
+}
+
+.import-zone__title {
+  margin: 0;
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-semibold);
+  color: var(--color-text);
+}
+
+.import-zone__hint {
+  margin: 0;
+  font-size: var(--fs-xs);
+  color: var(--color-text-muted);
+  max-width: 52ch;
+}
+
+.import-zone__hint kbd {
+  font-family: var(--font-mono);
+  font-size: 0.92em;
+  padding: 1px 5px;
+  border-radius: var(--radius-sm);
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-muted);
+}
+
+.import-zone__actions {
+  display: flex;
+  gap: var(--space-2);
+  margin-top: var(--space-1);
+}
+
+.import-zone__count {
+  margin: var(--space-0) 0 0;
+  font-size: var(--fs-xs);
+  color: var(--color-text-faint);
+}
+
+/* ---- Buttons ---- */
+.import-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  height: 28px;
+  padding: 0 var(--space-3);
+  border-radius: var(--radius-md);
+  font-family: inherit;
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-medium);
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: background var(--dur-fast) var(--ease-out), border-color var(--dur-fast) var(--ease-out),
+    opacity var(--dur-fast) var(--ease-out);
+}
+
+.import-btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.import-btn--primary {
+  background: var(--color-accent);
+  color: var(--color-accent-contrast);
+}
+
+.import-btn--primary:hover:not(:disabled) {
+  background: var(--color-accent-hover);
+}
+
+.import-btn--secondary {
+  background: var(--color-bg-elevated);
+  color: var(--color-text);
+  border-color: var(--color-border-strong);
+}
+
+.import-btn--secondary:hover:not(:disabled) {
+  background: var(--color-surface-hover);
+  border-color: var(--color-text-faint);
+}
+
+/* ---- Status messages ---- */
+.import-status {
+  margin: 0 var(--space-3) var(--space-2);
+  font-size: var(--fs-sm);
+}
+
+.import-status--progress {
+  color: var(--color-accent);
+}
+
+.import-status--ok {
+  /* Status-green is an intentional fixed affordance color. */
+  color: #16a34a;
+}
+
+.import-status--error {
+  color: var(--color-danger);
+}

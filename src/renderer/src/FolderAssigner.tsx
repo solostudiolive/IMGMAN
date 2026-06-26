@@ -47,8 +47,10 @@ export default function FolderAssigner({ itemId }: { itemId: string }): React.JS
   const available = allFolders.filter((f) => !assignedIds.has(f.id))
 
   return (
-    <div style={{ borderTop: '1px solid #f0f0f0', padding: '8px 0', fontSize: 12 }}>
-      <div style={{ color: '#999', marginBottom: 6 }}>Folders</div>
+    <div style={{ borderTop: '1px solid var(--color-border)', padding: '8px 0', marginTop: 12, fontSize: 12 }}>
+      <div style={{ color: 'var(--color-text-faint)', fontWeight: 'var(--fw-bold)', marginBottom: 6 }}>
+        Folders
+      </div>
 
       {folders.length > 0 && (
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 8 }}>
@@ -69,13 +71,13 @@ export default function FolderAssigner({ itemId }: { itemId: string }): React.JS
       )}
 
       {allFolders.length === 0 ? (
-        <div style={{ color: '#bbb' }}>No folders — create one in the sidebar.</div>
+        <div style={{ color: 'var(--color-text-faint)' }}>No folders — create one in the sidebar.</div>
       ) : (
         <select
+          className="modern-select"
           value=""
           onChange={(e) => void assign(e.target.value)}
           disabled={available.length === 0}
-          style={SELECT_STYLE}
         >
           <option value="" disabled>
             {available.length === 0 ? 'In all folders' : 'Add to folder…'}
@@ -95,10 +97,11 @@ const CHIP_STYLE: React.CSSProperties = {
   display: 'inline-flex',
   alignItems: 'center',
   gap: 4,
-  padding: '2px 6px',
-  borderRadius: 10,
-  background: '#ecfdf5',
-  color: '#065f46',
+  padding: '2px 8px',
+  borderRadius: 'var(--radius-pill)',
+  background: 'var(--color-bg-elevated)',
+  color: 'var(--color-text)',
+  border: '1px solid var(--color-border)',
   fontSize: 11
 }
 
@@ -107,17 +110,7 @@ const CHIP_REMOVE_STYLE: React.CSSProperties = {
   border: 'none',
   padding: 0,
   cursor: 'pointer',
-  color: '#9ca3af',
+  color: 'var(--color-text-faint)',
   fontSize: 13,
   lineHeight: 1
-}
-
-const SELECT_STYLE: React.CSSProperties = {
-  width: '100%',
-  boxSizing: 'border-box',
-  padding: '4px 6px',
-  border: '1px solid #e5e7eb',
-  borderRadius: 6,
-  fontSize: 12,
-  background: '#fff'
 }

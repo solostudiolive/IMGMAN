@@ -230,10 +230,10 @@ export default function MultiInspector({
           </div>
         ) : (
           <select
+            className="modern-select"
             value=""
             onChange={(e) => void assignFolder(e.target.value)}
             disabled={availableFolders.length === 0}
-            style={SELECT_STYLE}
           >
             <option value="" disabled>
               {availableFolders.length === 0 ? 'In all folders' : 'Add all to folder…'}
@@ -267,7 +267,9 @@ function Section({
         fontSize: 'var(--fs-sm)'
       }}
     >
-      <div style={{ color: 'var(--color-text-faint)', marginBottom: 'var(--space-1)' }}>{label}</div>
+      <div style={{ color: 'var(--color-text-faint)', fontWeight: 'var(--fw-bold)', marginBottom: 'var(--space-1)' }}>
+        {label}
+      </div>
       {note && (
         <div style={{ color: 'var(--color-text-faint)', fontSize: 'var(--fs-xs)', marginBottom: 6 }}>
           {note}
@@ -352,17 +354,6 @@ const CHIP_REMOVE_STYLE: React.CSSProperties = {
 }
 
 const INPUT_STYLE: React.CSSProperties = {
-  width: '100%',
-  boxSizing: 'border-box',
-  padding: 'var(--space-1) var(--space-2)',
-  border: '1px solid var(--color-border)',
-  borderRadius: 'var(--radius-md)',
-  background: 'var(--color-bg-elevated)',
-  color: 'var(--color-text)',
-  fontSize: 12
-}
-
-const SELECT_STYLE: React.CSSProperties = {
   width: '100%',
   boxSizing: 'border-box',
   padding: 'var(--space-1) var(--space-2)',

@@ -42,6 +42,33 @@ function readSettings(libPath: string): LibrarySettings | null {
   }
 }
 
+/** A library's display name: settings.json `name`, falling back to the folder basename. */
+export function readLibraryName(libPath: string): string {
+  return readSettings(libPath)?.name ?? basename(libPath).replace(/\.library$/, '')
+}
+
+/**
+ * Rename the ACTIVE library's display name. Writes settings.json only — the folder path (and
+ * thus the DB, recents key, and on-disk layout) is intentionally left unchanged, so the rename
+ * is metadata-only and can't break the active connection or stale the recents list.
+ */
+export function renameActiveLibrary(name: string): LibraryInfo {
+  if (!active) throw new Error('No active library to rename.')
+  const cleanName = name.trim()
+  if (!cleanName) throw new Error('Library name cannot be empty.')
+
+  const settings: LibrarySettings = readSettings(active.path) ?? {
+    name: cleanName,
+    createdAt: Date.now(),
+    formatVersion: FORMAT_VERSION
+  }
+  settings.name = cleanName
+  writeFileSync(settingsPath(active.path), JSON.stringify(settings, null, 2), 'utf-8')
+
+  active = { path: active.path, name: cleanName }
+  return active
+}
+
 /**
  * Create `<name>.library/` under parentDir with the full folder structure and an
  * initialized DB, then make it active. Rejects if the target already exists.
@@ -86,8 +113,7 @@ export function openLibrary(libPath: string): LibraryInfo {
   }
 
   openDatabase(dbPath(libPath))
-  const name = readSettings(libPath)?.name ?? basename(libPath).replace(/\.library$/, '')
-  active = { path: libPath, name }
+  active = { path: libPath, name: readLibraryName(libPath) }
   return active
 }
 

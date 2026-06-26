@@ -229,6 +229,20 @@
   border-color: var(--color-accent);
 }
 
+/* The rating <select> only — adds the modern custom chevron without touching the text/date inputs
+   that also use .searchbar__input. Placed after so its background-image wins the cascade. */
+.searchbar__select {
+  padding-right: 26px;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-image: var(--select-chevron);
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  background-size: 13px;
+}
+
 .searchbar__row {
   display: flex;
   gap: var(--space-2);

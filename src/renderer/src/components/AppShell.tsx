@@ -138,16 +138,6 @@ export default function AppShell({
       {!sidebarCollapsed && (
         <>
           <div className="shell__sidebar" style={{ width: sidebarW }}>
-            <div className="shell__pane-header shell__pane-header--end">
-              <button
-                className="shell__toggle"
-                onClick={toggleSidebar}
-                title="Hide sidebar"
-                aria-label="Hide sidebar"
-              >
-                «
-              </button>
-            </div>
             <div className="shell__pane-body">{sidebar}</div>
           </div>
           <div
@@ -161,25 +151,23 @@ export default function AppShell({
 
       <div className="shell__content">
         <div className="shell__toolbar">
-          {sidebarCollapsed && (
-            <button
-              className="shell__toggle"
-              onClick={toggleSidebar}
-              title="Show sidebar"
-              aria-label="Show sidebar"
-            >
-              »
-            </button>
-          )}
+          <button
+            className="shell__toggle"
+            onClick={toggleSidebar}
+            title={sidebarCollapsed ? 'Show sidebar' : 'Hide sidebar'}
+            aria-label={sidebarCollapsed ? 'Show sidebar' : 'Hide sidebar'}
+          >
+            {sidebarCollapsed ? '»' : '«'}
+          </button>
           <div className="shell__toolbar-mid">{toolbar}</div>
-          {inspector != null && inspectorCollapsed && (
+          {inspector != null && (
             <button
               className="shell__toggle"
               onClick={toggleInspector}
-              title="Show inspector"
-              aria-label="Show inspector"
+              title={inspectorCollapsed ? 'Show inspector' : 'Hide inspector'}
+              aria-label={inspectorCollapsed ? 'Show inspector' : 'Hide inspector'}
             >
-              «
+              {inspectorCollapsed ? '«' : '»'}
             </button>
           )}
         </div>
@@ -195,16 +183,6 @@ export default function AppShell({
             aria-orientation="vertical"
           />
           <div className="shell__inspector" style={{ width: inspectorW }}>
-            <div className="shell__pane-header">
-              <button
-                className="shell__toggle"
-                onClick={toggleInspector}
-                title="Hide inspector"
-                aria-label="Hide inspector"
-              >
-                »
-              </button>
-            </div>
             <div className="shell__pane-body">{inspector}</div>
           </div>
         </>

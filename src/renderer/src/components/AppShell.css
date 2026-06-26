@@ -21,22 +21,6 @@
   border-right: 1px solid var(--color-border);
 }
 
-/* Slim header at the top of a collapsible pane, holding its collapse toggle.
-   Height matches the center toolbar so the three panes' top edges line up. */
-.shell__pane-header {
-  flex: 0 0 auto;
-  height: var(--toolbar-h);
-  display: flex;
-  align-items: center;
-  padding: 0 var(--space-1);
-  border-bottom: 1px solid var(--color-border);
-}
-
-/* Sidebar toggle hugs the inner (divider) edge. */
-.shell__pane-header--end {
-  justify-content: flex-end;
-}
-
 .shell__pane-body {
   flex: 1 1 auto;
   min-height: 0;
@@ -54,14 +38,13 @@
 
 .shell__toolbar {
   flex: 0 0 auto;
-  /* Grows beyond the base height when the filter row wraps on a narrow window. */
+  /* Fixed at the toolbar height so it lines up with the side pane-headers; the 30px
+     controls center within it. Grows beyond it only when the filter row wraps. */
   min-height: var(--toolbar-h);
   display: flex;
   align-items: center;
   gap: var(--space-2);
-  padding: var(--space-2);
-  background: var(--color-bg-panel);
-  border-bottom: 1px solid var(--color-border);
+  padding: 0 var(--space-2);
 }
 
 .shell__toolbar-mid {

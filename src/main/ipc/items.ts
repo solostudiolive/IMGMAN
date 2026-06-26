@@ -6,6 +6,7 @@ import {
   deleteItems,
   renameItems,
   rateItems,
+  backfillPalettes,
   type Item,
   type FullItem,
   type ItemPatch
@@ -26,4 +27,5 @@ export function registerItemsIpc(): void {
     rateItems(ids, rating)
   )
   ipcMain.handle('items:search', (_e, criteria: SearchCriteria): Item[] => searchItems(criteria))
+  ipcMain.handle('items:backfillPalettes', (): Promise<number> => backfillPalettes())
 }

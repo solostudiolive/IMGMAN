@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import type { Tag } from '../../preload/types'
 import ContextMenu, { type MenuNode } from './components/ContextMenu'
+import { TrashIcon } from './components/icons'
 
 // A unique datalist id is fine as a constant — only one TagEditor renders at a time
 // (it lives in the single inspector). Suggestions are scoped by the input's `list`.
@@ -58,8 +59,10 @@ export default function TagEditor({ itemId }: { itemId: string }): React.JSX.Ele
   }
 
   return (
-    <div style={{ borderTop: '1px solid #f0f0f0', padding: '8px 0', fontSize: 12 }}>
-      <div style={{ color: '#999', marginBottom: 6 }}>Tags</div>
+    <div style={{ borderTop: '1px solid var(--color-border)', padding: '8px 0', fontSize: 12 }}>
+      <div style={{ color: 'var(--color-text-faint)', fontWeight: 'var(--fw-bold)', marginBottom: 6 }}>
+        Tags
+      </div>
 
       {tags.length > 0 && (
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 8 }}>
@@ -76,7 +79,7 @@ export default function TagEditor({ itemId }: { itemId: string }): React.JSX.Ele
                     {
                       kind: 'action',
                       label: 'Remove from item',
-                      icon: '×',
+                      icon: <TrashIcon />,
                       danger: true,
                       onSelect: () => void remove(tag.id)
                     }
@@ -128,10 +131,11 @@ const CHIP_STYLE: React.CSSProperties = {
   display: 'inline-flex',
   alignItems: 'center',
   gap: 4,
-  padding: '2px 6px',
-  borderRadius: 10,
-  background: '#eef2ff',
-  color: '#3730a3',
+  padding: '2px 8px',
+  borderRadius: 'var(--radius-pill)',
+  background: 'var(--color-bg-elevated)',
+  color: 'var(--color-text)',
+  border: '1px solid var(--color-border)',
   fontSize: 11
 }
 
@@ -140,7 +144,7 @@ const CHIP_REMOVE_STYLE: React.CSSProperties = {
   border: 'none',
   padding: 0,
   cursor: 'pointer',
-  color: '#9ca3af',
+  color: 'var(--color-text-faint)',
   fontSize: 13,
   lineHeight: 1
 }
@@ -148,8 +152,10 @@ const CHIP_REMOVE_STYLE: React.CSSProperties = {
 const INPUT_STYLE: React.CSSProperties = {
   width: '100%',
   boxSizing: 'border-box',
-  padding: '4px 6px',
-  border: '1px solid #e5e7eb',
-  borderRadius: 6,
+  padding: '4px 8px',
+  background: 'var(--color-bg-elevated)',
+  color: 'var(--color-text)',
+  border: '1px solid var(--color-border)',
+  borderRadius: 'var(--radius-md)',
   fontSize: 12
 }

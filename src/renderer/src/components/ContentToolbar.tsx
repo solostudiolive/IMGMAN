@@ -12,12 +12,14 @@ import './ContentToolbar.css'
 // and the thumbnail-size slider. View-mode switching (grid/masonry/list) is added by 06-02
 // in the gap on the right — this row intentionally leaves room for it.
 
+// Labels carry the "Sort:" prefix so the dropdown is self-describing — the standalone "Sort"
+// label is dropped to save toolbar width (the word now lives inside the control).
 const SORT_OPTIONS: ReadonlyArray<{ value: SortField; label: string }> = [
-  { value: 'imported', label: 'Imported' },
-  { value: 'created', label: 'Date created' },
-  { value: 'name', label: 'Name' },
-  { value: 'rating', label: 'Rating' },
-  { value: 'size', label: 'Size' }
+  { value: 'imported', label: 'Sort: Imported' },
+  { value: 'created', label: 'Sort: Date created' },
+  { value: 'name', label: 'Sort: Name' },
+  { value: 'rating', label: 'Sort: Rating' },
+  { value: 'size', label: 'Sort: Size' }
 ]
 
 export default function ContentToolbar({
@@ -25,7 +27,6 @@ export default function ContentToolbar({
   sortField,
   sortDir,
   viewMode,
-  count,
   selectedCount = 0,
   onThumbSize,
   onSortField,
@@ -36,7 +37,6 @@ export default function ContentToolbar({
   sortField: SortField
   sortDir: SortDir
   viewMode: ViewMode
-  count: number
   selectedCount?: number
   onThumbSize: (n: number) => void
   onSortField: (f: SortField) => void
@@ -46,12 +46,10 @@ export default function ContentToolbar({
   return (
     <div className="content-toolbar">
       <div className="content-toolbar__group">
-        <label className="content-toolbar__label" htmlFor="grid-sort">
-          Sort
-        </label>
         <select
           id="grid-sort"
           className="content-toolbar__select"
+          aria-label="Sort"
           value={sortField}
           onChange={(e) => onSortField(e.target.value as SortField)}
         >
@@ -72,11 +70,9 @@ export default function ContentToolbar({
         </button>
       </div>
 
-      <span className="content-toolbar__count">
-        {selectedCount > 1
-          ? `${selectedCount} selected`
-          : `${count} ${count === 1 ? 'item' : 'items'}`}
-      </span>
+      {selectedCount > 1 && (
+        <span className="content-toolbar__count">{selectedCount} selected</span>
+      )}
 
       <div className="content-toolbar__group content-toolbar__group--end">
         <div className="content-toolbar__viewmode" role="group" aria-label="View mode">

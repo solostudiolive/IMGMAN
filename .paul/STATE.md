@@ -10,24 +10,22 @@ See: .paul/PROJECT.md (updated 2026-06-23)
 ## Current Position
 
 Milestone: v1.0 — Eagle Parity 🚧 In Progress (3 of 5 phases complete)
-Phase: 8.1 (UI polish & Inter) [INSERTED] — ✅ COMPLETE (2 of 2 plans); parent Phase 8 paused at 2/~4 (resume at 08-03)
-Plan: 8.1-02 UNIFIED — Phase 8.1 loop closed. Both deferred SUMMARYs (08.1-01, 08.1-02) written.
-Status: Phase 8.1 complete + committed (feat(8.1-ui-polish)); ready to resume Phase 8 → PLAN 08-03 (color SEARCH)
-Last activity: 2026-06-26 — Closed Phase 8.1. Verified both slices applied (typecheck + build clean; Inter woff2 bundled): 8.1-01 (Inter + type/spacing tokens) and 8.1-02 ("Refined dark, Eagle-like" restyle). NOTE: 8.1-02 landed an EAGLE "FLAT NEAR-BLACK" dark palette (near-uniform #1a1a1a panes, #1d1d1d content, #2a2a2a elevated for inputs only), NEUTRAL-grey selection in sidebar/list with blue accent RESERVED for grid tiles, and restrained radii (md=6/lg=10, NOT the plan's 8/12) — a human-verify reinterpretation of the plan's suggested layered-grey/8–12 values. Added --shadow-3 + --ring; accent :focus-visible ring in base.css. AppShell.css listed in the plan but NOT edited (token propagation covered it). Wrote both SUMMARYs, updated ROADMAP, committed feat(8.1-ui-polish).
+Phase: 8 (Organize power features) — In Progress (08-01 ✓, 08-02 ✓, 08-03 PLAN created; 08-04 TBD). Inserted 8.1 ✅ complete + committed.
+Plan: 08-03 created, awaiting approval — Color SEARCH (nearest-color filter over stored palettes + color picker).
+Status: PLAN created, ready for APPLY
+Last activity: 2026-06-26 — Created Plan 08-03 (color SEARCH). Reuse-existing-scope design: add `color?` + `colorTolerance?` to SearchCriteria (services/search.ts + preload/types.ts mirror); searchItems does a NEAREST-COLOR JS post-filter over the stored items.palette (#rrggbb JSON from 08-02) — when color unset the query is byte-identical to before. SearchBar filters popover gains a native `<input type=color>` + tolerance select (Exact 25 / Close 60 / Loose 110, RGB Euclidean) + Clear; advCount counts color; LibraryGate isSearchActive adds `|| !!c.color`. NO new IPC channel (items:search forwards whole criteria), NO schema change, NO dep, NO worker (palettes pre-extracted). Color persists into saved searches (08-01) for free. Ends at a human-verify checkpoint.
 
 Progress:
 - v1.0 Eagle Parity: [██████░░░░] 60% (3 of 5 phases complete; Phase 8 in progress, inserted 8.1 complete)
-- Phase 8.1: [██████████] 100% (8.1-01 + 8.1-02 applied, unified, committed)
+- Phase 8: [█████░░░░░] ~50% (08-01 ✓, 08-02 ✓ applied; 08-03 planned; 08-04 TBD)
 
 ## Loop Position
 
 Current loop state:
 ```
-Phase 8.1 — both plans:
+Phase 8 — Plan 08-03 (color SEARCH):
 PLAN ──▶ APPLY ──▶ UNIFY
-  ✓        ✓        ✓     [8.1-01 + 8.1-02 — loop complete, Phase 8.1 closed + committed]
-
-Next loop: Phase 8 (organize power) resumes at PLAN 08-03 (color SEARCH).
+  ✓        ○        ○     [Plan 08-03 created, awaiting approval]
 ```
 
 Note: Phase 7 COMPLETE (7/7), bundled into one `feat(07-selection-interaction)` commit (c8e1477).
@@ -87,7 +85,7 @@ None logged.
 
 ### Git State
 - Repository initialized 2026-06-23 (branch: main).
-- Last commit: feat(8.1-ui-polish) — Inter typeface + "Refined dark, Eagle-like" restyle (inserted Phase 8.1; bundles 8.1-01 + 8.1-02). Committed 2026-06-26. NOTE: staged ONLY the 8.1 design files (tokens/base/main.tsx/Grid.tsx + the polished component CSS + package.json/-lock for Inter) + the 8.1 phase docs + STATE/ROADMAP — Phase 8 source (08-01, 08-02) remains intentionally UNCOMMITTED for the future feat(08-organize-power) bundle.
+- Last commit: 5fccb09 — feat(8.1-ui-polish): Inter typeface + "Refined dark, Eagle-like" restyle (inserted Phase 8.1; bundles 8.1-01 + 8.1-02). Committed 2026-06-26. NOTE: staged ONLY the 8.1 design files (tokens/base/main.tsx/Grid.tsx + the polished component CSS + package.json/-lock for Inter) + the 8.1 phase docs + STATE/ROADMAP — Phase 8 source (08-01, 08-02) remains intentionally UNCOMMITTED for the future feat(08-organize-power) bundle.
 - Prior: c8e1477 — feat(07-selection-interaction): multi-select, context menus, batch ops, and editable inspectors (Phase 7 — v1.0 Eagle Parity 3/5; bundles 07-01…07-07).
 - Prior: 8f39198 — feat(06-grid-content-area): view toolbar, view modes, and hover preview (Phase 6 — v1.0 Eagle Parity 2/5).
 - Prior: 2190713 — feat(05-design-system-shell): theming, chrome-less shell, and settings (Phase 5).
@@ -109,10 +107,10 @@ None logged.
 ## Session Continuity
 
 Last session: 2026-06-26
-Stopped at: Phase 8.1 UNIFIED + committed (feat(8.1-ui-polish)) — both SUMMARYs written, loop closed
-Next action: /paul:plan for Phase 8 plan 08-03 (color SEARCH — nearest-color filter over stored palettes + SearchCriteria + color picker)
-Resume file: .paul/phases/08.1-ui-polish/08.1-02-SUMMARY.md
-Done this session: verified both 8.1 slices applied (typecheck + build clean), wrote 08.1-01-SUMMARY.md + 08.1-02-SUMMARY.md, updated ROADMAP (8.1 → ✅), committed feat(8.1-ui-polish) with selective staging (8.1 files only; Phase 8 source left uncommitted).
+Stopped at: Plan 08-03 (color SEARCH) created, awaiting approval
+Next action: Review/approve, then /paul:apply .paul/phases/08-organize-power/08-03-PLAN.md
+Resume file: .paul/phases/08-organize-power/08-03-PLAN.md
+After 08-03 verifies: plan 08-04 (find duplicates). Phase-8 source stays UNCOMMITTED until 08-04 closes the phase (one feat(08-organize-power) commit).
 
 Phase 8 breakdown: 08-01 saved searches [✓] → 08-02 color extraction + backfill + swatches [✓] →
 [INSERTED 8.1 — UI polish & Inter, next] → 08-03 color SEARCH [TBD] → 08-04 find duplicates [TBD].

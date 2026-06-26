@@ -12,6 +12,15 @@ export default defineConfig({
   },
   renderer: {
     root: 'src/renderer',
+    // Pin the dev server to a fixed, IMGMAN-dedicated port. Without this, Vite falls back to
+    // 5174+ whenever 5173 is busy, so the dev origin (http://localhost:PORT) shifts between runs —
+    // and because the theme preference lives in origin-scoped localStorage, it appears "not saved"
+    // after a restart that landed on a different port. strictPort fails loudly instead of silently
+    // drifting, keeping the origin — and therefore persistence — stable across dev launches.
+    server: {
+      port: 5273,
+      strictPort: true
+    },
     resolve: {
       alias: {
         '@renderer': resolve('src/renderer/src')

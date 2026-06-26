@@ -1,9 +1,10 @@
 import { BrowserWindow, dialog, ipcMain } from 'electron'
-import { basename } from 'path'
 import {
   createLibrary,
   openLibrary,
   getActiveLibrary,
+  renameActiveLibrary,
+  readLibraryName,
   type LibraryInfo
 } from '../services/library'
 import { addRecent, removeRecent, getRecentLibraries } from '../config'
@@ -73,8 +74,17 @@ export function registerLibraryIpc(): void {
 
   ipcMain.handle('library:getActive', (): LibraryInfo | null => getActiveLibrary())
 
-  // Return recents as {path,name} for display (name derived from folder).
+  // Rename the active library's display name (settings.json only; path unchanged).
+  ipcMain.handle('library:rename', (_event, name: string): LibraryResult => {
+    try {
+      return ok(renameActiveLibrary(name))
+    } catch (e) {
+      return fail(e)
+    }
+  })
+
+  // Return recents as {path,name} for display (name from settings.json, falling back to folder).
   ipcMain.handle('library:listRecent', (): Array<{ path: string; name: string }> =>
-    getRecentLibraries().map((p) => ({ path: p, name: basename(p).replace(/\.library$/, '') }))
+    getRecentLibraries().map((p) => ({ path: p, name: readLibraryName(p) }))
   )
 }

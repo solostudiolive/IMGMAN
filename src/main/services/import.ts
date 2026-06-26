@@ -4,6 +4,7 @@ import { join, basename, extname } from 'path'
 import sharp from 'sharp'
 import { getDb } from '../db'
 import { getActiveLibrary, imagesDir } from './library'
+import { extractPalette, paletteToJson } from './palette'
 
 export type ItemType = 'image' | 'video' | 'audio' | 'font' | 'doc' | 'other'
 
@@ -49,6 +50,7 @@ function imagesRoot(): string {
 function insertItem(item: {
   id: string; name: string; ext: string; type: ItemType
   size_bytes: number; width: number | null; height: number | null
+  palette: string | null
   created_at: number; imported_at: number; source_url: string | null
 }): void {
   getDb()
@@ -56,7 +58,7 @@ function insertItem(item: {
       `INSERT INTO items
         (id, name, ext, type, size_bytes, width, height, duration_ms, palette, rating, source_url, note, created_at, imported_at)
        VALUES
-        (@id, @name, @ext, @type, @size_bytes, @width, @height, NULL, NULL, 0, @source_url, NULL, @created_at, @imported_at)`
+        (@id, @name, @ext, @type, @size_bytes, @width, @height, NULL, @palette, 0, @source_url, NULL, @created_at, @imported_at)`
     )
     .run(item)
 }
@@ -87,6 +89,7 @@ export async function importFile(absPath: string): Promise<ImportedItem> {
 
   let width: number | null = null
   let height: number | null = null
+  let palette: string | null = null
   if (type === 'image') {
     try {
       const meta = await sharp(absPath).metadata()
@@ -97,10 +100,12 @@ export async function importFile(absPath: string): Promise<ImportedItem> {
         .resize(THUMB_MAX, THUMB_MAX, { fit: 'inside', withoutEnlargement: true })
         .webp({ quality: 80 })
         .toFile(join(dir, 'thumbnail.webp'))
+      palette = paletteToJson(await extractPalette(absPath))
     } catch {
-      // Unreadable/unsupported image bytes: keep the original + row, skip the thumb.
+      // Unreadable/unsupported image bytes: keep the original + row, skip the thumb/palette.
       width = null
       height = null
+      palette = null
     }
   }
 
@@ -111,7 +116,7 @@ export async function importFile(absPath: string): Promise<ImportedItem> {
     size_bytes: stats.size,
     width, height,
     duration_ms: null,
-    palette: null,
+    palette,
     rating: 0,
     source_url: null,
     note: null,
@@ -123,6 +128,7 @@ export async function importFile(absPath: string): Promise<ImportedItem> {
     id, name, ext, type,
     size_bytes: stats.size,
     width, height,
+    palette,
     created_at: createdAt,
     imported_at: importedAt,
     source_url: null
@@ -146,6 +152,7 @@ export async function importImageBuffer(buf: Buffer, suggestedName?: string): Pr
 
   let width: number | null = null
   let height: number | null = null
+  let palette: string | null = null
   try {
     const meta = await sharp(buf).metadata()
     width = meta.width ?? null
@@ -154,9 +161,11 @@ export async function importImageBuffer(buf: Buffer, suggestedName?: string): Pr
       .resize(THUMB_MAX, THUMB_MAX, { fit: 'inside', withoutEnlargement: true })
       .webp({ quality: 80 })
       .toFile(join(dir, 'thumbnail.webp'))
+    palette = paletteToJson(await extractPalette(buf))
   } catch {
     width = null
     height = null
+    palette = null
   }
 
   const now = Date.now()
@@ -165,7 +174,7 @@ export async function importImageBuffer(buf: Buffer, suggestedName?: string): Pr
     size_bytes: buf.length,
     width, height,
     duration_ms: null,
-    palette: null,
+    palette,
     rating: 0,
     source_url: null,
     note: null,
@@ -177,6 +186,7 @@ export async function importImageBuffer(buf: Buffer, suggestedName?: string): Pr
     id, name, ext, type,
     size_bytes: buf.length,
     width, height,
+    palette,
     created_at: now,
     imported_at: now,
     source_url: null

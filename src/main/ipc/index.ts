@@ -4,6 +4,7 @@ import { registerImportIpc } from './import'
 import { registerItemsIpc } from './items'
 import { registerTagsIpc } from './tags'
 import { registerFoldersIpc } from './folders'
+import { registerSmartFoldersIpc } from './smartFolders'
 import { registerWindowIpc } from './window'
 
 /**
@@ -19,5 +20,6 @@ export function registerIpcHandlers(): void {
   registerItemsIpc()
   registerTagsIpc()
   registerFoldersIpc()
+  registerSmartFoldersIpc()
   registerWindowIpc()
 }

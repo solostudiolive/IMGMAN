@@ -1,10 +1,12 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import type { Item, LibraryInfo, LibraryResult, SearchCriteria } from '../../preload/types'
+import type { Item, LibraryInfo, LibraryResult, SearchCriteria, SmartFolder, Tag } from '../../preload/types'
 import ImportZone from './ImportZone'
 import Grid, { type GridHandle } from './Grid'
 import Inspector from './Inspector'
 import QuickPreview from './QuickPreview'
 import FolderTree from './FolderTree'
+import TagsList from './TagsList'
+import SmartFolders from './SmartFolders'
 import SearchBar from './SearchBar'
 import AppShell from './components/AppShell'
 import ContentToolbar from './components/ContentToolbar'
@@ -13,6 +15,7 @@ import ContextMenu, { type MenuNode } from './components/ContextMenu'
 import BatchTagDialog from './components/BatchTagDialog'
 import BatchRenameDialog from './components/BatchRenameDialog'
 import MultiInspector from './components/MultiInspector'
+import { EyeIcon, StarIcon, TagIcon, PencilIcon, FolderIcon, TrashIcon } from './components/icons'
 import type { RenameInput } from './components/renameItems'
 import { useGridView, compareItems } from './hooks/useGridView'
 import { useSelection } from './hooks/useSelection'
@@ -25,7 +28,8 @@ function isSearchActive(c: SearchCriteria): boolean {
     !!c.ext?.trim() ||
     !!c.minRating ||
     c.from != null ||
-    c.to != null
+    c.to != null ||
+    !!c.tagIds?.length
   )
 }
 
@@ -37,6 +41,9 @@ export default function LibraryGate() {
   // Electron doesn't support window.prompt(), so collect the name inline.
   const [creating, setCreating] = useState(false)
   const [name, setName] = useState('')
+  // Inline rename of the active library's display name.
+  const [renamingLib, setRenamingLib] = useState(false)
+  const [libNameDraft, setLibNameDraft] = useState('')
   // Browse state for the active library.
   const [items, setItems] = useState<Item[]>([])
   // Multi-select model; `primary` (last-clicked) drives the inspector + quick preview.
@@ -46,6 +53,12 @@ export default function LibraryGate() {
   const [selectedFolderId, setSelectedFolderId] = useState<string | null>(null)
   // Active search/filter criteria; when active it overrides the folder scope.
   const [searchCriteria, setSearchCriteria] = useState<SearchCriteria>({})
+  // Saved searches ("smart folders") for the active library; LibraryGate owns the list so the
+  // toolbar "Save search" control can refresh it alongside the sidebar section.
+  const [smartFolders, setSmartFolders] = useState<SmartFolder[]>([])
+  // All tags in the active library, for the sidebar Tags section. LibraryGate owns the list so
+  // it can refresh after tag mutations (batch dialog, multi-inspector edits).
+  const [allTags, setAllTags] = useState<Tag[]>([])
   // Settings modal visibility (Appearance + About).
   const [settingsOpen, setSettingsOpen] = useState(false)
   // Open right-click item context menu (null = closed).
@@ -97,6 +110,31 @@ export default function LibraryGate() {
     setItems(list)
   }, [searchCriteria, selectedFolderId])
 
+  // Reload the active library's saved searches (empty when no library).
+  const reloadSmartFolders = useCallback(async () => {
+    setSmartFolders(active ? await window.api.smartFolders.list() : [])
+  }, [active])
+
+  // Reload the active library's tag list for the sidebar (empty when no library).
+  const reloadTags = useCallback(async () => {
+    setAllTags(active ? await window.api.tags.listAll() : [])
+  }, [active])
+
+  // After an edit that may create/remove tags (batch dialog, multi-inspector), refresh both the
+  // grid and the sidebar tag list so a newly-created tag appears immediately.
+  const reloadAfterTagEdit = useCallback(() => {
+    reloadItems()
+    reloadTags()
+  }, [reloadItems, reloadTags])
+
+  // Save the current search/filter criteria as a smart folder, then refresh the list.
+  const saveCurrentSearch = useCallback(
+    (name: string) => {
+      void window.api.smartFolders.create(name, searchCriteria).then(setSmartFolders)
+    },
+    [searchCriteria]
+  )
+
   // Search and folder scopes are mutually exclusive.
   const applySearch = useCallback((c: SearchCriteria) => {
     if (isSearchActive(c)) setSelectedFolderId(null)
@@ -106,6 +144,16 @@ export default function LibraryGate() {
     setSearchCriteria({})
     setSelectedFolderId(id)
   }, [])
+  // Sidebar Tags section: filter the grid to one tag via the search scope (or clear it).
+  const selectTag = useCallback(
+    (tagId: string | null) => applySearch(tagId ? { tagIds: [tagId] } : {}),
+    [applySearch]
+  )
+  // The tag currently driving the grid (only when a lone tag filter is applied) — for sidebar highlight.
+  const selectedTagId =
+    searchCriteria.tagIds?.length === 1 && Object.keys(searchCriteria).length === 1
+      ? searchCriteria.tagIds[0]
+      : null
 
   // Permanently delete a batch (with confirm), then reload + clear selection. The prune effect
   // drops any stale ids; the inspector empties when primary is cleared.
@@ -139,7 +187,7 @@ export default function LibraryGate() {
         ? folders.map((f) => ({
             kind: 'action',
             label: f.name,
-            icon: '📁',
+            icon: <FolderIcon />,
             onSelect: () => {
               void window.api.folders.assignMany(targets, f.id).then(reloadItems)
             }
@@ -154,11 +202,11 @@ export default function LibraryGate() {
           reloadItems()
         }
         menu.push(
-          { kind: 'action', label: 'Quick preview', icon: '👁', onSelect: () => setPreviewOpen(true) },
+          { kind: 'action', label: 'Quick preview', icon: <EyeIcon />, onSelect: () => setPreviewOpen(true) },
           {
             kind: 'submenu',
             label: 'Rating',
-            icon: '★',
+            icon: <StarIcon />,
             items: [
               { kind: 'action', label: 'Clear', onSelect: () => void rate(0) },
               { kind: 'action', label: '★', onSelect: () => void rate(1) },
@@ -171,11 +219,11 @@ export default function LibraryGate() {
         )
       }
       menu.push(
-        { kind: 'action', label: 'Add tag…', icon: '🏷', onSelect: () => setTagDialog(targets) },
+        { kind: 'action', label: 'Add tag…', icon: <TagIcon />, onSelect: () => setTagDialog(targets) },
         {
           kind: 'action',
           label: 'Rename…',
-          icon: '✎',
+          icon: <PencilIcon />,
           onSelect: () => {
             const tset = new Set(targets)
             setRenameDialog(
@@ -185,12 +233,12 @@ export default function LibraryGate() {
             )
           }
         },
-        { kind: 'submenu', label: 'Add to folder', icon: '🗂', items: folderNodes },
+        { kind: 'submenu', label: 'Add to folder', icon: <FolderIcon />, items: folderNodes },
         { kind: 'separator' },
         {
           kind: 'action',
           label: targets.length > 1 ? `Delete ${targets.length} items` : 'Delete item',
-          icon: '🗑',
+          icon: <TrashIcon />,
           danger: true,
           onSelect: () => void deleteTargets(targets)
         }
@@ -208,7 +256,18 @@ export default function LibraryGate() {
   useEffect(() => {
     setSelectedFolderId(null)
     setSearchCriteria({})
+    setRenamingLib(false)
   }, [active?.path])
+
+  // Load (or clear) saved searches when the active library changes.
+  useEffect(() => {
+    reloadSmartFolders()
+  }, [active?.path, reloadSmartFolders])
+
+  // Load (or clear) the sidebar tag list when the active library changes.
+  useEffect(() => {
+    reloadTags()
+  }, [active?.path, reloadTags])
 
   // Load (or clear) items whenever the active library or folder scope changes;
   // reset selection (reloadItems identity changes with selectedFolderId).
@@ -334,6 +393,15 @@ export default function LibraryGate() {
     setName('')
   }
 
+  // Persist the inline library rename (no-op on empty / unchanged), then refresh name + recents.
+  const submitLibraryRename = async () => {
+    const trimmed = libNameDraft.trim()
+    setRenamingLib(false)
+    if (trimmed && trimmed !== active?.name) {
+      await apply(await window.api.library.rename(trimmed))
+    }
+  }
+
   const previewItem =
     previewOpen && sel.primary ? sortedItems.find((it) => it.id === sel.primary) : null
 
@@ -352,23 +420,68 @@ export default function LibraryGate() {
               }}
             >
               <div style={{ flex: '0 0 auto', marginBottom: 'var(--space-3)' }}>
-                <div
-                  title={active.path}
-                  style={{
-                    fontWeight: 'var(--fw-semibold)',
-                    fontSize: 'var(--fs-md)',
-                    whiteSpace: 'nowrap',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis'
-                  }}
-                >
-                  {active.name}
-                </div>
+                {renamingLib ? (
+                  <input
+                    autoFocus
+                    value={libNameDraft}
+                    onChange={(e) => setLibNameDraft(e.target.value)}
+                    onBlur={submitLibraryRename}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') void submitLibraryRename()
+                      if (e.key === 'Escape') setRenamingLib(false)
+                    }}
+                    style={{
+                      ...INPUT_STYLE,
+                      width: '100%',
+                      fontWeight: 'var(--fw-semibold)',
+                      fontSize: 'var(--fs-md)'
+                    }}
+                  />
+                ) : (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                    <div
+                      title={active.path}
+                      style={{
+                        flex: 1,
+                        minWidth: 0,
+                        fontWeight: 'var(--fw-semibold)',
+                        fontSize: 'var(--fs-md)',
+                        whiteSpace: 'nowrap',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis'
+                      }}
+                    >
+                      {active.name}
+                    </div>
+                    <button
+                      type="button"
+                      title="Rename library"
+                      aria-label="Rename library"
+                      onClick={() => {
+                        setLibNameDraft(active.name)
+                        setRenamingLib(true)
+                      }}
+                      style={{
+                        flex: '0 0 auto',
+                        display: 'inline-flex',
+                        background: 'none',
+                        border: 'none',
+                        padding: 2,
+                        cursor: 'pointer',
+                        color: 'var(--color-text-faint)'
+                      }}
+                    >
+                      <PencilIcon size={13} />
+                    </button>
+                  </div>
+                )}
                 <button
+                  type="button"
                   onClick={() => run(() => window.api.library.open())}
                   disabled={busy}
-                  style={SECONDARY_BTN}
+                  className="sidebar-switch-btn"
                 >
+                  <FolderIcon size={14} style={{ color: 'var(--color-accent)' }} />
                   Switch / Open…
                 </button>
                 <Recents
@@ -383,6 +496,21 @@ export default function LibraryGate() {
                   selectedFolderId={selectedFolderId}
                   onSelectFolder={selectFolder}
                   onFoldersChanged={reloadItems}
+                />
+                <TagsList tags={allTags} selectedTagId={selectedTagId} onSelect={selectTag} />
+                <SmartFolders
+                  folders={smartFolders}
+                  activeCriteria={searchCriteria}
+                  searchActive={isSearchActive(searchCriteria)}
+                  onSelect={applySearch}
+                  onRename={(id, name) =>
+                    void window.api.smartFolders.rename(id, name).then(setSmartFolders)
+                  }
+                  onDelete={async (f) => {
+                    if (window.confirm(`Delete saved search "${f.name}"?`)) {
+                      setSmartFolders(await window.api.smartFolders.delete(f.id))
+                    }
+                  }}
                 />
               </div>
               <div
@@ -399,10 +527,12 @@ export default function LibraryGate() {
               </div>
             </div>
           }
-          toolbar={<SearchBar criteria={searchCriteria} onChange={applySearch} />}
+          toolbar={
+            <SearchBar criteria={searchCriteria} onChange={applySearch} onSave={saveCurrentSearch} />
+          }
           inspector={
             sel.selected.size > 1 ? (
-              <MultiInspector items={selectedItems} onChanged={reloadItems} />
+              <MultiInspector items={selectedItems} onChanged={reloadAfterTagEdit} />
             ) : (
               <Inspector selectedId={sel.primary} />
             )
@@ -423,7 +553,6 @@ export default function LibraryGate() {
                 sortField={sortField}
                 sortDir={sortDir}
                 viewMode={viewMode}
-                count={sortedItems.length}
                 selectedCount={sel.selected.size}
                 onThumbSize={setThumbSize}
                 onSortField={setSortField}
@@ -433,7 +562,7 @@ export default function LibraryGate() {
             </div>
             {/* Empty-space clear + rubber-band marquee are owned by Grid's background pointer
                 handler (so a drag and a click don't conflict). */}
-            <div style={{ flex: '1 1 auto', minHeight: 0 }}>
+            <div style={{ flex: '1 1 auto', minHeight: 0, paddingTop: 'var(--space-3)' }}>
               <Grid
                 ref={gridRef}
                 items={sortedItems}
@@ -463,7 +592,7 @@ export default function LibraryGate() {
             count={tagDialog.length}
             onSubmit={async (name) => {
               await window.api.tags.addToMany(tagDialog, name)
-              reloadItems()
+              reloadAfterTagEdit()
             }}
             onClose={() => setTagDialog(null)}
           />

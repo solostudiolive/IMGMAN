@@ -26,6 +26,7 @@ const api: IpcApi = {
     open: () => ipcRenderer.invoke('library:open'),
     openPath: (path: string) => ipcRenderer.invoke('library:openPath', path),
     getActive: () => ipcRenderer.invoke('library:getActive'),
+    rename: (name: string) => ipcRenderer.invoke('library:rename', name),
     listRecent: () => ipcRenderer.invoke('library:listRecent')
   },
   import: {
@@ -47,6 +48,7 @@ const api: IpcApi = {
     renameMany: (renames: { id: string; name: string }[]) =>
       ipcRenderer.invoke('items:renameMany', renames),
     rateMany: (ids: string[], rating: number) => ipcRenderer.invoke('items:rateMany', ids, rating),
+    backfillPalettes: () => ipcRenderer.invoke('items:backfillPalettes'),
     count: () => ipcRenderer.invoke('items:count'),
     search: (criteria: SearchCriteria) => ipcRenderer.invoke('items:search', criteria)
   },
@@ -78,6 +80,13 @@ const api: IpcApi = {
     commonForItems: (ids: string[]) => ipcRenderer.invoke('folders:commonForItems', ids),
     unassignMany: (ids: string[], folderId: string) =>
       ipcRenderer.invoke('folders:unassignMany', ids, folderId)
+  },
+  smartFolders: {
+    list: () => ipcRenderer.invoke('smartFolders:list'),
+    create: (name: string, criteria: SearchCriteria) =>
+      ipcRenderer.invoke('smartFolders:create', name, criteria),
+    rename: (id: string, name: string) => ipcRenderer.invoke('smartFolders:rename', id, name),
+    delete: (id: string) => ipcRenderer.invoke('smartFolders:delete', id)
   }
 }
 

@@ -1,6 +1,15 @@
 import { useEffect, useState } from 'react'
 import type { Folder } from '../../preload/types'
 import ContextMenu, { type MenuNode } from './components/ContextMenu'
+import {
+  FolderIcon,
+  AllItemsIcon,
+  PlusIcon,
+  PencilIcon,
+  TrashIcon,
+  ChevronRightIcon,
+  MoreIcon
+} from './components/icons'
 
 // Left-sidebar folder tree: an "All items" root plus the nested folders, with
 // inline create / rename / delete. Built from the flat folders list (grouped by
@@ -21,8 +30,10 @@ export default function FolderTree({
   const [addingParent, setAddingParent] = useState<string | null | undefined>(undefined)
   const [renamingId, setRenamingId] = useState<string | null>(null)
   const [draft, setDraft] = useState('')
-  // Open right-click folder context menu (null = closed).
+  // Open right-click / kebab folder menu (null = closed).
   const [menu, setMenu] = useState<{ x: number; y: number; items: MenuNode[] } | null>(null)
+  // Folder ids whose children are currently expanded (collapsed by default — open on toggle).
+  const [expanded, setExpanded] = useState<Set<string>>(() => new Set())
 
   useEffect(() => {
     let cancelled = false
@@ -40,11 +51,43 @@ export default function FolderTree({
     onFoldersChanged?.()
   }
 
+  const expandFolder = (id: string): void =>
+    setExpanded((prev) => {
+      if (prev.has(id)) return prev
+      const next = new Set(prev)
+      next.add(id)
+      return next
+    })
+
+  const toggleExpand = (id: string): void =>
+    setExpanded((prev) => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+
   const startAdd = (parentId: string | null): void => {
     setAddingParent(parentId)
     setRenamingId(null)
     setDraft('')
+    // Expand the parent so the inline add-input is visible under it.
+    if (parentId) expandFolder(parentId)
   }
+
+  const beginRename = (folder: Folder): void => {
+    setRenamingId(folder.id)
+    setAddingParent(undefined)
+    setDraft(folder.name)
+  }
+
+  // Shared Add / Edit / Delete actions for the row kebab and the right-click menu.
+  const folderMenuItems = (folder: Folder): MenuNode[] => [
+    { kind: 'action', label: 'Add subfolder', icon: <PlusIcon />, onSelect: () => startAdd(folder.id) },
+    { kind: 'action', label: 'Edit', icon: <PencilIcon />, onSelect: () => beginRename(folder) },
+    { kind: 'separator' },
+    { kind: 'action', label: 'Delete', icon: <TrashIcon />, danger: true, onSelect: () => void remove(folder) }
+  ]
 
   const submitAdd = async (): Promise<void> => {
     const name = draft.trim()
@@ -83,6 +126,8 @@ export default function FolderTree({
     const rows: React.JSX.Element[] = []
     for (const folder of childrenOf(parentId)) {
       const selected = folder.id === selectedFolderId
+      const hasChildren = folders.some((f) => f.parent_id === folder.id)
+      const isOpen = expanded.has(folder.id)
       rows.push(
         <li key={folder.id}>
           {renamingId === folder.id ? (
@@ -102,27 +147,10 @@ export default function FolderTree({
             />
           ) : (
             <div
+              className="nav-row"
               onContextMenu={(e) => {
                 e.preventDefault()
-                setMenu({
-                  x: e.clientX,
-                  y: e.clientY,
-                  items: [
-                    { kind: 'action', label: 'New subfolder', icon: '＋', onSelect: () => startAdd(folder.id) },
-                    {
-                      kind: 'action',
-                      label: 'Rename',
-                      icon: '✎',
-                      onSelect: () => {
-                        setRenamingId(folder.id)
-                        setAddingParent(undefined)
-                        setDraft(folder.name)
-                      }
-                    },
-                    { kind: 'separator' },
-                    { kind: 'action', label: 'Delete', icon: '🗑', danger: true, onSelect: () => void remove(folder) }
-                  ]
-                })
+                setMenu({ x: e.clientX, y: e.clientY, items: folderMenuItems(folder) })
               }}
               style={{
                 ...ROW_STYLE,
@@ -131,40 +159,59 @@ export default function FolderTree({
                 color: selected ? 'var(--color-accent)' : 'var(--color-text)'
               }}
             >
+              {hasChildren ? (
+                <button
+                  type="button"
+                  title={isOpen ? 'Collapse' : 'Expand'}
+                  aria-label={isOpen ? 'Collapse' : 'Expand'}
+                  aria-expanded={isOpen}
+                  onClick={() => toggleExpand(folder.id)}
+                  style={CHEVRON_BTN}
+                >
+                  <ChevronRightIcon
+                    size={12}
+                    style={{
+                      transform: isOpen ? 'rotate(90deg)' : 'none',
+                      transition: 'transform var(--dur-fast) var(--ease-out)'
+                    }}
+                  />
+                </button>
+              ) : (
+                <span style={CHEVRON_SPACER} />
+              )}
               <button
                 type="button"
                 onClick={() => onSelectFolder(folder.id)}
                 title={folder.name}
                 style={ROW_NAME_STYLE}
               >
-                📁 {folder.name}
+                <FolderIcon />
+                <span style={ROW_TEXT_STYLE}>{folder.name}</span>
               </button>
               <span style={ROW_ACTIONS_STYLE}>
-                <button type="button" title="Add subfolder" onClick={() => startAdd(folder.id)} style={ICON_BTN}>
-                  ＋
-                </button>
                 <button
                   type="button"
-                  title="Rename"
-                  onClick={() => {
-                    setRenamingId(folder.id)
-                    setAddingParent(undefined)
-                    setDraft(folder.name)
+                  title="More"
+                  aria-label="Folder actions"
+                  aria-haspopup="menu"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    const r = e.currentTarget.getBoundingClientRect()
+                    setMenu({ x: r.left, y: r.bottom + 4, items: folderMenuItems(folder) })
                   }}
                   style={ICON_BTN}
                 >
-                  ✎
-                </button>
-                <button type="button" title="Delete" onClick={() => remove(folder)} style={ICON_BTN}>
-                  🗑
+                  <MoreIcon size={15} />
                 </button>
               </span>
             </div>
           )}
         </li>
       )
-      // Children, then an inline add-input if we're adding under this folder.
-      rows.push(...renderRows(folder.id, depth + 1))
+      // Children only when expanded; an inline add-input if we're adding under this folder.
+      if (isOpen) {
+        rows.push(...renderRows(folder.id, depth + 1))
+      }
       if (addingParent === folder.id) {
         rows.push(renderAddInput(folder.id, depth + 1))
       }
@@ -203,21 +250,22 @@ export default function FolderTree({
             letterSpacing: 0.5
           }}
         >
-          Folders
+          Folders{folders.length ? ` (${folders.filter((f) => f.parent_id === null).length})` : ''}
         </span>
         <button type="button" title="New folder" onClick={() => startAdd(null)} style={{ ...ICON_BTN, marginLeft: 'auto' }}>
-          ＋
+          <PlusIcon size={14} />
         </button>
       </div>
       <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
         <li>
           <div
+            className="nav-row"
             onContextMenu={(e) => {
               e.preventDefault()
               setMenu({
                 x: e.clientX,
                 y: e.clientY,
-                items: [{ kind: 'action', label: 'New folder', icon: '＋', onSelect: () => startAdd(null) }]
+                items: [{ kind: 'action', label: 'New folder', icon: <PlusIcon />, onSelect: () => startAdd(null) }]
               })
             }}
             style={{
@@ -229,7 +277,8 @@ export default function FolderTree({
             }}
           >
             <button type="button" onClick={() => onSelectFolder(null)} style={ROW_NAME_STYLE}>
-              🗂 All items
+              <AllItemsIcon />
+              <span style={ROW_TEXT_STYLE}>All items</span>
             </button>
           </div>
         </li>
@@ -252,21 +301,28 @@ const ASIDE_STYLE: React.CSSProperties = {
 const ROW_STYLE: React.CSSProperties = {
   display: 'flex',
   alignItems: 'center',
-  gap: 4,
-  borderRadius: 6,
-  fontSize: 12,
-  minHeight: 24
+  gap: 6,
+  borderRadius: 'var(--radius-md)',
+  fontSize: 'var(--fs-sm)',
+  minHeight: 30
 }
 
 const ROW_NAME_STYLE: React.CSSProperties = {
   flex: 1,
   minWidth: 0,
+  display: 'inline-flex',
+  alignItems: 'center',
+  gap: 8,
   textAlign: 'left',
   background: 'none',
   border: 'none',
   padding: '3px 0',
   cursor: 'pointer',
-  color: 'inherit',
+  color: 'inherit'
+}
+
+const ROW_TEXT_STYLE: React.CSSProperties = {
+  minWidth: 0,
   whiteSpace: 'nowrap',
   overflow: 'hidden',
   textOverflow: 'ellipsis'
@@ -287,6 +343,22 @@ const ICON_BTN: React.CSSProperties = {
   fontSize: 12,
   lineHeight: 1
 }
+
+// Disclosure toggle + a same-width spacer so leaf rows align with togglable ones.
+const CHEVRON_BTN: React.CSSProperties = {
+  flex: '0 0 auto',
+  width: 16,
+  display: 'inline-flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  background: 'none',
+  border: 'none',
+  padding: 0,
+  cursor: 'pointer',
+  color: 'var(--color-text-faint)'
+}
+
+const CHEVRON_SPACER: React.CSSProperties = { flex: '0 0 auto', width: 16 }
 
 const INPUT_STYLE: React.CSSProperties = {
   width: '90%',

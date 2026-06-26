@@ -59,6 +59,8 @@ export interface SearchCriteria {
   minRating?: number
   from?: number | null
   to?: number | null
+  // Exact tag filter (item must carry ALL listed tags). Driven by the sidebar Tags section.
+  tagIds?: string[]
 }
 
 // A tag row (mirrors src/main/services/tags.ts Tag).
@@ -75,6 +77,14 @@ export interface Folder {
   name: string
   parent_id: string | null
   sort_order: number | null
+}
+
+// A saved search / smart folder (mirrors src/main/services/smartFolders.ts SmartFolder).
+// `criteria` is the persisted SearchCriteria re-applied through the existing search scope.
+export interface SmartFolder {
+  id: string
+  name: string
+  criteria: SearchCriteria
 }
 
 export interface IpcApi {
@@ -98,6 +108,7 @@ export interface IpcApi {
     open: () => Promise<LibraryResult>
     openPath: (path: string) => Promise<LibraryResult>
     getActive: () => Promise<LibraryInfo | null>
+    rename: (name: string) => Promise<LibraryResult>
     listRecent: () => Promise<LibraryInfo[]>
   }
   import: {
@@ -118,6 +129,8 @@ export interface IpcApi {
     renameMany: (renames: { id: string; name: string }[]) => Promise<number>
     // Set the same rating (0..5) on a batch of items. Returns rows changed.
     rateMany: (ids: string[], rating: number) => Promise<number>
+    // Backfill dominant-color palettes for image items missing one. Returns count populated.
+    backfillPalettes: () => Promise<number>
     count: () => Promise<number>
     search: (criteria: SearchCriteria) => Promise<Item[]>
   }
@@ -148,5 +161,12 @@ export interface IpcApi {
     commonForItems: (ids: string[]) => Promise<Folder[]>
     // Remove many items from a folder at once (items kept). Returns links removed.
     unassignMany: (ids: string[], folderId: string) => Promise<number>
+  }
+  smartFolders: {
+    list: () => Promise<SmartFolder[]>
+    // Save the current SearchCriteria under a name. Returns the canonical list.
+    create: (name: string, criteria: SearchCriteria) => Promise<SmartFolder[]>
+    rename: (id: string, name: string) => Promise<SmartFolder[]>
+    delete: (id: string) => Promise<SmartFolder[]>
   }
 }

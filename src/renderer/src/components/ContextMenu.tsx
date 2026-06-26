@@ -5,8 +5,8 @@ import './ContextMenu.css'
 // A node in a context menu. Presentational only — actions carry their own onSelect; the menu
 // knows nothing about selection or IPC.
 export type MenuNode =
-  | { kind: 'action'; label: string; icon?: string; danger?: boolean; disabled?: boolean; onSelect: () => void }
-  | { kind: 'submenu'; label: string; icon?: string; items: MenuNode[] }
+  | { kind: 'action'; label: string; icon?: React.ReactNode; danger?: boolean; disabled?: boolean; onSelect: () => void }
+  | { kind: 'submenu'; label: string; icon?: React.ReactNode; items: MenuNode[] }
   | { kind: 'separator' }
 
 export interface ContextMenuProps {

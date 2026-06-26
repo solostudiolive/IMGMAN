@@ -1,7 +1,8 @@
-import { rmSync } from 'fs'
+import { rmSync, existsSync } from 'fs'
 import { join } from 'path'
 import { isDatabaseOpen, getDb } from '../db'
 import { getActiveLibrary, imagesDir } from './library'
+import { extractPalette, paletteToJson } from './palette'
 import type { ItemType } from './import'
 
 // A row projected for the grid (subset of the items table).
@@ -125,6 +126,42 @@ export function deleteItems(ids: string[]): number {
     }
   }
   return deleted
+}
+
+/**
+ * Backfill dominant-color palettes for image items that don't have one yet. For each such item,
+ * extract from its stored original (falling back to the thumbnail) and persist the #rrggbb JSON to
+ * items.palette. Per-item failures are skipped. Idempotent (only touches palette IS NULL rows).
+ * Returns the number of items populated. Async (sharp decode).
+ */
+export async function backfillPalettes(): Promise<number> {
+  if (!isDatabaseOpen()) return 0
+  const lib = getActiveLibrary()
+  if (!lib) return 0
+  const root = imagesDir(lib.path)
+  const db = getDb()
+  const rows = db
+    .prepare("SELECT id, ext FROM items WHERE type = 'image' AND palette IS NULL")
+    .all() as { id: string; ext: string | null }[]
+  const update = db.prepare('UPDATE items SET palette = ? WHERE id = ?')
+
+  let n = 0
+  for (const row of rows) {
+    try {
+      const dir = join(root, row.id)
+      const original = join(dir, row.ext ? `original.${row.ext}` : 'original')
+      const path = existsSync(original) ? original : join(dir, 'thumbnail.webp')
+      if (!existsSync(path)) continue
+      const json = paletteToJson(await extractPalette(path))
+      if (json) {
+        update.run(json, row.id)
+        n++
+      }
+    } catch {
+      // Skip this item; a missing/unreadable file shouldn't abort the backfill.
+    }
+  }
+  return n
 }
 
 /**

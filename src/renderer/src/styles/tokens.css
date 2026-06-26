@@ -39,6 +39,10 @@
   /* Accent focus ring (keyboard :focus-visible). */
   --ring: 0 0 0 2px color-mix(in srgb, var(--color-accent) 55%, transparent);
 
+  /* Custom dropdown chevron for native <select> (appearance:none strips the OS arrow).
+     Single source of truth — stroke colored per-theme. CSP-safe (img-src allows data:). */
+  --select-chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238a9099' stroke-width='2.25' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+
   /* ---- Spacing scale ---- */
   --space-0: 2px;
   --space-1: 4px;
@@ -110,6 +114,9 @@
   --color-accent-contrast: #ffffff;
 
   --color-danger: #f0686a;
+
+  /* Lighter chevron stroke for contrast on the dark elevated field. */
+  --select-chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%239a9a9e' stroke-width='2.25' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
 
   /* Flat aesthetic — shadows only for floating surfaces (menus/modal), kept restrained. */
   --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.4);
