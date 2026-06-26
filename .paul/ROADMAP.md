@@ -6,15 +6,29 @@ A local-first desktop asset manager built in stages: stand up the Electron/React
 
 ## Current Milestone
 
-**v1.0 — Eagle Parity** (v1.0.0)
-Status: 🚧 In Progress (started 2026-06-24)
-Phases: 4 of 5 complete (Phases 5–9) — only Phase 9 (browser-extension collecting) remains
-Focus: Transform the functional v0.1 MVP into a polished, Eagle-class desktop asset
-manager — look, feel, and feature parity — reusing the proven SQLite/IPC backend.
+**None active.** v1.0 — Eagle Parity shipped 2026-06-26 (tag v1.0.0).
+Run `/paul:discuss-milestone` or `/paul:milestone` to define the next milestone.
+Carry-over: Phase 9 (browser-extension collecting) was deferred from v1.0 and opens v1.1.
 
 ## Completed Milestones
 
 **v0.1 MVP** (v0.1.0) — ✅ Complete (2026-06-23) — Phases 1–4. See MILESTONES.md.
+
+<details>
+<summary><strong>v1.0 — Eagle Parity</strong> (v1.0.0) — ✅ Complete 2026-06-26 — 4 phases (+1 inserted), 21 plans</summary>
+
+Full snapshot: `.paul/milestones/v1.0.0-ROADMAP.md` · Outcomes: MILESTONES.md
+
+| Phase | Name | Plans | Completed |
+|-------|------|-------|-----------|
+| 5 | Design system & shell | 4 | 2026-06-24 |
+| 6 | Eagle grid & content area | 4 | 2026-06-24 |
+| 7 | Selection & interaction | 7 | 2026-06-24 |
+| 8 | Organize power features | 4 | 2026-06-26 |
+| 8.1 | UI polish & Inter [INSERTED] | 2 | 2026-06-26 |
+| 9 | Browser-extension collecting | TBD | ⏭️ Deferred to v1.1 |
+
+</details>
 
 ## Phases
 
@@ -33,7 +47,7 @@ manager — look, feel, and feature parity — reusing the proven SQLite/IPC bac
 | 7 | Selection & interaction | 7 | ✅ Complete | 2026-06-24 |
 | 8 | Organize power features | 4 | ✅ Complete | 2026-06-26 |
 | 8.1 | UI polish & Inter [INSERTED] | 2 | ✅ Complete | 2026-06-26 |
-| 9 | Browser-extension collecting | TBD | Not started | - |
+| 9 | Browser-extension collecting | TBD | ⏭️ Deferred to v1.1 | - |
 
 ## Phase Details
 
@@ -79,12 +93,16 @@ Phase scope and plans will be defined during `/paul:plan`. Provisional intent (f
 
 ---
 
-## Milestone v1.0 — Eagle Parity (Phases 5–9)
+## Milestone v1.0 — Eagle Parity (Phases 5–9) — ✅ COMPLETE 2026-06-26 (archived)
+
+> ✅ Shipped at v1.0.0 (Phase 8). Phase 9 deferred to v1.1. Full archive:
+> `.paul/milestones/v1.0.0-ROADMAP.md`; outcomes in MILESTONES.md. The per-phase detail
+> below is retained as historical reference.
 
 Front-end transformation of the v0.1 MVP into an Eagle-class desktop app, plus a few new
 backend features. The existing IPC namespaces (`library:*`, `items:*`, `tags:*`,
 `folders:*`, `items:search`), per-library SQLite, and `imgman://` protocol are **reused**,
-not rebuilt — new work extends them. Phase scope and plans are defined during `/paul:plan`.
+not rebuilt — new work extends them.
 
 ### Phase 5: Design system & shell
 **Goal:** Establish the visual foundation — dark + light theming tokens (Eagle-matched
@@ -173,12 +191,13 @@ one token + the @fontsource import in the renderer entry; the rest is token/comp
 endpoint that sends images/URLs into the active library.
 **Depends on:** Phase 2 import pipeline; a running app to receive
 **Research:** Likely (extension ↔ desktop local-endpoint handshake, security)
-**Status:** Not started
-**Plans:** TBD (defined during `/paul:plan`)
-
-> Optional descope: V1 could ship at Phases 5–7 and defer 8–9 to a V1.1 if timeline
-> pressure appears. Kept as one milestone per the milestone discussion (2026-06-24).
+**Status:** ⏭️ Deferred to v1.1 (descope confirmed 2026-06-26 — v1.0 ships at Phase 8)
+**v1.1 starting decisions (captured 2026-06-26 during the deferred /paul:plan):**
+- Browsers: **Chromium (Chrome/Edge) + Firefox** (Manifest V3 both; mind Firefox MV3 background/host-permission differences)
+- Capture surface: **right-click image + visible-page screenshot + drag-an-image** (full Eagle-style capture)
+- Security/handshake: **loopback-only receiver (127.0.0.1) + pairing token** shown in app Settings (blocks rogue localhost pages / CSRF)
+**Plans:** TBD (define during `/paul:plan` when v1.1 starts; likely split — local receiver endpoint first (testable via curl, reuses Phase-2 import), then the extension)
 
 ---
 *Roadmap created: 2026-06-23*
-*Last updated: 2026-06-26 — Phase 8 (Organize power features) ✅ COMPLETE (08-01..08-04 + off-loop Tags); milestone v1.0 now 4/5, only Phase 9 (browser-extension collecting) remains*
+*Last updated: 2026-06-26 — v1.0 — Eagle Parity COMPLETE (tag v1.0.0); milestone collapsed into Completed. Phase 9 carries to v1.1. Next: /paul:discuss-milestone.*

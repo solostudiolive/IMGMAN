@@ -9,44 +9,31 @@ See: .paul/PROJECT.md (updated 2026-06-23)
 
 ## Current Position
 
-Milestone: v1.0 — Eagle Parity 🚧 In Progress (4 of 5 phases complete — only Phase 9 remains)
-Phase: 8 (Organize power features) — ✅ COMPLETE (08-01 ✓, 08-02 ✓, 08-03 ✓, 08-04 ✓). Inserted 8.1 ✅. Phase transition done.
-Plan: 08-04 ✅ COMPLETE — Find duplicates applied, human-verify APPROVED, SUMMARY written; phase transition executed.
-Status: Phase 8 closed. Ready to start Phase 9 (browser-extension collecting) — /paul:discuss or /paul:plan. 08-03 + 08-04 source committed in the feat(08-organize-power) phase commit.
-Last activity: 2026-06-26 — Off-loop UI/feature session (no PLAN/SUMMARY) then committed everything in `3cf919b` (feat(08-organize-power)). Shipped: sidebar TAGS section (lists all tags; click filters via new `SearchCriteria.tagIds` exact item_tags AND-match; collapsible header toggle); inline LIBRARY RENAME (`library:rename` → settings.json name only, path untouched; listRecent now reads settings name via `readLibraryName`); Inspector hover-zoom LIGHTBOX (reuses QuickPreview) + smaller meta font + Type/Format split + Folders-before-Tags + bold section headings; modern custom-chevron `<select>` via shared `--select-chevron` token (FolderAssigner/MultiInspector/ContentToolbar/SearchBar rating); ImportZone restyle (UploadIcon badge + primary/secondary buttons, compact, full-width); modern "Switch / Open…" button; ContentToolbar compact + "Sort:" moved into dropdown + item-count text removed (kept "N selected"); min window size 900×560 (main/index.ts). FIX: theme preference "not saved" in dev was an origin-scoped-localStorage artifact — PINNED the renderer dev port (strictPort 5273) in electron.vite.config.ts so the origin stays stable across `npm run dev`. Typecheck clean. 08-03 PLAN still unstarted.
+Version: 1.0.0
+Milestone: None active — v1.0 — Eagle Parity ✅ COMPLETE 2026-06-26 (tag v1.0.0). Awaiting next milestone.
+Phase: None active. (v1.0 shipped at Phase 8; Phase 9 browser-extension collecting deferred to v1.1.)
+Plan: None.
+Status: Milestone v1.0 complete — MILESTONES.md entry written, ROADMAP collapsed, PROJECT.md evolved, archive at .paul/milestones/v1.0.0-ROADMAP.md, package.json → 1.0.0, git tag v1.0.0. NEXT ACTION → /paul:discuss-milestone (or /paul:milestone) to define v1.1, which opens with Phase 9.
+Last activity: 2026-06-26 — Ran /paul:complete-milestone: closed v1.0 (4 phases + inserted 8.1, 21 plans, 114 files / +15,638 since v0.1), tagged v1.0.0.
 
 Progress:
-- v1.0 Eagle Parity: [████████░░] 80% (4 of 5 phases complete; only Phase 9 remains)
-- Phase 8: [██████████] 100% COMPLETE (08-01 ✓, 08-02 ✓, 08-03 ✓, 08-04 ✓)
+- v1.0 Eagle Parity: [██████████] 100% ✓ COMPLETE (Phases 5–8 + 8.1; Phase 9 deferred to v1.1)
 
 ## Loop Position
 
 Current loop state:
 ```
-Phase 8 — Plan 08-04 (find duplicates) — FINAL Phase-8 plan:
-PLAN ──▶ APPLY ──▶ UNIFY ──▶ TRANSITION
-  ✓        ✓        ✓          ✓     [Phase 8 COMPLETE 2026-06-26]
+PLAN ──▶ APPLY ──▶ UNIFY
+  ○        ○        ○     [Milestone v1.0 complete — ready for next milestone]
 ```
-Next: Phase 9 (browser-extension collecting) — the last v1.0 milestone phase. Start with /paul:discuss or /paul:plan.
-
-⚠️ OFF-LOOP WORK (2026-06-26): A UI-polish + small-feature session ran WITHOUT PLAN/SUMMARY files
-(sidebar Tags, library rename, lightbox, modern selects, ImportZone restyle, compact toolbar, theme
-dev-port fix, min window). It was committed in 3cf919b alongside the Phase-8 source. This bypassed the
-PLAN→APPLY→UNIFY loop — acceptable as ad-hoc polish, but it means those features have no SUMMARY. The
-NEW backend surface from that session that LATER plans must know about: `SearchCriteria.tagIds`
-(exact-tag filter, reused by the Tags sidebar) and `library:rename` / `readLibraryName`.
-
-Note: Phase 7 COMPLETE (7/7), bundled into one `feat(07-selection-interaction)` commit (c8e1477).
-Phase 8 (Organize power features) breakdown (revised — color split into extract/search): 08-01 saved
-searches / smart folders [✓] → 08-02 color extraction + backfill + swatches [created] → 08-03 color
-SEARCH (nearest-color filter + SearchCriteria + picker) [TBD] → 08-04 find duplicates (content
-hashing) [TBD]. 08-02 chosen NO-dep / NO-worker (custom quantizer on sharp pixels). 08-04 (and any
-heavy scan) may still warrant a worker — revisit then. Phase-8 source is UNCOMMITTED until the phase
-completes (one feat(08-organize-power) commit).
+Next: /paul:discuss-milestone (or /paul:milestone) to define v1.1. v1.1 opens with the deferred
+Phase 9 (browser-extension collecting) — starting decisions captured in the Decisions section below
+and in ROADMAP Phase 9.
 
 ## Accumulated Context
 
 ### Decisions
+- 2026-06-26: DESCOPE — Phase 9 (browser-extension collecting) DEFERRED to v1.1; ship v1.0 at Phase 8. During a `/paul:plan` for Phase 9, the user took the ROADMAP's optional descope: ship full v1.0 Eagle Parity now (Phases 5–8 + inserted 8.1) and move the browser extension to v1.1. No Phase-9 PLAN.md was created. v1.1 STARTING DECISIONS captured for when planning resumes: (1) browsers = Chromium (Chrome/Edge) + Firefox, Manifest V3 both (watch Firefox MV3 background/host-permission differences); (2) capture = right-click image + visible-page screenshot + drag-an-image (full Eagle-style); (3) security = loopback-only receiver bound to 127.0.0.1 + a pairing token shown in app Settings (blocks rogue localhost pages/CSRF). Likely plan split: local receiver endpoint first (testable via curl, reuses the Phase-2 import pipeline), then the extension. | v1.0 close-out | Next: /paul:complete-milestone, then /paul:discuss-milestone (or /paul:milestone) for v1.1 opening with Phase 9.
 - 2026-06-26: Off-loop UI/feature polish session + EARLY Phase-8 commit (3cf919b). A long ad-hoc, user-directed polish session ran OUTSIDE the PLAN→APPLY→UNIFY loop (no plan/summary), then the user said "commit this" — so the previously-held Phase-8 source (08-01/08-02) was committed EARLY together with the polish, superseding the "one feat(08-organize-power) bundle when the phase closes" strategy. New durable surface added off-loop (future plans must respect): (1) `SearchCriteria.tagIds?: string[]` — exact-tag filter, `id IN (SELECT item_id FROM item_tags WHERE tag_id IN (…) GROUP BY item_id HAVING COUNT(DISTINCT tag_id)=N)` AND-semantics in services/search.ts; mirrored in preload/types.ts; counted by LibraryGate `isSearchActive`. Drives a presentational `TagsList.tsx` sidebar section (LibraryGate owns the list via `reloadTags`, refreshed on library change + batch-tag dialog + multi-inspector edits; single-inspector tag adds are the known stale gap). (2) `library:rename(name)` → `renameActiveLibrary` writes settings.json `name` ONLY (folder path/DB untouched); `readLibraryName(libPath)` (settings name → basename fallback) now also backs `library:listRecent`. (3) Shared `--select-chevron` token + `.modern-select` (appearance:none custom-chevron selects). (4) Inspector preview hover-zoom reuses QuickPreview as a lightbox. (5) DEV-ONLY FIX: pinned renderer dev server to strictPort 5273 (electron.vite.config.ts) so origin-scoped localStorage (theme pref) stays stable across restarts — production (file://) was never affected. (6) BrowserWindow minWidth 900 / minHeight 560. | Off-loop (committed in Phase 8) | Lesson: rapid UI iteration is fine off-loop, but it leaves no SUMMARY — capture durable backend surface here in STATE so later plans don't clobber it.
 - 2026-06-24: Inserted Phase 8.1 (UI polish & Inter) — user requested a UI polish pass + Inter font mid-Phase-8. Handled as a DECIMAL insertion ([INSERTED], dir `.paul/phases/08.1-ui-polish/`) between 08-02 and 08-03, NOT a Phase-8 plan, because it's design-system work (Phase-5 lineage) — gets its OWN `feat(8.1-ui-polish)` commit. Decisions: bundle Inter via `@fontsource/inter` (self-hosted woff2, CSP/offline-safe — `default-src 'self'` covers fonts, no CDN); `--font-sans='Inter', system-ui, sans-serif`. Scope = typography & spacing scale + dark/light color & contrast tokens + component density/layout. Typography centralized (one `--font-sans` in styles/tokens.css applied in styles/base.css) → font swap is one token + the @fontsource import in the renderer entry; rest is token/component refinement. Likely split into 8.1-01 (Inter + type/spacing foundation) and 8.1-02 (color/contrast + component density); each ends at a visual human-verify checkpoint. Milestone still framed as 5 phases (8.1 is an inserted sub-phase). | Phase 8 (inserted 8.1) | Resume Phase 8 at 08-03 (color search) after 8.1.
 - 2026-06-24: Color extraction (08-02) — a NO-dependency dominant-color quantizer in `services/palette.ts`: `extractPalette(input)` does `sharp(input).resize(64).raw()`, skips (near-)transparent pixels (alpha<128 when 4ch), buckets each pixel to 4-bits/channel (16 levels), averages the true colors within the top-`PALETTE_SIZE`(5) buckets by count → `#rrggbb` (lowercase), most-dominant first; never throws (→ []). `paletteToJson` → JSON string or null. Extraction PIGGYBACKS the existing import sharp decode: importFile + importImageBuffer compute palette inside the SAME try as the thumbnail (failure leaves palette null alongside width/height, never aborts import) and store it to BOTH the existing `items.palette` column (insertItem now binds `@palette`) and metadata.json. NO worker (sharp off-thread, per Phase-2 precedent). `items:backfillPalettes()` (async) fills `type='image' AND palette IS NULL` rows — reads `images/<id>/original.<ext>` (fallback thumbnail.webp), idempotent, returns count; triggered by a "Extract colors" button in SettingsModal (Library maintenance section, busy state + "Done — N updated"). Inspector renders a Colors swatch row from defensively-parsed `FullItem.palette` (already returned by items:get — no new channel); omitted when empty. NO schema change (items.palette pre-existed), no new dep. | Phase 8 (08-02) | Palette `#rrggbb` JSON (most-dominant first) is the contract 08-03 color SEARCH will query. Scope was extraction+backfill+swatches only; color search → 08-03, find-dupes → 08-04.
@@ -117,11 +104,11 @@ None logged.
 
 ## Session Continuity
 
-Last session: 2026-06-26 — applied + verified 08-03 (color search) AND 08-04 (find duplicates); Phase 8 closed + committed (73f37a1). Also fixed folder-delete FK bug + theme default→light.
-Stopped at: Phase 8 ✅ COMPLETE. Working tree clean except STATE.md (this reconciliation). Dev server running on 5273.
-Next action: Start Phase 9 (browser-extension collecting) — `/paul:discuss` to shape it (Research likely: extension ↔ desktop local-endpoint handshake + security), then `/paul:plan`.
-Resume file: .paul/phases/08-organize-power/08-04-SUMMARY.md
-Phase 9 is the LAST v1.0 milestone phase; after it, the milestone can ship (/paul:complete-milestone). Per ROADMAP, an optional descope could defer Phase 9 to v1.1 — confirm with user before starting.
+Last session: 2026-06-26 — ran /paul:complete-milestone: closed v1.0 — Eagle Parity. Wrote MILESTONES.md entry, archived ROADMAP snapshot (.paul/milestones/v1.0.0-ROADMAP.md), evolved PROJECT.md (requirements validated; Phase-8/8.1 decisions added; version 1.0.0), collapsed ROADMAP, aligned package.json → 1.0.0, committed close-out, tagged v1.0.0.
+Stopped at: v1.0 milestone COMPLETE. No milestone active.
+Next action: `/paul:discuss-milestone` (or `/paul:milestone`) to define v1.1 — opens with the deferred Phase 9 (browser-extension collecting) using the captured starting decisions. Optionally `git push origin main --tags` to publish the release.
+Resume file: .paul/MILESTONES.md
+Phase 9 starting decisions for v1.1 are recorded in the Decisions section above + ROADMAP Phase 9 entry.
 SearchCriteria extension point carries: query/types/ext/rating/date/tagIds/color/colorTolerance. NEW reusable infra from Phase 8: services/hash.ts (streamed SHA-256) + the first schema-migration pattern (schema.sql + table_info-guarded ALTER, user_version) in db/index.ts.
 
 Phase 8 breakdown: 08-01 saved searches [✓] → 08-02 color extraction + backfill + swatches [✓] →

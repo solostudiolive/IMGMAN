@@ -34,19 +34,26 @@ A fast, offline-first local "second brain" — collect, organize, search, and br
 - ✓ Right-click context menus (items / folders / tags) via a reusable portal menu — Phase 7
 - ✓ Batch operations over a selection: delete, add-tag, add-to-folder, rename (pattern + find/replace) — atomic main-side IPC — Phase 7
 - ✓ Editable inspector — single-item (rating/tags/folders) + multi-item (aggregate header + batch rating/tags/folders over the intersection) — Phase 7
+- ✓ Smart folders / saved searches (persisted re-runnable `SearchCriteria` in `smart_folders`) — Phase 8
+- ✓ Color extraction (no-dep quantizer → `items.palette`) + inspector swatches + nearest-color color search — Phase 8
+- ✓ Find duplicates (SHA-256 `content_hash`; project's first schema migration; keep-newest delete) — Phase 8
+- ✓ Sidebar Tags section (exact-tag filter) + inline library rename — Phase 8 (off-loop)
+- ✓ Inter typeface bundled + "refined dark, Eagle-like" restyle (palette/density/focus ring) — Phase 8.1
 
 ### Must Have (MVP)
 - Cross-platform (Windows + macOS) — Windows verified; macOS build unverified (see Constraints/packaging)
 
 ### Should Have (V1)
-- Smart folders + saved searches
-- Color extraction + color search
-- Hover preview for audio (GIF/video shipped — Phase 6)
-- Notes/annotations editing (batch rename / batch tag shipped — Phase 7)
+- ✓ Smart folders + saved searches — Phase 8
+- ✓ Color extraction + color search — Phase 8
+- Hover preview for audio (GIF/video shipped — Phase 6; audio still pending)
+- Notes/annotations editing (batch rename / batch tag shipped — Phase 7; freeform note editing still pending)
 - Signed builds + auto-update
 
 ### Nice to Have (Later)
-- Browser extension, find duplicates, plugin API
+- ✓ Find duplicates — Phase 8
+- Browser extension — scheduled for v1.1 (deferred from v1.0, 2026-06-26)
+- Plugin API
 - AI tagging / semantic + visual search
 - Password lock, cloud-sync-friendly layout
 
@@ -94,6 +101,11 @@ A fast, offline-first local "second brain" — collect, organize, search, and br
 | Hover preview (GIF animate / video inline-play) in the shared grid/masonry Cell, hover-intent ~180ms, reuses imgman://original | 6 | No CSP/IPC/dep change; scroll/sweep-safe; List rows + a disable-toggle deferred |
 | Selection model in a renderer `useSelection` hook (click/ctrl/shift + marquee + keyboard), batch ops as atomic main-side IPC (one txn, returns count), context menu via reusable portal `ContextMenu` | 7 | Renderer owns selection; batch mutations bypass single-item channels; menu escapes pane overflow via createPortal |
 | Multi-item inspector reads the INTERSECTION (`HAVING COUNT(DISTINCT item_id)=N`); header aggregates computed renderer-side; new channels only (single Inspector untouched) | 7 | "Common" = on all selected; no tri-state UI; edits apply to whole selection atomically |
+| Saved searches persist a `SearchCriteria` JSON in the pre-existing `smart_folders` table; sidebar section re-applies it through the existing search scope | 8 | No schema change, no deps; reuses the Phase-4 search path |
+| Color extraction = no-dependency quantizer over sharp pixels (no worker), storing `#rrggbb` JSON in the pre-existing `items.palette`; color SEARCH is a JS nearest-color post-filter (`color`/`colorTolerance` on `SearchCriteria`) | 8 | Extraction and search split into separate slices; no new dep/worker/schema |
+| Find duplicates = SHA-256 `content_hash` via the project's FIRST schema migration (table_info-guarded ALTER + `user_version`); hash at import + backfill; keep-newest delete reuses `items:delete` | 8 | Establishes the migration pattern for future schema growth |
+| Inter typeface bundled via `@fontsource/inter` (self-hosted woff2, CSP/offline-safe); `--font-sans` is one centralized token; "refined dark, Eagle-like" flat near-black palette + focus-visible ring | 8.1 | Font swap = one token + the entry import; rest is token/component refinement |
+| Phase 9 (browser-extension collecting) deferred to v1.1 | 8→9 | v1.0 ships at Phase 8; extension is an external capture surface, cleanly separable |
 
 ## Reference
 
@@ -101,4 +113,5 @@ Full design doc (architecture, data model, library format, risks): see root `PRO
 
 ---
 *Created: 2026-06-23*
-*Last updated: 2026-06-24 after Phase 7 — Selection & interaction complete (v1.0 Eagle Parity 3/5)*
+*Version: 1.0.0*
+*Last updated: 2026-06-26 — v1.0 Eagle Parity COMPLETE (Phases 5–8 + inserted 8.1); Phase 9 (browser extension) deferred to v1.1.*

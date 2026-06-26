@@ -1,6 +1,6 @@
 {
   "name": "imgman",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "description": "Local-first desktop asset manager (Electron + React + TypeScript)",
   "main": "./out/main/index.js",
   "author": "IMGMAN",
