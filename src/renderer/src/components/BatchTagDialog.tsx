@@ -92,7 +92,8 @@ const BACKDROP: React.CSSProperties = {
   background: 'rgba(0, 0, 0, 0.45)',
   display: 'flex',
   alignItems: 'center',
-  justifyContent: 'center'
+  justifyContent: 'center',
+  animation: 'imgman-fade-in var(--dur-fast) var(--ease-out)'
 }
 
 const PANEL: React.CSSProperties = {
@@ -103,7 +104,8 @@ const PANEL: React.CSSProperties = {
   borderRadius: 'var(--radius-lg)',
   boxShadow: 'var(--shadow-2)',
   padding: 'var(--space-4)',
-  boxSizing: 'border-box'
+  boxSizing: 'border-box',
+  animation: 'imgman-scale-in var(--dur-fast) var(--ease-out)'
 }
 
 const TITLE: React.CSSProperties = {

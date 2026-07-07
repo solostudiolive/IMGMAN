@@ -2,10 +2,7 @@ import { useEffect, useState } from 'react'
 import type { Tag } from '../../preload/types'
 import ContextMenu, { type MenuNode } from './components/ContextMenu'
 import { TrashIcon } from './components/icons'
-
-// A unique datalist id is fine as a constant — only one TagEditor renders at a time
-// (it lives in the single inspector). Suggestions are scoped by the input's `list`.
-const DATALIST_ID = 'tag-suggestions'
+import TagInput from './components/TagInput'
 
 // Inspector tag editor: chips for the item's current tags (each removable) plus an
 // add input backed by a datalist of all existing tag names. Reconciles to the list
@@ -13,14 +10,12 @@ const DATALIST_ID = 'tag-suggestions'
 export default function TagEditor({ itemId }: { itemId: string }): React.JSX.Element {
   const [tags, setTags] = useState<Tag[]>([])
   const [allTags, setAllTags] = useState<Tag[]>([])
-  const [draft, setDraft] = useState('')
   // Open right-click tag-chip context menu (null = closed).
   const [menu, setMenu] = useState<{ x: number; y: number; items: MenuNode[] } | null>(null)
 
   // (Re)load this item's tags and the suggestion pool when the selection changes.
   useEffect(() => {
     let cancelled = false
-    setDraft('')
     Promise.all([window.api.tags.listForItem(itemId), window.api.tags.listAll()]).then(
       ([forItem, all]) => {
         if (cancelled) return
@@ -33,12 +28,11 @@ export default function TagEditor({ itemId }: { itemId: string }): React.JSX.Ele
     }
   }, [itemId])
 
-  const add = async (): Promise<void> => {
-    const name = draft.trim()
-    if (!name) return
-    setDraft('')
+  const add = async (name: string): Promise<void> => {
+    const n = name.trim()
+    if (!n) return
     try {
-      const next = await window.api.tags.add(itemId, name)
+      const next = await window.api.tags.add(itemId, n)
       setTags(next)
       // A new tag may have been created — refresh suggestions.
       setAllTags(await window.api.tags.listAll())
@@ -69,7 +63,7 @@ export default function TagEditor({ itemId }: { itemId: string }): React.JSX.Ele
           {tags.map((tag) => (
             <span
               key={tag.id}
-              style={CHIP_STYLE}
+              className="chip"
               onContextMenu={(e) => {
                 e.preventDefault()
                 setMenu({
@@ -87,12 +81,12 @@ export default function TagEditor({ itemId }: { itemId: string }): React.JSX.Ele
                 })
               }}
             >
-              {tag.name}
+              <span className="chip__label">{tag.name}</span>
               <button
                 type="button"
+                className="chip__remove"
                 aria-label={`Remove ${tag.name}`}
                 onClick={() => remove(tag.id)}
-                style={CHIP_REMOVE_STYLE}
               >
                 ×
               </button>
@@ -101,25 +95,7 @@ export default function TagEditor({ itemId }: { itemId: string }): React.JSX.Ele
         </div>
       )}
 
-      <input
-        type="text"
-        value={draft}
-        list={DATALIST_ID}
-        placeholder="Add a tag…"
-        onChange={(e) => setDraft(e.target.value)}
-        onKeyDown={(e) => {
-          if (e.key === 'Enter') {
-            e.preventDefault()
-            void add()
-          }
-        }}
-        style={INPUT_STYLE}
-      />
-      <datalist id={DATALIST_ID}>
-        {allTags.map((tag) => (
-          <option key={tag.id} value={tag.name} />
-        ))}
-      </datalist>
+      <TagInput suggestions={allTags.map((t) => t.name)} onAdd={(n) => void add(n)} />
       {menu && (
         <ContextMenu x={menu.x} y={menu.y} items={menu.items} onClose={() => setMenu(null)} />
       )}
@@ -127,35 +103,3 @@ export default function TagEditor({ itemId }: { itemId: string }): React.JSX.Ele
   )
 }
 
-const CHIP_STYLE: React.CSSProperties = {
-  display: 'inline-flex',
-  alignItems: 'center',
-  gap: 4,
-  padding: '2px 8px',
-  borderRadius: 'var(--radius-pill)',
-  background: 'var(--color-bg-elevated)',
-  color: 'var(--color-text)',
-  border: '1px solid var(--color-border)',
-  fontSize: 11
-}
-
-const CHIP_REMOVE_STYLE: React.CSSProperties = {
-  background: 'none',
-  border: 'none',
-  padding: 0,
-  cursor: 'pointer',
-  color: 'var(--color-text-faint)',
-  fontSize: 13,
-  lineHeight: 1
-}
-
-const INPUT_STYLE: React.CSSProperties = {
-  width: '100%',
-  boxSizing: 'border-box',
-  padding: '4px 8px',
-  background: 'var(--color-bg-elevated)',
-  color: 'var(--color-text)',
-  border: '1px solid var(--color-border)',
-  borderRadius: 'var(--radius-md)',
-  fontSize: 12
-}

@@ -21,6 +21,21 @@ export function listFolders(): Folder[] {
 }
 
 /**
+ * Direct item count per folder (folder_id → count). Only folders with 1+ items appear; the
+ * renderer defaults missing ids to 0. Counts are non-recursive (an item in a subfolder is not
+ * counted toward the parent), matching how the grid scopes a folder selection.
+ */
+export function folderCounts(): Record<string, number> {
+  if (!isDatabaseOpen()) return {}
+  const rows = getDb()
+    .prepare('SELECT folder_id, count(*) AS n FROM item_folders GROUP BY folder_id')
+    .all() as Array<{ folder_id: string; n: number }>
+  const out: Record<string, number> = {}
+  for (const r of rows) out[r.folder_id] = r.n
+  return out
+}
+
+/**
  * Create a folder (optionally nested under parentId). Trimmed; blank names are a
  * no-op. Returns the full folder list afterward.
  */

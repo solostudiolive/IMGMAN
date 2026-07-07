@@ -42,12 +42,17 @@ const api: IpcApi = {
   },
   items: {
     list: () => ipcRenderer.invoke('items:list'),
+    listUncategorized: () => ipcRenderer.invoke('items:listUncategorized'),
+    listUntagged: () => ipcRenderer.invoke('items:listUntagged'),
+    sidebarCounts: () => ipcRenderer.invoke('items:sidebarCounts'),
     get: (id: string) => ipcRenderer.invoke('items:get', id),
     update: (id: string, patch: ItemPatch) => ipcRenderer.invoke('items:update', id, patch),
     delete: (ids: string[]) => ipcRenderer.invoke('items:delete', ids),
     renameMany: (renames: { id: string; name: string }[]) =>
       ipcRenderer.invoke('items:renameMany', renames),
     rateMany: (ids: string[], rating: number) => ipcRenderer.invoke('items:rateMany', ids, rating),
+    export: (ids: string[]) => ipcRenderer.invoke('items:export', ids),
+    convert: (ids: string[], format: string) => ipcRenderer.invoke('items:convert', ids, format),
     backfillPalettes: () => ipcRenderer.invoke('items:backfillPalettes'),
     backfillHashes: () => ipcRenderer.invoke('items:backfillHashes'),
     findDuplicates: () => ipcRenderer.invoke('items:findDuplicates'),
@@ -67,6 +72,7 @@ const api: IpcApi = {
   },
   folders: {
     list: () => ipcRenderer.invoke('folders:list'),
+    counts: () => ipcRenderer.invoke('folders:counts'),
     create: (name: string, parentId: string | null) =>
       ipcRenderer.invoke('folders:create', name, parentId),
     rename: (id: string, name: string) => ipcRenderer.invoke('folders:rename', id, name),

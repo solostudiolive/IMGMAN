@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import type { Item, LibraryInfo, LibraryResult, SearchCriteria, SmartFolder, Tag } from '../../preload/types'
+import type { Item, LibraryInfo, LibraryResult, SearchCriteria, SmartFolder, Tag, Folder } from '../../preload/types'
 import ImportZone from './ImportZone'
 import Grid, { type GridHandle } from './Grid'
 import Inspector from './Inspector'
@@ -23,7 +23,9 @@ import {
   PencilIcon,
   FolderIcon,
   TrashIcon,
-  PlusIcon
+  PlusIcon,
+  DownloadIcon,
+  ConvertIcon
 } from './components/icons'
 import type { RenameInput } from './components/renameItems'
 import { useGridView, compareItems } from './hooks/useGridView'
@@ -61,6 +63,9 @@ export default function LibraryGate() {
   const [previewOpen, setPreviewOpen] = useState(false)
   // Active folder filter: null = "All items"; otherwise show that folder's items.
   const [selectedFolderId, setSelectedFolderId] = useState<string | null>(null)
+  // Sidebar counts: scope totals + per-folder item counts.
+  const [counts, setCounts] = useState({ all: 0, uncategorized: 0, untagged: 0 })
+  const [folderCounts, setFolderCounts] = useState<Record<string, number>>({})
   // Active search/filter criteria; when active it overrides the folder scope.
   const [searchCriteria, setSearchCriteria] = useState<SearchCriteria>({})
   // Saved searches ("smart folders") for the active library; LibraryGate owns the list so the
@@ -113,14 +118,21 @@ export default function LibraryGate() {
     setRecents(await window.api.library.listRecent())
   }, [])
 
-  // Load the grid for the current scope (search wins over folder over all-items).
+  // Refresh sidebar counts (scope totals + per-folder). Cheap; run alongside item reloads.
+  const reloadCounts = useCallback(async () => {
+    setCounts(await window.api.items.sidebarCounts())
+    setFolderCounts(await window.api.folders.counts())
+  }, [])
+
+  // Load the grid for the current scope (search > folder > all-items).
   const reloadItems = useCallback(async () => {
     let list: Item[]
     if (isSearchActive(searchCriteria)) list = await window.api.items.search(searchCriteria)
     else if (selectedFolderId) list = await window.api.folders.itemsIn(selectedFolderId)
     else list = await window.api.items.list()
     setItems(list)
-  }, [searchCriteria, selectedFolderId])
+    void reloadCounts()
+  }, [searchCriteria, selectedFolderId, reloadCounts])
 
   // Reload the active library's saved searches (empty when no library).
   const reloadSmartFolders = useCallback(async () => {
@@ -206,6 +218,10 @@ export default function LibraryGate() {
           }))
         : [{ kind: 'action', label: 'No folders', disabled: true, onSelect: () => {} }]
 
+      // Convert is image-only; show it when the selection contains at least one image.
+      const targetSet = new Set(targets)
+      const hasImageTarget = sortedItems.some((it) => targetSet.has(it.id) && it.type === 'image')
+
       const menu: MenuNode[] = []
       if (targets.length === 1) {
         const only = targets[0]
@@ -246,6 +262,26 @@ export default function LibraryGate() {
           }
         },
         { kind: 'submenu', label: 'Add to folder', icon: <FolderIcon />, items: folderNodes },
+        {
+          kind: 'action',
+          label: targets.length > 1 ? `Export ${targets.length} items…` : 'Export…',
+          icon: <DownloadIcon />,
+          onSelect: () => void window.api.items.export(targets)
+        },
+        ...(hasImageTarget
+          ? [
+              {
+                kind: 'submenu' as const,
+                label: 'Convert to',
+                icon: <ConvertIcon />,
+                items: (['jpg', 'png', 'webp', 'avif'] as const).map((fmt) => ({
+                  kind: 'action' as const,
+                  label: fmt.toUpperCase(),
+                  onSelect: () => void window.api.items.convert(targets, fmt)
+                }))
+              }
+            ]
+          : []),
         { kind: 'separator' },
         {
           kind: 'action',
@@ -526,18 +562,14 @@ export default function LibraryGate() {
                     New Library…
                   </button>
                 )}
-                <Recents
-                  recents={recents}
-                  active={active}
-                  busy={busy}
-                  onPick={(p) => run(() => window.api.library.openPath(p))}
-                />
               </div>
               <div style={{ flex: '1 1 auto', minHeight: 0, overflow: 'auto' }}>
                 <FolderTree
                   selectedFolderId={selectedFolderId}
                   onSelectFolder={selectFolder}
                   onFoldersChanged={reloadItems}
+                  folderCounts={folderCounts}
+                  allCount={counts.all}
                 />
                 <TagsList tags={allTags} selectedTagId={selectedTagId} onSelect={selectTag} />
                 <SmartFolders
@@ -576,7 +608,7 @@ export default function LibraryGate() {
             sel.selected.size > 1 ? (
               <MultiInspector items={selectedItems} onChanged={reloadAfterTagEdit} />
             ) : (
-              <Inspector selectedId={sel.primary} />
+              <Inspector selectedId={sel.primary} onChanged={reloadItems} />
             )
           }
         >

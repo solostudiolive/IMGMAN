@@ -16,6 +16,28 @@ export type ImportResult =
   | { ok: false; error: string }
   | { ok: false; cancelled: true }
 
+// Counts for the sidebar scope rows (mirrors src/main/services/items.ts SidebarCounts).
+export interface SidebarCounts {
+  all: number
+  uncategorized: number
+  untagged: number
+}
+
+// Result of exporting originals to disk (mirrors src/main/ipc/items.ts ExportResult).
+export type ExportResult =
+  | { ok: true; exported: number; failed: number }
+  | { ok: false; cancelled: true }
+  | { ok: false; error: string }
+
+// Target image formats for Convert (value = output extension).
+export type ConvertFormat = 'jpg' | 'png' | 'webp' | 'avif'
+
+// Result of a convert request (mirrors src/main/ipc/items.ts ConvertResult).
+export type ConvertResult =
+  | { ok: true; converted: number; failed: number }
+  | { ok: false; cancelled: true }
+  | { ok: false; error: string }
+
 export interface ImportProgress {
   done: number
   total: number
@@ -48,6 +70,8 @@ export interface FullItem extends Item {
 // Allow-listed mutable fields for items.update (mirrors items.ts ItemPatch).
 export interface ItemPatch {
   rating?: number
+  note?: string | null
+  source_url?: string | null
 }
 
 // A set of byte-identical items sharing one content hash (mirrors items.ts DuplicateGroup).
@@ -130,6 +154,11 @@ export interface IpcApi {
   }
   items: {
     list: () => Promise<Item[]>
+    // Items in no folder / with no tag — the sidebar "Uncategorized" / "Untagged" scopes.
+    listUncategorized: () => Promise<Item[]>
+    listUntagged: () => Promise<Item[]>
+    // Counts for the sidebar scope rows (All / Uncategorized / Untagged).
+    sidebarCounts: () => Promise<SidebarCounts>
     get: (id: string) => Promise<FullItem | null>
     update: (id: string, patch: ItemPatch) => Promise<FullItem | null>
     // Permanently delete a batch of items (rows + on-disk files). Returns rows deleted.
@@ -138,6 +167,10 @@ export interface IpcApi {
     renameMany: (renames: { id: string; name: string }[]) => Promise<number>
     // Set the same rating (0..5) on a batch of items. Returns rows changed.
     rateMany: (ids: string[], rating: number) => Promise<number>
+    // Export originals to disk (1 item → Save dialog, many → Choose-folder). Never mutates the library.
+    export: (ids: string[]) => Promise<ExportResult>
+    // Convert image originals to another format (jpg/png/webp/avif) and save to disk.
+    convert: (ids: string[], format: ConvertFormat) => Promise<ConvertResult>
     // Backfill dominant-color palettes for image items missing one. Returns count populated.
     backfillPalettes: () => Promise<number>
     // Backfill SHA-256 content hashes for items missing one (all types). Returns count populated.
@@ -161,6 +194,8 @@ export interface IpcApi {
   }
   folders: {
     list: () => Promise<Folder[]>
+    // Direct (non-recursive) item count per folder id; missing ids default to 0.
+    counts: () => Promise<Record<string, number>>
     create: (name: string, parentId: string | null) => Promise<Folder[]>
     rename: (id: string, name: string) => Promise<Folder[]>
     delete: (id: string) => Promise<Folder[]>

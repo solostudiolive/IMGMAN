@@ -1,6 +1,7 @@
 import { ipcMain } from 'electron'
 import {
   listFolders,
+  folderCounts,
   createFolder,
   renameFolder,
   deleteFolder,
@@ -17,6 +18,7 @@ import type { Item } from '../services/items'
 
 export function registerFoldersIpc(): void {
   ipcMain.handle('folders:list', (): Folder[] => listFolders())
+  ipcMain.handle('folders:counts', (): Record<string, number> => folderCounts())
   ipcMain.handle('folders:create', (_e, name: string, parentId: string | null): Folder[] =>
     createFolder(name, parentId)
   )

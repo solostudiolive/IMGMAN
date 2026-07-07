@@ -1,5 +1,6 @@
-import { rmSync, existsSync, readdirSync } from 'fs'
+import { rmSync, existsSync, readdirSync, copyFileSync } from 'fs'
 import { join } from 'path'
+import sharp from 'sharp'
 import { isDatabaseOpen, getDb } from '../db'
 import { getActiveLibrary, imagesDir } from './library'
 import { extractPalette, paletteToJson } from './palette'
@@ -28,10 +29,11 @@ export interface FullItem extends Item {
   note: string | null
 }
 
-// Allow-listed mutable fields for items:update. Extend as later slices need
-// (note, etc.) — only keys handled below ever reach SQL.
+// Allow-listed mutable fields for items:update. Only keys handled in updateItem() ever reach SQL.
 export interface ItemPatch {
   rating?: number
+  note?: string | null
+  source_url?: string | null
 }
 
 /** Number of items in the active library (0 when no library is open). */
@@ -41,16 +43,64 @@ export function countItems(): number {
   return row.n
 }
 
+// Shared column list + ordering for grid projections (listItems / listUncategorized / listUntagged).
+const ITEM_COLS = `id, name, ext, type, size_bytes, width, height, rating, created_at, imported_at`
+
 /** All items in the active library, newest first (empty when no library open). */
 export function listItems(): Item[] {
   if (!isDatabaseOpen()) return []
   return getDb()
+    .prepare(`SELECT ${ITEM_COLS} FROM items ORDER BY imported_at DESC`)
+    .all() as Item[]
+}
+
+/** Items in no folder ("Uncategorized"), newest first. */
+export function listUncategorized(): Item[] {
+  if (!isDatabaseOpen()) return []
+  return getDb()
     .prepare(
-      `SELECT id, name, ext, type, size_bytes, width, height, rating, created_at, imported_at
-       FROM items
+      `SELECT ${ITEM_COLS} FROM items
+       WHERE id NOT IN (SELECT item_id FROM item_folders)
        ORDER BY imported_at DESC`
     )
     .all() as Item[]
+}
+
+/** Items with no tag ("Untagged"), newest first. */
+export function listUntagged(): Item[] {
+  if (!isDatabaseOpen()) return []
+  return getDb()
+    .prepare(
+      `SELECT ${ITEM_COLS} FROM items
+       WHERE id NOT IN (SELECT item_id FROM item_tags)
+       ORDER BY imported_at DESC`
+    )
+    .all() as Item[]
+}
+
+// Counts for the sidebar's top scope rows.
+export interface SidebarCounts {
+  all: number
+  uncategorized: number
+  untagged: number
+}
+
+/** Item counts for the sidebar scope rows (All / Uncategorized / Untagged). */
+export function sidebarCounts(): SidebarCounts {
+  if (!isDatabaseOpen()) return { all: 0, uncategorized: 0, untagged: 0 }
+  const db = getDb()
+  const all = (db.prepare('SELECT count(*) AS n FROM items').get() as { n: number }).n
+  const uncategorized = (
+    db
+      .prepare('SELECT count(*) AS n FROM items WHERE id NOT IN (SELECT item_id FROM item_folders)')
+      .get() as { n: number }
+  ).n
+  const untagged = (
+    db
+      .prepare('SELECT count(*) AS n FROM items WHERE id NOT IN (SELECT item_id FROM item_tags)')
+      .get() as { n: number }
+  ).n
+  return { all, uncategorized, untagged }
 }
 
 /** The full record for one item, or null (unknown id / no library open). */
@@ -80,6 +130,16 @@ export function updateItem(id: string, patch: ItemPatch): FullItem | null {
   if (patch.rating !== undefined) {
     sets.push('rating = ?')
     values.push(Math.max(0, Math.min(5, Math.round(patch.rating))))
+  }
+  if (patch.note !== undefined) {
+    sets.push('note = ?')
+    const note = patch.note?.trim()
+    values.push(note ? note : null)
+  }
+  if (patch.source_url !== undefined) {
+    sets.push('source_url = ?')
+    const url = patch.source_url?.trim()
+    values.push(url ? url : null)
   }
 
   if (sets.length > 0) {
@@ -243,6 +303,146 @@ export function findDuplicateGroups(): DuplicateGroup[] {
     else groups.push({ hash: content_hash, items: [item as Item] })
   }
   return groups
+}
+
+// Strip characters illegal in Windows/macOS filenames so an item's display name is safe on disk.
+function safeFilename(name: string): string {
+  const cleaned = name.replace(/[\\/:*?"<>|\x00-\x1f]/g, '_').replace(/[. ]+$/, '').trim()
+  return cleaned || 'export'
+}
+
+/**
+ * Resolve one item's stored ORIGINAL file plus the filename it should export as (`name.ext`).
+ * Returns null for unknown id / no library / missing file.
+ */
+export function itemExportInfo(id: string): { path: string; filename: string } | null {
+  if (!isDatabaseOpen()) return null
+  const lib = getActiveLibrary()
+  if (!lib) return null
+  const row = getDb()
+    .prepare('SELECT id, name, ext FROM items WHERE id = ?')
+    .get(id) as { id: string; name: string; ext: string | null } | undefined
+  if (!row) return null
+  const src = originalPath(join(imagesDir(lib.path), row.id), row.ext)
+  if (!src) return null
+  const ext = row.ext ? `.${row.ext}` : ''
+  return { path: src, filename: `${safeFilename(row.name)}${ext}` }
+}
+
+/**
+ * Copy each item's original file into `destDir`, using its display name (`name.ext`). Colliding
+ * names get a ` (n)` suffix so nothing is silently overwritten. Returns counts. Used for multi-item
+ * export; single-item export copies to an explicit path via the IPC layer.
+ */
+export function exportItemsToDir(ids: string[], destDir: string): { exported: number; failed: number } {
+  let exported = 0
+  let failed = 0
+  const used = new Set<string>()
+  for (const id of ids) {
+    const info = itemExportInfo(id)
+    if (!info) {
+      failed++
+      continue
+    }
+    const dot = info.filename.lastIndexOf('.')
+    const base = dot > 0 ? info.filename.slice(0, dot) : info.filename
+    const ext = dot > 0 ? info.filename.slice(dot) : ''
+    let name = info.filename
+    let n = 1
+    while (used.has(name.toLowerCase()) || existsSync(join(destDir, name))) {
+      name = `${base} (${n})${ext}`
+      n++
+    }
+    used.add(name.toLowerCase())
+    try {
+      copyFileSync(info.path, join(destDir, name))
+      exported++
+    } catch {
+      failed++
+    }
+  }
+  return { exported, failed }
+}
+
+// Target formats offered by the "Convert" action. Value doubles as the output file extension.
+export type ConvertFormat = 'jpg' | 'png' | 'webp' | 'avif'
+
+// Apply the chosen output encoder to a sharp pipeline.
+function encodeAs(pipe: sharp.Sharp, format: ConvertFormat): sharp.Sharp {
+  switch (format) {
+    case 'jpg':
+      return pipe.jpeg({ quality: 90 })
+    case 'png':
+      return pipe.png()
+    case 'webp':
+      return pipe.webp({ quality: 82 })
+    case 'avif':
+      return pipe.avif({ quality: 50 })
+  }
+}
+
+/** The base filename (no extension) for an item — used to suggest a converted file's name. */
+export function itemBaseName(id: string): string | null {
+  if (!isDatabaseOpen()) return null
+  const row = getDb().prepare('SELECT name, ext FROM items WHERE id = ?').get(id) as
+    | { name: string; ext: string | null }
+    | undefined
+  if (!row) return null
+  const suffix = row.ext ? `.${row.ext}`.toLowerCase() : ''
+  const base =
+    suffix && row.name.toLowerCase().endsWith(suffix) ? row.name.slice(0, -suffix.length) : row.name
+  return safeFilename(base)
+}
+
+/**
+ * Convert one item's original image to `format`, writing to `destPath`. Sharp decodes the stored
+ * original and re-encodes; throws (caught by the IPC layer) on a non-image / unreadable source.
+ */
+export async function convertItemTo(
+  id: string,
+  format: ConvertFormat,
+  destPath: string
+): Promise<boolean> {
+  const info = itemExportInfo(id)
+  if (!info) return false
+  await encodeAs(sharp(info.path), format).toFile(destPath)
+  return true
+}
+
+/**
+ * Convert many items to `format` into `destDir` (each as `base.format`, collision-safe). Per-item
+ * failures (non-images, decode errors) are counted, never fatal. Async (sharp decode).
+ */
+export async function convertItemsToDir(
+  ids: string[],
+  format: ConvertFormat,
+  destDir: string
+): Promise<{ converted: number; failed: number }> {
+  let converted = 0
+  let failed = 0
+  const used = new Set<string>()
+  for (const id of ids) {
+    const base = itemBaseName(id)
+    const info = base ? itemExportInfo(id) : null
+    if (!base || !info) {
+      failed++
+      continue
+    }
+    let name = `${base}.${format}`
+    let n = 1
+    while (used.has(name.toLowerCase()) || existsSync(join(destDir, name))) {
+      name = `${base} (${n}).${format}`
+      n++
+    }
+    used.add(name.toLowerCase())
+    try {
+      await encodeAs(sharp(info.path), format).toFile(join(destDir, name))
+      converted++
+    } catch {
+      failed++
+    }
+  }
+  return { converted, failed }
 }
 
 /**

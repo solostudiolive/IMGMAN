@@ -142,3 +142,137 @@
 .import-status--error {
   color: var(--color-danger);
 }
+
+/* ---- Slim strip (populated library) ---- */
+/* Reclaims the vertical space the hero card used to hold once the library has items.
+   The full dropzone returns as .import-overlay only while files are being dragged in. */
+.import-strip {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin: var(--space-2) var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-bg-content);
+}
+
+.import-strip__actions {
+  display: flex;
+  gap: var(--space-2);
+}
+
+/* Compact import chips — subtle, equal-weight pills (not a heavy blue primary). */
+.import-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  height: 30px;
+  padding: 0 var(--space-3);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-elevated);
+  color: var(--color-text);
+  font-family: inherit;
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-medium);
+  cursor: pointer;
+  transition: background var(--dur-fast) var(--ease-out), border-color var(--dur-fast) var(--ease-out),
+    color var(--dur-fast) var(--ease-out);
+}
+
+.import-chip svg {
+  color: var(--color-text-faint);
+  transition: color var(--dur-fast) var(--ease-out);
+}
+
+.import-chip:hover:not(:disabled) {
+  background: var(--color-surface-hover);
+  border-color: var(--color-border-strong);
+}
+
+.import-chip:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+/* Accent variant for the primary "Import" action: tinted, not fully saturated. */
+.import-chip--accent {
+  color: var(--color-accent);
+  border-color: color-mix(in srgb, var(--color-accent) 40%, var(--color-border));
+  background: color-mix(in srgb, var(--color-accent) 10%, var(--color-bg-elevated));
+}
+
+.import-chip--accent svg {
+  color: var(--color-accent);
+}
+
+.import-chip--accent:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--color-accent) 18%, var(--color-bg-elevated));
+  border-color: var(--color-accent);
+}
+
+.import-strip__hint {
+  font-size: var(--fs-xs);
+  color: var(--color-text-faint);
+  white-space: nowrap;
+}
+
+.import-strip__count {
+  margin-left: auto;
+  font-size: var(--fs-xs);
+  color: var(--color-text-faint);
+  white-space: nowrap;
+}
+
+/* Status messages sit inline inside the strip instead of stacking below. */
+.import-strip .import-status {
+  margin: 0;
+  font-size: var(--fs-xs);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ---- Full-window drag overlay ---- */
+.import-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: grid;
+  place-items: center;
+  padding: var(--space-6);
+  background: color-mix(in srgb, var(--color-bg-app) 62%, transparent);
+  backdrop-filter: blur(2px);
+  animation: import-overlay-in var(--dur-fast) var(--ease-out);
+}
+
+.import-overlay__card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  width: min(560px, 80%);
+  padding: var(--space-6) var(--space-5);
+  border: 2px dashed var(--color-accent);
+  border-radius: var(--radius-lg);
+  background: var(--color-bg-content);
+  box-shadow: var(--shadow-3);
+  text-align: center;
+  pointer-events: none;
+}
+
+@keyframes import-overlay-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .import-overlay {
+    animation: none;
+  }
+}

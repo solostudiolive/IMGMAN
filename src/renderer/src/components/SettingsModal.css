@@ -11,6 +11,7 @@
   justify-content: center;
   padding: var(--space-5);
   background: rgba(0, 0, 0, 0.55);
+  animation: imgman-fade-in var(--dur-fast) var(--ease-out);
 }
 
 .settings__panel {
@@ -24,6 +25,7 @@
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-2);
+  animation: imgman-scale-in var(--dur-fast) var(--ease-out);
 }
 
 .settings__header {

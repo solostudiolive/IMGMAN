@@ -18,6 +18,7 @@ import type { ViewMode } from './hooks/useGridView'
 import type { SelectMods } from './hooks/useSelection'
 import { useElementWidth } from './hooks/useElementWidth'
 import { TypeIcon } from './components/icons'
+import { baseName } from './displayName'
 import './Grid.css'
 
 // Imperative handle the container (LibraryGate) uses to scroll the keyboard-active item
@@ -292,7 +293,9 @@ function Masonry({
     <div ref={ref} style={{ height: '100%' }}>
       {width > 0 && (
         <VirtuosoMasonry
-          key={columnCount}
+          // Remount on column OR item-count change: VirtuosoMasonry mis-reconciles a shrinking
+          // data array (stale indices → blank grid), so a fresh mount per scope is the safe path.
+          key={`${columnCount}-${items.length}`}
           style={{ height: '100%' }}
           columnCount={columnCount}
           data={items}
@@ -312,6 +315,10 @@ function MasonryItem({
   index: number
   context: MasonryContext
 }) {
+  // VirtuosoMasonry can momentarily render a stale index past the end of a shrunk `data` array
+  // (e.g. switching from All items to a 1-item folder). Guard so an undefined item never throws
+  // and unmounts the whole grid to blank.
+  if (!data) return null
   return (
     <div style={{ padding: GAP / 2 }}>
       <Cell
@@ -363,7 +370,7 @@ function ListRow({
           <Placeholder item={item} />
         )}
       </div>
-      <span className="list-row__name">{item.name}</span>
+      <span className="list-row__name">{baseName(item.name, item.ext)}</span>
       <span className="list-row__meta list-row__type">{type}</span>
       <span className="list-row__meta list-row__dims">{dims}</span>
       <span className="list-row__meta list-row__size">{formatBytes(item.size_bytes)}</span>
@@ -430,6 +437,13 @@ function Cell({
   }
 
   const mediaStyle: React.CSSProperties = { width: '100%', height: '100%', objectFit: 'cover' }
+  // Fade thumbnails in as they decode so fast scrolling doesn't flash the empty tile bg.
+  const [loaded, setLoaded] = useState(false)
+  const thumbStyle: React.CSSProperties = {
+    ...mediaStyle,
+    opacity: loaded ? 1 : 0,
+    transition: 'opacity 200ms var(--ease-out)'
+  }
 
   return (
     <button
@@ -441,7 +455,7 @@ function Cell({
       }}
       onMouseEnter={onEnter}
       onMouseLeave={onLeave}
-      title={item.name}
+      title={baseName(item.name, item.ext)}
       className={`grid-cell${selected ? ' grid-cell--selected' : ''}`}
       style={{
         display: 'flex',
@@ -455,12 +469,10 @@ function Cell({
       }}
     >
       <div
+        className="grid-cell__frame"
         style={{
           width: '100%',
           aspectRatio,
-          borderRadius: 'var(--radius-sm)',
-          overflow: 'hidden',
-          background: 'var(--color-bg-elevated)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center'
@@ -474,8 +486,9 @@ function Cell({
           <img
             src={`imgman://thumb/${item.id}`}
             loading="lazy"
+            onLoad={() => setLoaded(true)}
             onError={() => setFailed(true)}
-            style={mediaStyle}
+            style={thumbStyle}
           />
         ) : (
           <Placeholder item={item} />
@@ -495,7 +508,7 @@ function Cell({
           maxWidth: '100%'
         }}
       >
-        {item.name}
+        {baseName(item.name, item.ext)}
       </span>
     </button>
   )

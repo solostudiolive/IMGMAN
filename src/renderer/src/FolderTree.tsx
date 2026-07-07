@@ -10,19 +10,32 @@ import {
   ChevronRightIcon,
   MoreIcon
 } from './components/icons'
+import { folderColor } from './folderColor'
 
-// Left-sidebar folder tree: an "All items" root plus the nested folders, with
-// inline create / rename / delete. Built from the flat folders list (grouped by
-// parent_id). Each mutation reconciles to the returned list and notifies the
-// container (so the grid filter can reload).
+// Right-aligned muted count badge shown on scope / folder rows (hidden when 0).
+function Count({ n }: { n: number }): React.JSX.Element | null {
+  if (!n) return null
+  return (
+    <span className="nav-row__count" style={COUNT_STYLE}>
+      {n}
+    </span>
+  )
+}
+
+// Left-sidebar folder tree: an "All items" root plus the nested folders, with inline
+// create / rename / delete, per-row item counts, and colored folder icons.
 export default function FolderTree({
   selectedFolderId,
   onSelectFolder,
-  onFoldersChanged
+  onFoldersChanged,
+  folderCounts = {},
+  allCount = 0
 }: {
   selectedFolderId: string | null
   onSelectFolder: (id: string | null) => void
   onFoldersChanged?: () => void
+  folderCounts?: Record<string, number>
+  allCount?: number
 }): React.JSX.Element {
   const [folders, setFolders] = useState<Folder[]>([])
   // Inline-input state: the parent under which we're adding (string id, or null
@@ -51,21 +64,36 @@ export default function FolderTree({
     onFoldersChanged?.()
   }
 
-  const expandFolder = (id: string): void =>
-    setExpanded((prev) => {
-      if (prev.has(id)) return prev
-      const next = new Set(prev)
-      next.add(id)
-      return next
-    })
+  // The id + all its ancestors — the branch that must stay open to reveal a folder.
+  const branchOf = (id: string): Set<string> => {
+    const out = new Set<string>()
+    let cur: Folder | undefined = folders.find((f) => f.id === id)
+    while (cur) {
+      out.add(cur.id)
+      cur = cur.parent_id ? folders.find((f) => f.id === cur!.parent_id) : undefined
+    }
+    return out
+  }
+
+  // Accordion: opening a folder keeps only its branch open, collapsing every other branch.
+  const expandFolder = (id: string): void => setExpanded((prev) => (prev.has(id) ? prev : branchOf(id)))
 
   const toggleExpand = (id: string): void =>
     setExpanded((prev) => {
-      const next = new Set(prev)
-      if (next.has(id)) next.delete(id)
-      else next.add(id)
-      return next
+      if (prev.has(id)) {
+        const next = new Set(prev)
+        next.delete(id)
+        return next
+      }
+      return branchOf(id)
     })
+
+  // Selecting a folder collapses every other branch (accordion), opening only the selected one's
+  // path. Selecting "All items" (null) collapses everything.
+  const handleSelect = (id: string | null): void => {
+    onSelectFolder(id)
+    setExpanded(id ? branchOf(id) : new Set())
+  }
 
   const startAdd = (parentId: string | null): void => {
     setAddingParent(parentId)
@@ -143,7 +171,7 @@ export default function FolderTree({
                   setDraft('')
                 }
               }}
-              style={{ ...INPUT_STYLE, marginLeft: depth * 12 }}
+              style={{ ...INPUT_STYLE, marginLeft: depth * 18 }}
             />
           ) : (
             <div
@@ -154,41 +182,51 @@ export default function FolderTree({
               }}
               style={{
                 ...ROW_STYLE,
-                paddingLeft: 6 + depth * 12,
+                paddingLeft: 6 + depth * 18,
                 background: selected ? 'var(--color-surface-selected)' : 'transparent',
                 color: selected ? 'var(--color-accent)' : 'var(--color-text)'
               }}
             >
-              {hasChildren ? (
-                <button
-                  type="button"
-                  title={isOpen ? 'Collapse' : 'Expand'}
-                  aria-label={isOpen ? 'Collapse' : 'Expand'}
-                  aria-expanded={isOpen}
-                  onClick={() => toggleExpand(folder.id)}
-                  style={CHEVRON_BTN}
-                >
-                  <ChevronRightIcon
-                    size={12}
-                    style={{
-                      transform: isOpen ? 'rotate(90deg)' : 'none',
-                      transition: 'transform var(--dur-fast) var(--ease-out)'
+              {/* Icon column: folder icon by default; on row-hover it swaps to the chevron toggle
+                  (only for folders that have children). No separate chevron lane → icons align. */}
+              <span
+                className={`nav-row__glyph${hasChildren ? ' nav-row__glyph--expandable' : ''}`}
+              >
+                <span className="glyph-icon" style={{ display: 'inline-flex', color: folderColor(folder.id) }}>
+                  <FolderIcon />
+                </span>
+                {hasChildren && (
+                  <button
+                    type="button"
+                    className="glyph-toggle"
+                    title={isOpen ? 'Collapse' : 'Expand'}
+                    aria-label={isOpen ? 'Collapse' : 'Expand'}
+                    aria-expanded={isOpen}
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      toggleExpand(folder.id)
                     }}
-                  />
-                </button>
-              ) : (
-                <span style={CHEVRON_SPACER} />
-              )}
+                  >
+                    <ChevronRightIcon
+                      size={12}
+                      style={{
+                        transform: isOpen ? 'rotate(90deg)' : 'none',
+                        transition: 'transform var(--dur-fast) var(--ease-out)'
+                      }}
+                    />
+                  </button>
+                )}
+              </span>
               <button
                 type="button"
-                onClick={() => onSelectFolder(folder.id)}
+                onClick={() => handleSelect(folder.id)}
                 title={folder.name}
                 style={ROW_NAME_STYLE}
               >
-                <FolderIcon />
                 <span style={ROW_TEXT_STYLE}>{folder.name}</span>
               </button>
-              <span style={ROW_ACTIONS_STYLE}>
+              <Count n={folderCounts[folder.id] ?? 0} />
+              <span className="nav-row__actions" style={ROW_ACTIONS_STYLE}>
                 <button
                   type="button"
                   title="More"
@@ -206,15 +244,20 @@ export default function FolderTree({
               </span>
             </div>
           )}
+          {/* Children + inline add-input live in an animatable wrapper (always mounted so both
+              expand AND collapse animate via the grid-rows 0fr↔1fr transition). */}
+          {(hasChildren || addingParent === folder.id) && (
+            <div
+              className={`folder-children${isOpen || addingParent === folder.id ? ' folder-children--open' : ''}`}
+            >
+              <ul className="folder-children__inner">
+                {renderRows(folder.id, depth + 1)}
+                {addingParent === folder.id && renderAddInput(folder.id, depth + 1)}
+              </ul>
+            </div>
+          )}
         </li>
       )
-      // Children only when expanded; an inline add-input if we're adding under this folder.
-      if (isOpen) {
-        rows.push(...renderRows(folder.id, depth + 1))
-      }
-      if (addingParent === folder.id) {
-        rows.push(renderAddInput(folder.id, depth + 1))
-      }
     }
     return rows
   }
@@ -234,7 +277,7 @@ export default function FolderTree({
             setDraft('')
           }
         }}
-        style={{ ...INPUT_STYLE, marginLeft: depth * 12 }}
+        style={{ ...INPUT_STYLE, marginLeft: depth * 18 }}
       />
     </li>
   )
@@ -276,10 +319,13 @@ export default function FolderTree({
               color: selectedFolderId === null ? 'var(--color-accent)' : 'var(--color-text)'
             }}
           >
-            <button type="button" onClick={() => onSelectFolder(null)} style={ROW_NAME_STYLE}>
+            <span className="nav-row__glyph">
               <AllItemsIcon />
+            </span>
+            <button type="button" onClick={() => handleSelect(null)} style={ROW_NAME_STYLE}>
               <span style={ROW_TEXT_STYLE}>All items</span>
             </button>
+            <Count n={allCount} />
           </div>
         </li>
         {renderRows(null, 0)}
@@ -298,10 +344,22 @@ const ASIDE_STYLE: React.CSSProperties = {
   boxSizing: 'border-box'
 }
 
+const COUNT_STYLE: React.CSSProperties = {
+  flex: '0 0 auto',
+  marginLeft: 4,
+  fontSize: 11,
+  color: 'var(--color-text-faint)',
+  fontVariantNumeric: 'tabular-nums'
+}
+
 const ROW_STYLE: React.CSSProperties = {
+  // Relative so the kebab can be absolutely positioned (out of flow) — that keeps the count column
+  // at the same right edge on every row, whether or not the row has a kebab.
+  position: 'relative',
   display: 'flex',
   alignItems: 'center',
   gap: 6,
+  paddingRight: 8,
   borderRadius: 'var(--radius-md)',
   fontSize: 'var(--fs-sm)',
   minHeight: 30
@@ -329,9 +387,13 @@ const ROW_TEXT_STYLE: React.CSSProperties = {
 }
 
 const ROW_ACTIONS_STYLE: React.CSSProperties = {
+  // Out of flow (overlays the count, which hides on hover) so it never shifts the count column.
+  position: 'absolute',
+  right: 4,
+  top: '50%',
+  transform: 'translateY(-50%)',
   display: 'inline-flex',
-  gap: 2,
-  flex: '0 0 auto'
+  gap: 2
 }
 
 const ICON_BTN: React.CSSProperties = {
@@ -343,22 +405,6 @@ const ICON_BTN: React.CSSProperties = {
   fontSize: 12,
   lineHeight: 1
 }
-
-// Disclosure toggle + a same-width spacer so leaf rows align with togglable ones.
-const CHEVRON_BTN: React.CSSProperties = {
-  flex: '0 0 auto',
-  width: 16,
-  display: 'inline-flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  background: 'none',
-  border: 'none',
-  padding: 0,
-  cursor: 'pointer',
-  color: 'var(--color-text-faint)'
-}
-
-const CHEVRON_SPACER: React.CSSProperties = { flex: '0 0 auto', width: 16 }
 
 const INPUT_STYLE: React.CSSProperties = {
   width: '90%',

@@ -1,5 +1,6 @@
 import type { Item } from '../../preload/types'
 import { TypeIcon } from './components/icons'
+import { baseName } from './displayName'
 
 // Full-viewport overlay showing the selected item's original. Keyboard
 // (Space/Escape) is owned by LibraryGate; this only renders + closes on backdrop.
@@ -15,6 +16,7 @@ export default function QuickPreview({
   return (
     <div
       onClick={onClose}
+      className="qp-backdrop"
       style={{
         position: 'fixed',
         inset: 0,
@@ -51,7 +53,7 @@ function Content({ item, src }: { item: Item; src: string }): React.JSX.Element 
           <TypeIcon type="audio" size={64} />
         </div>
         <audio src={src} controls autoPlay />
-        <div style={{ marginTop: 12, fontSize: 13, opacity: 0.8 }}>{item.name}</div>
+        <div style={{ marginTop: 12, fontSize: 13, opacity: 0.8 }}>{baseName(item.name, item.ext)}</div>
       </div>
     )
   }
@@ -61,7 +63,7 @@ function Content({ item, src }: { item: Item; src: string }): React.JSX.Element 
       <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'center' }}>
         <TypeIcon type={item.type} size={80} />
       </div>
-      <div style={{ fontSize: 14 }}>{item.name}</div>
+      <div style={{ fontSize: 14 }}>{baseName(item.name, item.ext)}</div>
       <div style={{ fontSize: 12, opacity: 0.6, marginTop: 6 }}>
         No preview for {item.ext ? item.ext.toUpperCase() : item.type} files yet.
       </div>

@@ -17,20 +17,34 @@
  * Scoped to grid cells — list rows are also [data-item-id] but carry .list-row.
  */
 .grid-cell {
-  /* Constant 2px border (transparent) reserves space so selection never shifts layout. */
-  border: 2px solid transparent;
+  border: 0;
+  background: none;
+}
+
+/* The image frame carries Eagle's look: rounded corners, a soft resting shadow, and a lift on
+   hover. Cheap GPU props (transform/box-shadow) only, so 50k-item scroll stays smooth. */
+.grid-cell__frame {
   border-radius: var(--radius-md);
-  transition: border-color var(--dur-fast) var(--ease-out);
+  overflow: hidden;
+  background: var(--color-bg-elevated);
+  box-shadow: var(--shadow-1);
+  /* Transparent ring reserved so selection never reflows the tile. */
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+  transition: transform var(--dur-fast) var(--ease-out), box-shadow var(--dur-fast) var(--ease-out),
+    outline-color var(--dur-fast) var(--ease-out);
 }
 
-/* Eagle keeps tiles flat — a faint border tint on hover is the only affordance for unselected. */
-.grid-cell:hover {
-  border-color: var(--color-border-strong);
+.grid-cell:hover .grid-cell__frame {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-2);
 }
 
-.grid-cell--selected,
-.grid-cell--selected:hover {
-  border-color: var(--color-accent);
+/* Eagle-style selection: an accent ring around the rounded image plus a soft accent glow. */
+.grid-cell--selected .grid-cell__frame,
+.grid-cell--selected:hover .grid-cell__frame {
+  outline-color: var(--color-accent);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--color-accent) 22%, transparent), var(--shadow-2);
 }
 
 /*

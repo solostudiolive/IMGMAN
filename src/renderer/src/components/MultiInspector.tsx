@@ -1,7 +1,9 @@
 import { useEffect, useMemo, useState } from 'react'
 import type { Item, ItemType, Tag, Folder } from '../../../preload/types'
-
-const DATALIST_ID = 'multi-tag-suggestions'
+import { DownloadIcon, FolderIcon } from './icons'
+import Select from './Select'
+import TagInput from './TagInput'
+import { folderColor } from '../folderColor'
 
 const TYPE_LABEL: Record<ItemType, string> = {
   image: 'image',
@@ -40,7 +42,6 @@ export default function MultiInspector({
   const [allTags, setAllTags] = useState<Tag[]>([])
   const [commonFolders, setCommonFolders] = useState<Folder[]>([])
   const [allFolders, setAllFolders] = useState<Folder[]>([])
-  const [draft, setDraft] = useState('')
 
   // Aggregate header values (free — derived from the items prop).
   const totalSize = items.reduce((sum, it) => sum + it.size_bytes, 0)
@@ -68,7 +69,6 @@ export default function MultiInspector({
 
   useEffect(() => {
     let cancelled = false
-    setDraft('')
     Promise.all([
       window.api.tags.commonForItems(ids),
       window.api.tags.listAll(),
@@ -94,11 +94,10 @@ export default function MultiInspector({
     onChanged()
   }
 
-  const addTag = async (): Promise<void> => {
-    const name = draft.trim()
-    if (!name) return
-    setDraft('')
-    await window.api.tags.addToMany(ids, name)
+  const addTag = async (name: string): Promise<void> => {
+    const n = name.trim()
+    if (!n) return
+    await window.api.tags.addToMany(ids, n)
     await reloadCommon()
     onChanged()
   }
@@ -171,13 +170,13 @@ export default function MultiInspector({
         {commonTags.length > 0 && (
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 'var(--space-2)' }}>
             {commonTags.map((tag) => (
-              <span key={tag.id} style={CHIP_STYLE}>
-                {tag.name}
+              <span key={tag.id} className="chip">
+                <span className="chip__label">{tag.name}</span>
                 <button
                   type="button"
+                  className="chip__remove"
                   aria-label={`Remove ${tag.name} from all`}
                   onClick={() => void removeTag(tag.id)}
-                  style={CHIP_REMOVE_STYLE}
                 >
                   ×
                 </button>
@@ -185,38 +184,27 @@ export default function MultiInspector({
             ))}
           </div>
         )}
-        <input
-          type="text"
-          value={draft}
-          list={DATALIST_ID}
+        <TagInput
+          suggestions={allTags.map((t) => t.name)}
           placeholder="Add a tag to all…"
-          onChange={(e) => setDraft(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter') {
-              e.preventDefault()
-              void addTag()
-            }
-          }}
-          style={INPUT_STYLE}
+          onAdd={(n) => void addTag(n)}
         />
-        <datalist id={DATALIST_ID}>
-          {allTags.map((tag) => (
-            <option key={tag.id} value={tag.name} />
-          ))}
-        </datalist>
       </Section>
 
       <Section label="Folders" note="shown: folders containing all selected">
         {commonFolders.length > 0 && (
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 'var(--space-2)' }}>
             {commonFolders.map((folder) => (
-              <span key={folder.id} style={CHIP_STYLE}>
-                📁 {folder.name}
+              <span key={folder.id} className="chip">
+                <span className="chip__icon" style={{ color: folderColor(folder.id) }}>
+                  <FolderIcon size={13} />
+                </span>
+                <span className="chip__label">{folder.name}</span>
                 <button
                   type="button"
+                  className="chip__remove"
                   aria-label={`Remove all from ${folder.name}`}
                   onClick={() => void unassignFolder(folder.id)}
-                  style={CHIP_REMOVE_STYLE}
                 >
                   ×
                 </button>
@@ -229,23 +217,27 @@ export default function MultiInspector({
             No folders — create one in the sidebar.
           </div>
         ) : (
-          <select
-            className="modern-select"
+          <Select
             value=""
-            onChange={(e) => void assignFolder(e.target.value)}
+            placeholder={availableFolders.length === 0 ? 'In all folders' : 'Add all to folder…'}
             disabled={availableFolders.length === 0}
-          >
-            <option value="" disabled>
-              {availableFolders.length === 0 ? 'In all folders' : 'Add all to folder…'}
-            </option>
-            {availableFolders.map((folder) => (
-              <option key={folder.id} value={folder.id}>
-                {folder.name}
-              </option>
-            ))}
-          </select>
+            ariaLabel="Add all to folder"
+            options={availableFolders.map((f) => ({ value: f.id, label: f.name }))}
+            onChange={(id) => void assignFolder(id)}
+          />
         )}
       </Section>
+
+      <div style={{ marginTop: 14 }}>
+        <button
+          type="button"
+          className="inspector-export"
+          onClick={() => void window.api.items.export(ids)}
+        >
+          <DownloadIcon size={15} />
+          Export {ids.length} items
+        </button>
+      </div>
     </aside>
   )
 }
@@ -331,35 +323,3 @@ const TYPE_PILL_STYLE: React.CSSProperties = {
   fontSize: 'var(--fs-xs)'
 }
 
-const CHIP_STYLE: React.CSSProperties = {
-  display: 'inline-flex',
-  alignItems: 'center',
-  gap: 4,
-  padding: '2px 8px',
-  borderRadius: 'var(--radius-pill, 999px)',
-  background: 'var(--color-bg-elevated)',
-  color: 'var(--color-text)',
-  border: '1px solid var(--color-border)',
-  fontSize: 11
-}
-
-const CHIP_REMOVE_STYLE: React.CSSProperties = {
-  background: 'none',
-  border: 'none',
-  padding: 0,
-  cursor: 'pointer',
-  color: 'var(--color-text-faint)',
-  fontSize: 13,
-  lineHeight: 1
-}
-
-const INPUT_STYLE: React.CSSProperties = {
-  width: '100%',
-  boxSizing: 'border-box',
-  padding: 'var(--space-1) var(--space-2)',
-  border: '1px solid var(--color-border)',
-  borderRadius: 'var(--radius-md)',
-  background: 'var(--color-bg-elevated)',
-  color: 'var(--color-text)',
-  fontSize: 12
-}

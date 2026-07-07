@@ -59,7 +59,8 @@ function readSortDir(): SortDir {
 
 function readViewMode(): ViewMode {
   const raw = read(KEYS.viewMode)
-  return VIEW_MODES.includes(raw as ViewMode) ? (raw as ViewMode) : 'grid'
+  // Default to masonry (Eagle's waterfall look) for first-time users; honor a saved choice.
+  return VIEW_MODES.includes(raw as ViewMode) ? (raw as ViewMode) : 'masonry'
 }
 
 export interface GridView {

@@ -11,6 +11,7 @@
   justify-content: center;
   padding: var(--space-4);
   background: rgba(0, 0, 0, 0.5);
+  animation: imgman-fade-in var(--dur-fast) var(--ease-out);
 }
 
 .dups__panel {
@@ -25,6 +26,7 @@
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-3);
   overflow: hidden;
+  animation: imgman-scale-in var(--dur-fast) var(--ease-out);
 }
 
 .dups__header {

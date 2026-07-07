@@ -1,13 +1,29 @@
 import type { ItemType } from '../../../preload/types'
 
-// Shared FILLED icon set (Phase 8.1 restyle). Solid glyphs, single-path where possible, drawn with
-// `fill: currentColor` so they inherit the surrounding text color (muted normally, accent when active).
-// Inline SVG — no icon-font / dependency, CSP-safe.
+// Shared OUTLINE icon set (Lucide-style). Stroked glyphs (`fill: none`, `stroke: currentColor`) so
+// they inherit the surrounding text color and read consistently at UI sizes. Inline SVG — no
+// icon-font / dependency, CSP-safe. TypeIcon (item-type placeholders) stays filled below.
 
 type IconProps = { size?: number; style?: React.CSSProperties }
 
+// Filled preset — used only by the large TypeIcon placeholders.
 function svgProps(size: number): React.SVGProps<SVGSVGElement> {
   return { width: size, height: size, viewBox: '0 0 24 24', fill: 'currentColor', 'aria-hidden': true }
+}
+
+// Outline preset — the shared stroked look for every sidebar / menu / action icon.
+function strokeProps(size: number): React.SVGProps<SVGSVGElement> {
+  return {
+    width: size,
+    height: size,
+    viewBox: '0 0 24 24',
+    fill: 'none',
+    stroke: 'currentColor',
+    strokeWidth: 2,
+    strokeLinecap: 'round',
+    strokeLinejoin: 'round',
+    'aria-hidden': true
+  }
 }
 
 const base: React.CSSProperties = { flex: '0 0 auto', display: 'block' }
@@ -15,28 +31,27 @@ const base: React.CSSProperties = { flex: '0 0 auto', display: 'block' }
 // ---- Sidebar ----
 export function FolderIcon({ size = 15, style }: IconProps): React.JSX.Element {
   return (
-    <svg {...svgProps(size)} style={{ ...base, ...style }}>
-      <path d="M2.5 6.5A2 2 0 0 1 4.5 4.5h4.2a2 2 0 0 1 1.4.6l1.2 1.2H19.5a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-15a2 2 0 0 1-2-2v-10.5Z" />
+    <svg {...strokeProps(size)} style={{ ...base, ...style }}>
+      <path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z" />
     </svg>
   )
 }
 
 export function AllItemsIcon({ size = 15, style }: IconProps): React.JSX.Element {
   return (
-    <svg {...svgProps(size)} style={{ ...base, ...style }}>
-      <rect x="3" y="3" width="7.5" height="7.5" rx="1.6" />
-      <rect x="13.5" y="3" width="7.5" height="7.5" rx="1.6" />
-      <rect x="3" y="13.5" width="7.5" height="7.5" rx="1.6" />
-      <rect x="13.5" y="13.5" width="7.5" height="7.5" rx="1.6" />
+    <svg {...strokeProps(size)} style={{ ...base, ...style }}>
+      <rect x="3" y="3" width="7" height="7" rx="1" />
+      <rect x="14" y="3" width="7" height="7" rx="1" />
+      <rect x="3" y="14" width="7" height="7" rx="1" />
+      <rect x="14" y="14" width="7" height="7" rx="1" />
     </svg>
   )
 }
 
 export function SmartFolderIcon({ size = 15, style }: IconProps): React.JSX.Element {
   return (
-    <svg {...svgProps(size)} style={{ ...base, ...style }}>
-      <path d="M2.5 6.5A2 2 0 0 1 4.5 4.5h4.2a2 2 0 0 1 1.4.6l1.2 1.2H19.5a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-15a2 2 0 0 1-2-2v-10.5Z" opacity="0.5" />
-      <path d="M11.2 10.4a3.4 3.4 0 1 0 1.9 6.2l2 2a1 1 0 0 0 1.4-1.4l-2-2a3.4 3.4 0 0 0-3.3-4.8Zm0 2a1.4 1.4 0 1 1 0 2.8 1.4 1.4 0 0 1 0-2.8Z" />
+    <svg {...strokeProps(size)} style={{ ...base, ...style }}>
+      <path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3Z" />
     </svg>
   )
 }
@@ -44,19 +59,19 @@ export function SmartFolderIcon({ size = 15, style }: IconProps): React.JSX.Elem
 // Disclosure chevron (points right; rotate 90° via `style` when the row is expanded).
 export function ChevronRightIcon({ size = 12, style }: IconProps): React.JSX.Element {
   return (
-    <svg {...svgProps(size)} style={{ ...base, ...style }}>
-      <path d="M9 5.4 15.6 12 9 18.6 7.4 17l5-5-5-5L9 5.4Z" />
+    <svg {...strokeProps(size)} style={{ ...base, ...style }}>
+      <path d="m9 18 6-6-6-6" />
     </svg>
   )
 }
 
-// Vertical "kebab" (3-dot) overflow-menu glyph.
+// Vertical "kebab" (3-dot) overflow-menu glyph (dots are filled so they read at small sizes).
 export function MoreIcon({ size = 15, style }: IconProps): React.JSX.Element {
   return (
     <svg {...svgProps(size)} style={{ ...base, ...style }}>
-      <circle cx="12" cy="5" r="2" />
-      <circle cx="12" cy="12" r="2" />
-      <circle cx="12" cy="19" r="2" />
+      <circle cx="12" cy="5" r="1.6" />
+      <circle cx="12" cy="12" r="1.6" />
+      <circle cx="12" cy="19" r="1.6" />
     </svg>
   )
 }
@@ -64,48 +79,55 @@ export function MoreIcon({ size = 15, style }: IconProps): React.JSX.Element {
 // ---- Row actions ----
 export function PlusIcon({ size = 14, style }: IconProps): React.JSX.Element {
   return (
-    <svg {...svgProps(size)} style={{ ...base, ...style }}>
-      <path d="M11 4h2v7h7v2h-7v7h-2v-7H4v-2h7V4Z" />
+    <svg {...strokeProps(size)} style={{ ...base, ...style }}>
+      <path d="M12 5v14" />
+      <path d="M5 12h14" />
     </svg>
   )
 }
 
 export function PencilIcon({ size = 14, style }: IconProps): React.JSX.Element {
   return (
-    <svg {...svgProps(size)} style={{ ...base, ...style }}>
-      <path d="M14.06 4.94 19.06 9.94 8.5 20.5l-4.6.6.6-4.6L14.06 4.94Zm1.4-1.4 2.1-2.1a1.5 1.5 0 0 1 2.12 0l2.88 2.88a1.5 1.5 0 0 1 0 2.12l-2.1 2.1-5-5Z" />
+    <svg {...strokeProps(size)} style={{ ...base, ...style }}>
+      <path d="M12 20h9" />
+      <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5Z" />
     </svg>
   )
 }
 
 export function TrashIcon({ size = 14, style }: IconProps): React.JSX.Element {
   return (
-    <svg {...svgProps(size)} style={{ ...base, ...style }}>
-      <path d="M9 3h6l1 2h4v2H4V5h4l1-2ZM6 8h12l-1 12.2a2 2 0 0 1-2 1.8H9a2 2 0 0 1-2-1.8L6 8Z" />
+    <svg {...strokeProps(size)} style={{ ...base, ...style }}>
+      <path d="M3 6h18" />
+      <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" />
+      <path d="M10 11v6" />
+      <path d="M14 11v6" />
     </svg>
   )
 }
 
 export function EyeIcon({ size = 14, style }: IconProps): React.JSX.Element {
   return (
-    <svg {...svgProps(size)} style={{ ...base, ...style }}>
-      <path d="M12 5c-5 0-9 4.2-10 7 1 2.8 5 7 10 7s9-4.2 10-7c-1-2.8-5-7-10-7Zm0 11a4 4 0 1 1 0-8 4 4 0 0 1 0 8Zm0-2a2 2 0 1 0 0-4 2 2 0 0 0 0 4Z" />
+    <svg {...strokeProps(size)} style={{ ...base, ...style }}>
+      <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z" />
+      <circle cx="12" cy="12" r="3" />
     </svg>
   )
 }
 
 export function StarIcon({ size = 14, style }: IconProps): React.JSX.Element {
   return (
-    <svg {...svgProps(size)} style={{ ...base, ...style }}>
-      <path d="m12 3 2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17.9 6.6 20l1-6.1L3.2 9.5l6.1-.9L12 3Z" />
+    <svg {...strokeProps(size)} style={{ ...base, ...style }}>
+      <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2Z" />
     </svg>
   )
 }
 
 export function TagIcon({ size = 14, style }: IconProps): React.JSX.Element {
   return (
-    <svg {...svgProps(size)} style={{ ...base, ...style }}>
-      <path d="M3 3h8.2a2 2 0 0 1 1.4.6l8 8a2 2 0 0 1 0 2.8l-6.2 6.2a2 2 0 0 1-2.8 0l-8-8A2 2 0 0 1 3 11.2V3Zm4.5 3A1.5 1.5 0 1 0 7.5 9 1.5 1.5 0 0 0 7.5 6Z" />
+    <svg {...strokeProps(size)} style={{ ...base, ...style }}>
+      <path d="M6 3.5h12a1 1 0 0 1 1 1V20l-7-4-7 4V4.5a1 1 0 0 1 1-1Z" />
     </svg>
   )
 }
@@ -113,9 +135,41 @@ export function TagIcon({ size = 14, style }: IconProps): React.JSX.Element {
 // ---- Import / upload ----
 export function UploadIcon({ size = 22, style }: IconProps): React.JSX.Element {
   return (
-    <svg {...svgProps(size)} style={{ ...base, ...style }}>
-      <path d="M11 14V7.8L8.4 10.4 7 9l5-5 5 5-1.4 1.4L13 7.8V14h-2Z" />
-      <path d="M5 16h2v3h10v-3h2v3a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-3Z" />
+    <svg {...strokeProps(size)} style={{ ...base, ...style }}>
+      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+      <path d="M17 8l-5-5-5 5" />
+      <path d="M12 3v12" />
+    </svg>
+  )
+}
+
+export function ClipboardIcon({ size = 14, style }: IconProps): React.JSX.Element {
+  return (
+    <svg {...strokeProps(size)} style={{ ...base, ...style }}>
+      <rect x="8" y="2" width="8" height="4" rx="1" />
+      <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
+    </svg>
+  )
+}
+
+// Two-way swap arrows — the "convert format" action.
+export function ConvertIcon({ size = 14, style }: IconProps): React.JSX.Element {
+  return (
+    <svg {...strokeProps(size)} style={{ ...base, ...style }}>
+      <path d="M8 3 4 7l4 4" />
+      <path d="M4 7h16" />
+      <path d="m16 21 4-4-4-4" />
+      <path d="M20 17H4" />
+    </svg>
+  )
+}
+
+export function DownloadIcon({ size = 14, style }: IconProps): React.JSX.Element {
+  return (
+    <svg {...strokeProps(size)} style={{ ...base, ...style }}>
+      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+      <path d="M7 10l5 5 5-5" />
+      <path d="M12 15V3" />
     </svg>
   )
 }

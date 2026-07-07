@@ -48,6 +48,90 @@ body {
   background: var(--color-surface-hover);
 }
 
+/* Row kebab (folder actions) stays hidden until the row is hovered/focused — Eagle keeps rows
+   clean and reveals actions on demand. The count shows at rest and yields to the kebab on hover. */
+.nav-row__actions {
+  opacity: 0;
+  transition: opacity var(--dur-fast) var(--ease-out);
+}
+
+.nav-row:hover .nav-row__actions,
+.nav-row:focus-within .nav-row__actions {
+  opacity: 1;
+}
+
+.nav-row:hover .nav-row__count,
+.nav-row:focus-within .nav-row__count {
+  display: none;
+}
+
+/* Smooth folder expand/collapse. The children stay mounted; animating grid-template-rows between
+   0fr and 1fr glides the subtree open/closed without measuring heights. The inner ul clips. */
+.folder-children {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 200ms var(--ease-out);
+}
+
+.folder-children--open {
+  grid-template-rows: 1fr;
+}
+
+.folder-children__inner {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .folder-children {
+    transition: none;
+  }
+}
+
+/* Icon column shared by All-items / folder rows. Folder icon and the disclosure chevron overlay
+   the same 16px box; the chevron is hidden until the row is hovered, then it replaces the icon
+   (only on folders that have children). Keeps every icon on one x with no separate chevron lane. */
+.nav-row__glyph {
+  position: relative;
+  flex: 0 0 auto;
+  width: 16px;
+  height: 16px;
+  display: grid;
+  place-items: center;
+}
+
+.nav-row__glyph .glyph-icon {
+  transition: opacity var(--dur-fast) var(--ease-out);
+}
+
+.nav-row__glyph .glyph-toggle {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  color: var(--color-text-faint);
+  opacity: 0;
+  transition: opacity var(--dur-fast) var(--ease-out);
+}
+
+/* On hover of an expandable row: fade the folder icon out, the chevron in. */
+.nav-row:hover .nav-row__glyph--expandable .glyph-icon,
+.nav-row:focus-within .nav-row__glyph--expandable .glyph-icon {
+  opacity: 0;
+}
+
+.nav-row:hover .nav-row__glyph--expandable .glyph-toggle,
+.nav-row:focus-within .nav-row__glyph--expandable .glyph-toggle {
+  opacity: 1;
+}
+
 /* Modern keyboard focus affordance: an accent ring on interactive elements only when focus is
    keyboard-driven (mouse clicks don't show it). Components can override per-shape as needed. */
 button:focus-visible,
@@ -132,6 +216,193 @@ textarea:focus-visible {
   opacity: 1;
 }
 
+/* Eagle-style pills for inspector folders + tags. Shared so both read as one system: a soft
+   rounded chip, label with ellipsis, and an × that highlights (danger) on hover. */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  max-width: 100%;
+  height: 24px;
+  padding: 0 3px 0 8px;
+  border-radius: var(--radius-md);
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border);
+  color: var(--color-text);
+  font-size: var(--fs-xs);
+  transition: border-color var(--dur-fast) var(--ease-out);
+}
+
+.chip:hover {
+  border-color: var(--color-border-strong);
+}
+
+.chip__icon {
+  flex: 0 0 auto;
+  display: inline-flex;
+}
+
+.chip__label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.chip__remove {
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  width: 16px;
+  height: 16px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: none;
+  color: var(--color-text-faint);
+  font-size: 14px;
+  line-height: 1;
+  cursor: pointer;
+  transition: background var(--dur-fast) var(--ease-out), color var(--dur-fast) var(--ease-out);
+}
+
+.chip__remove:hover {
+  background: color-mix(in srgb, var(--color-danger) 16%, transparent);
+  color: var(--color-danger);
+}
+
+/* Format badge in the corner of the inspector preview (Eagle-style JPG/PNG/PSD chip). */
+.inspector-badge {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  padding: 2px 7px;
+  border-radius: var(--radius-sm);
+  background: rgba(0, 0, 0, 0.6);
+  color: #fff;
+  font-size: 10px;
+  font-weight: var(--fw-semibold);
+  letter-spacing: 0.4px;
+  pointer-events: none;
+}
+
+/* Inline-editable filename in the inspector. Reads as a heading until focused, then a field. */
+.inspector-name {
+  width: 100%;
+  box-sizing: border-box;
+  margin: 0 0 10px;
+  padding: 6px 8px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--color-text);
+  font-family: inherit;
+  font-size: var(--fs-md);
+  font-weight: var(--fw-semibold);
+  transition: background var(--dur-fast) var(--ease-out), border-color var(--dur-fast) var(--ease-out);
+}
+
+.inspector-name:hover {
+  background: var(--color-surface-hover);
+}
+
+.inspector-name:focus {
+  outline: none;
+  background: var(--color-bg-elevated);
+  border-color: var(--color-accent);
+}
+
+/* Editable Notes + Source URL fields in the inspector (Eagle-style). */
+.inspector-note,
+.inspector-url input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 7px 9px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-bg-elevated);
+  color: var(--color-text);
+  font-family: inherit;
+  font-size: var(--fs-sm);
+  transition: border-color var(--dur-fast) var(--ease-out);
+}
+
+.inspector-note {
+  margin-bottom: 8px;
+  resize: vertical;
+  min-height: 44px;
+  line-height: var(--lh);
+}
+
+.inspector-note::placeholder,
+.inspector-url input::placeholder {
+  color: var(--color-text-faint);
+}
+
+.inspector-note:focus,
+.inspector-url input:focus {
+  outline: none;
+  border-color: var(--color-accent);
+}
+
+.inspector-url {
+  position: relative;
+  margin-bottom: 12px;
+}
+
+.inspector-url input {
+  padding-right: 28px;
+}
+
+.inspector-url__link {
+  position: absolute;
+  right: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border-radius: var(--radius-sm);
+  color: var(--color-accent);
+  text-decoration: none;
+  font-size: 13px;
+}
+
+.inspector-url__link:hover {
+  background: var(--color-surface-hover);
+}
+
+/* Full-width Export action at the bottom of the inspector. */
+.inspector-export {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  width: 100%;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border-strong);
+  background: var(--color-bg-elevated);
+  color: var(--color-text);
+  font-family: inherit;
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-medium);
+  cursor: pointer;
+  box-shadow: var(--shadow-1);
+  transition: background var(--dur-fast) var(--ease-out), border-color var(--dur-fast) var(--ease-out);
+}
+
+.inspector-export:hover:not(:disabled) {
+  background: var(--color-surface-hover);
+  border-color: var(--color-text-faint);
+}
+
+.inspector-export:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
 /* Sidebar "Switch / Open…" library action — a modern elevated button with icon + hover lift.
    Inline-styled neighbours (Recents/Settings) keep SECONDARY_BTN; this is the primary library action. */
 .sidebar-switch-btn {
@@ -171,6 +442,57 @@ textarea:focus-visible {
   color: var(--color-accent);
 }
 
+/* ---- Motion primitives ----
+   Shared entrance keyframes for floating surfaces (menus, modals, overlays). Kept cheap:
+   opacity + transform only, so they stay GPU-composited. Each surface opts in with `animation`.
+   The reduced-motion block at the end of this file neutralizes them for users who ask. */
+@keyframes imgman-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Menus / popovers: rise + settle from just below, scaled down a touch. */
+@keyframes imgman-pop-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Modal panels: a subtle scale-in that reads as "coming forward". */
+@keyframes imgman-scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.qp-backdrop {
+  animation: imgman-fade-in var(--dur-fast) var(--ease-out);
+}
+
+/* Rating stars (Inspector): brighten to the affordance yellow on hover to signal they're clickable. */
+.star-btn {
+  transition: color var(--dur-fast) var(--ease-out), transform var(--dur-fast) var(--ease-out);
+}
+
+.star-btn:hover {
+  color: #f5b301 !important;
+  transform: scale(1.15);
+}
+
 /* Themed scrollbars so dark mode doesn't get bright native bars (WebKit/Chromium). */
 ::-webkit-scrollbar {
   width: 12px;
@@ -196,4 +518,17 @@ textarea:focus-visible {
 
 ::-webkit-scrollbar-corner {
   background: transparent;
+}
+
+/* Respect the OS "reduce motion" setting: kill entrance animations and collapse transitions
+   to near-instant. Global backstop so no component has to remember to guard its own motion. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
 }

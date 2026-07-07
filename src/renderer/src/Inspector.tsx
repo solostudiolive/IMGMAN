@@ -3,7 +3,9 @@ import type { FullItem } from '../../preload/types'
 import TagEditor from './TagEditor'
 import FolderAssigner from './FolderAssigner'
 import QuickPreview from './QuickPreview'
-import { TypeIcon } from './components/icons'
+import { TypeIcon, DownloadIcon } from './components/icons'
+import Select from './components/Select'
+import { baseName, withExt } from './displayName'
 
 function formatBytes(n: number): string {
   if (!n) return '0 B'
@@ -18,23 +20,43 @@ function formatDate(ms: number | null): string | null {
   return new Date(ms).toLocaleString()
 }
 
-export default function Inspector({ selectedId }: { selectedId: string | null }): React.JSX.Element {
+export default function Inspector({
+  selectedId,
+  onChanged
+}: {
+  selectedId: string | null
+  // Fired after a rename so the grid caption / list refreshes to match.
+  onChanged?: () => void
+}): React.JSX.Element {
   const [item, setItem] = useState<FullItem | null>(null)
   const [thumbFailed, setThumbFailed] = useState(false)
   // Full-size lightbox toggled by clicking the preview thumbnail.
   const [zoomed, setZoomed] = useState(false)
+  // Editable name draft (Eagle-style inline rename). Synced to the loaded item.
+  const [nameDraft, setNameDraft] = useState('')
+  // Editable Notes + Source URL drafts (Eagle inspector fields).
+  const [noteDraft, setNoteDraft] = useState('')
+  const [urlDraft, setUrlDraft] = useState('')
+  const [exporting, setExporting] = useState(false)
+  const [exportMsg, setExportMsg] = useState<string | null>(null)
 
   // Load the full record whenever the selection changes (clear when none).
   useEffect(() => {
     let cancelled = false
     setThumbFailed(false)
     setZoomed(false)
+    setExportMsg(null)
     if (!selectedId) {
       setItem(null)
       return
     }
     window.api.items.get(selectedId).then((row) => {
-      if (!cancelled) setItem(row)
+      if (!cancelled) {
+        setItem(row)
+        setNameDraft(row ? baseName(row.name, row.ext) : '')
+        setNoteDraft(row?.note ?? '')
+        setUrlDraft(row?.source_url ?? '')
+      }
     })
     return () => {
       cancelled = true
@@ -103,6 +125,58 @@ export default function Inspector({ selectedId }: { selectedId: string | null })
     }
   }
 
+  // Commit the inline rename. The field edits the base name (no extension); the stored `name`
+  // keeps its `.<ext>`. No-op on empty / unchanged; refresh the grid on success.
+  const currentBase = baseName(item.name, item.ext)
+  const commitName = async (): Promise<void> => {
+    const nextBase = nameDraft.trim()
+    if (!nextBase || nextBase === currentBase) {
+      setNameDraft(currentBase)
+      return
+    }
+    const fullName = withExt(nextBase, item.ext)
+    setItem({ ...item, name: fullName })
+    try {
+      await window.api.items.renameMany([{ id: item.id, name: fullName }])
+      onChanged?.()
+    } catch (err) {
+      console.error('Failed to rename:', err)
+      setItem((cur) => (cur ? { ...cur, name: item.name } : cur))
+      setNameDraft(currentBase)
+    }
+  }
+
+  // Persist Notes / Source URL on blur (skip when unchanged). Reconcile to the returned row.
+  const commitNote = async (): Promise<void> => {
+    if ((item.note ?? '') === noteDraft) return
+    const row = await window.api.items.update(item.id, { note: noteDraft })
+    if (row) setItem(row)
+  }
+  const commitUrl = async (): Promise<void> => {
+    if ((item.source_url ?? '') === urlDraft) return
+    const row = await window.api.items.update(item.id, { source_url: urlDraft })
+    if (row) setItem(row)
+  }
+
+  const doExport = async (): Promise<void> => {
+    setExporting(true)
+    setExportMsg(null)
+    try {
+      const res = await window.api.items.export([item.id])
+      if (res.ok) setExportMsg(`Exported ${res.exported} file${res.exported === 1 ? '' : 's'}.`)
+      else if (!('cancelled' in res)) setExportMsg(res.error)
+    } finally {
+      setExporting(false)
+    }
+  }
+
+  const doConvert = async (format: 'jpg' | 'png' | 'webp' | 'avif'): Promise<void> => {
+    setExportMsg(null)
+    const res = await window.api.items.convert([item.id], format)
+    if (res.ok) setExportMsg(`Converted to ${format.toUpperCase()}.`)
+    else if (!('cancelled' in res)) setExportMsg(res.error)
+  }
+
   return (
     <aside style={ASIDE_STYLE}>
       <div
@@ -138,18 +212,60 @@ export default function Inspector({ selectedId }: { selectedId: string | null })
         ) : (
           <TypeIcon type={item.type} size={48} style={{ color: 'var(--color-text-faint)' }} />
         )}
+        {item.ext && (
+          // Eagle-style format badge in the corner of the preview.
+          <span className="inspector-badge">{item.ext.toUpperCase()}</span>
+        )}
       </div>
 
-      <h3
-        style={{
-          margin: '0 0 10px',
-          fontSize: 14,
-          wordBreak: 'break-word',
-          color: 'var(--color-text)'
+      {/* Inline-editable filename (rename). Enter/blur commits, Escape reverts. */}
+      <input
+        className="inspector-name"
+        value={nameDraft}
+        onChange={(e) => setNameDraft(e.target.value)}
+        onBlur={() => void commitName()}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') e.currentTarget.blur()
+          else if (e.key === 'Escape') {
+            setNameDraft(currentBase)
+            e.currentTarget.blur()
+          }
         }}
-      >
-        {item.name}
-      </h3>
+        aria-label="File name"
+        spellCheck={false}
+      />
+
+      <textarea
+        className="inspector-note"
+        value={noteDraft}
+        placeholder="Notes…"
+        rows={2}
+        onChange={(e) => setNoteDraft(e.target.value)}
+        onBlur={() => void commitNote()}
+        aria-label="Notes"
+      />
+      <div className="inspector-url">
+        <input
+          value={urlDraft}
+          placeholder="Source URL…"
+          spellCheck={false}
+          onChange={(e) => setUrlDraft(e.target.value)}
+          onBlur={() => void commitUrl()}
+          onKeyDown={(e) => e.key === 'Enter' && e.currentTarget.blur()}
+          aria-label="Source URL"
+        />
+        {item.source_url && (
+          <a
+            href={item.source_url}
+            target="_blank"
+            rel="noreferrer"
+            title="Open source"
+            className="inspector-url__link"
+          >
+            ↗
+          </a>
+        )}
+      </div>
 
       <dl style={{ margin: 0, fontSize: 11, color: 'var(--color-text-muted)' }}>
         <Row label="Type" value={item.type} />
@@ -172,8 +288,6 @@ export default function Inspector({ selectedId }: { selectedId: string | null })
         </div>
         <Row label="Created" value={created} />
         <Row label="Imported" value={imported} />
-        <Row label="Source" value={item.source_url} />
-        <Row label="Note" value={item.note} />
       </dl>
 
       {colors.length > 0 && (
@@ -187,7 +301,8 @@ export default function Inspector({ selectedId }: { selectedId: string | null })
                 style={{
                   width: 18,
                   height: 18,
-                  borderRadius: 'var(--radius-sm, 4px)',
+                  // Eagle uses circular color dots.
+                  borderRadius: 'var(--radius-pill)',
                   // The swatch background is the literal extracted color (intentional, not a token).
                   background: color,
                   border: '1px solid var(--color-border)'
@@ -200,6 +315,46 @@ export default function Inspector({ selectedId }: { selectedId: string | null })
 
       <FolderAssigner itemId={item.id} />
       <TagEditor itemId={item.id} />
+
+      <div style={{ marginTop: 14 }}>
+        <button
+          type="button"
+          className="inspector-export"
+          onClick={() => void doExport()}
+          disabled={exporting}
+        >
+          <DownloadIcon size={15} />
+          {exporting ? 'Exporting…' : 'Export'}
+        </button>
+        {item.type === 'image' && (
+          <div style={{ marginTop: 8 }}>
+            <Select
+              value=""
+              placeholder="Convert to…"
+              ariaLabel="Convert to format"
+              options={[
+                { value: 'jpg', label: 'JPG' },
+                { value: 'png', label: 'PNG' },
+                { value: 'webp', label: 'WEBP' },
+                { value: 'avif', label: 'AVIF' }
+              ]}
+              onChange={(f) => void doConvert(f as 'jpg' | 'png' | 'webp' | 'avif')}
+            />
+          </div>
+        )}
+        {exportMsg && (
+          <p
+            style={{
+              margin: '6px 0 0',
+              fontSize: 11,
+              color: 'var(--color-text-muted)',
+              textAlign: 'center'
+            }}
+          >
+            {exportMsg}
+          </p>
+        )}
+      </div>
 
       {zoomed && <QuickPreview item={item} onClose={() => setZoomed(false)} />}
     </aside>
@@ -221,6 +376,7 @@ function StarRating({
         <button
           key={n}
           type="button"
+          className="star-btn"
           aria-label={`${n} star${n > 1 ? 's' : ''}`}
           onClick={() => onChange(n === value ? 0 : n)}
           style={{
@@ -228,10 +384,11 @@ function StarRating({
             border: 'none',
             padding: 0,
             cursor: 'pointer',
-            fontSize: 16,
+            fontSize: 18,
             lineHeight: 1,
-            // Star-yellow is an intentional fixed affordance color; empty uses a token.
-            color: n <= value ? '#f5b301' : 'var(--color-border-strong)'
+            // Star-yellow is an intentional fixed affordance color; empty uses a visible muted token
+            // (border-strong was near-invisible in dark mode).
+            color: n <= value ? '#f5b301' : 'var(--color-text-faint)'
           }}
         >
           {n <= value ? '★' : '☆'}

@@ -1,5 +1,8 @@
 import { useEffect, useState } from 'react'
 import type { Folder } from '../../preload/types'
+import Select from './components/Select'
+import { FolderIcon } from './components/icons'
+import { folderColor } from './folderColor'
 
 // Inspector section mirroring TagEditor: chips for the folders the selected item
 // is in (each removable) plus a <select> to assign it to another folder. Folders
@@ -55,13 +58,16 @@ export default function FolderAssigner({ itemId }: { itemId: string }): React.JS
       {folders.length > 0 && (
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 8 }}>
           {folders.map((folder) => (
-            <span key={folder.id} style={CHIP_STYLE}>
-              📁 {folder.name}
+            <span key={folder.id} className="chip">
+              <span className="chip__icon" style={{ color: folderColor(folder.id) }}>
+                <FolderIcon size={13} />
+              </span>
+              <span className="chip__label">{folder.name}</span>
               <button
                 type="button"
+                className="chip__remove"
                 aria-label={`Remove from ${folder.name}`}
                 onClick={() => remove(folder.id)}
-                style={CHIP_REMOVE_STYLE}
               >
                 ×
               </button>
@@ -73,44 +79,16 @@ export default function FolderAssigner({ itemId }: { itemId: string }): React.JS
       {allFolders.length === 0 ? (
         <div style={{ color: 'var(--color-text-faint)' }}>No folders — create one in the sidebar.</div>
       ) : (
-        <select
-          className="modern-select"
+        <Select
           value=""
-          onChange={(e) => void assign(e.target.value)}
+          placeholder={available.length === 0 ? 'In all folders' : 'Add to folder…'}
           disabled={available.length === 0}
-        >
-          <option value="" disabled>
-            {available.length === 0 ? 'In all folders' : 'Add to folder…'}
-          </option>
-          {available.map((folder) => (
-            <option key={folder.id} value={folder.id}>
-              {folder.name}
-            </option>
-          ))}
-        </select>
+          ariaLabel="Add to folder"
+          options={available.map((f) => ({ value: f.id, label: f.name }))}
+          onChange={(id) => void assign(id)}
+        />
       )}
     </div>
   )
 }
 
-const CHIP_STYLE: React.CSSProperties = {
-  display: 'inline-flex',
-  alignItems: 'center',
-  gap: 4,
-  padding: '2px 8px',
-  borderRadius: 'var(--radius-pill)',
-  background: 'var(--color-bg-elevated)',
-  color: 'var(--color-text)',
-  border: '1px solid var(--color-border)',
-  fontSize: 11
-}
-
-const CHIP_REMOVE_STYLE: React.CSSProperties = {
-  background: 'none',
-  border: 'none',
-  padding: 0,
-  cursor: 'pointer',
-  color: 'var(--color-text-faint)',
-  fontSize: 13,
-  lineHeight: 1
-}
