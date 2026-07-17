@@ -1,5 +1,6 @@
-import { rmSync, existsSync, readdirSync, copyFileSync } from 'fs'
+import { rmSync, existsSync, readdirSync, copyFileSync, createWriteStream } from 'fs'
 import { join } from 'path'
+import { ZipArchive, type ArchiverError } from 'archiver'
 import sharp from 'sharp'
 import { isDatabaseOpen, getDb } from '../db'
 import { getActiveLibrary, imagesDir } from './library'
@@ -362,6 +363,51 @@ export function exportItemsToDir(ids: string[], destDir: string): { exported: nu
     }
   }
   return { exported, failed }
+}
+
+// Export the given items' ORIGINALS into a single .zip at destZipPath. Names are de-duplicated
+// the same way as the dir export (missing files are counted as failed, never abort the archive).
+// Resolves once the archive is fully written to disk.
+export function exportItemsToZip(
+  ids: string[],
+  destZipPath: string
+): Promise<{ exported: number; failed: number }> {
+  return new Promise((resolve, reject) => {
+    let exported = 0
+    let failed = 0
+    const used = new Set<string>()
+    const output = createWriteStream(destZipPath)
+    const archive = new ZipArchive({ zlib: { level: 9 } })
+
+    output.on('close', () => resolve({ exported, failed }))
+    archive.on('warning', (err: ArchiverError) => {
+      if (err.code !== 'ENOENT') reject(err)
+    })
+    archive.on('error', reject)
+    archive.pipe(output)
+
+    for (const id of ids) {
+      const info = itemExportInfo(id)
+      if (!info || !existsSync(info.path)) {
+        failed++
+        continue
+      }
+      const dot = info.filename.lastIndexOf('.')
+      const base = dot > 0 ? info.filename.slice(0, dot) : info.filename
+      const ext = dot > 0 ? info.filename.slice(dot) : ''
+      let name = info.filename
+      let n = 1
+      while (used.has(name.toLowerCase())) {
+        name = `${base} (${n})${ext}`
+        n++
+      }
+      used.add(name.toLowerCase())
+      archive.file(info.path, { name })
+      exported++
+    }
+
+    void archive.finalize()
+  })
 }
 
 // Target formats offered by the "Convert" action. Value doubles as the output file extension.

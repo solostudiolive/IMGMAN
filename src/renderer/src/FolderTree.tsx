@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
-import type { Folder } from '../../preload/types'
+import type { Folder, ExportResult } from '../../preload/types'
 import ContextMenu, { type MenuNode } from './components/ContextMenu'
+import { showToast } from './components/Toast'
 import {
   FolderIcon,
   AllItemsIcon,
@@ -8,7 +9,8 @@ import {
   PencilIcon,
   TrashIcon,
   ChevronRightIcon,
-  MoreIcon
+  MoreIcon,
+  DownloadIcon
 } from './components/icons'
 import { folderColor } from './folderColor'
 
@@ -109,10 +111,34 @@ export default function FolderTree({
     setDraft(folder.name)
   }
 
-  // Shared Add / Edit / Delete actions for the row kebab and the right-click menu.
+  // Turn an ExportResult into a toast (cancelled → silent).
+  const reportExport = (res: ExportResult): void => {
+    if (res.ok) {
+      showToast(
+        `Exported ${res.exported} file${res.exported === 1 ? '' : 's'} to ZIP` +
+          (res.failed ? ` (${res.failed} could not be read).` : '.'),
+        'success'
+      )
+    } else if (!('cancelled' in res)) {
+      showToast(res.error, 'error')
+    }
+  }
+
+  // Export a folder's items' originals into one .zip (Save dialog + result toast).
+  const exportFolder = async (folder: Folder): Promise<void> => {
+    reportExport(await window.api.folders.export(folder.id))
+  }
+
+  // Export EVERY item in the library into one .zip (from the "All items" row menu).
+  const exportAll = async (): Promise<void> => {
+    reportExport(await window.api.items.exportAllZip())
+  }
+
+  // Shared Add / Edit / Export / Delete actions for the row kebab and the right-click menu.
   const folderMenuItems = (folder: Folder): MenuNode[] => [
     { kind: 'action', label: 'Add subfolder', icon: <PlusIcon />, onSelect: () => startAdd(folder.id) },
     { kind: 'action', label: 'Edit', icon: <PencilIcon />, onSelect: () => beginRename(folder) },
+    { kind: 'action', label: 'Export as ZIP…', icon: <DownloadIcon />, onSelect: () => void exportFolder(folder) },
     { kind: 'separator' },
     { kind: 'action', label: 'Delete', icon: <TrashIcon />, danger: true, onSelect: () => void remove(folder) }
   ]
@@ -183,7 +209,8 @@ export default function FolderTree({
               style={{
                 ...ROW_STYLE,
                 paddingLeft: 6 + depth * 18,
-                background: selected ? 'var(--color-surface-selected)' : 'transparent',
+                // Non-selected bg omitted so the .nav-row:hover CSS shows through.
+                background: selected ? 'var(--color-surface-selected)' : undefined,
                 color: selected ? 'var(--color-accent)' : 'var(--color-text)'
               }}
             >
@@ -308,14 +335,17 @@ export default function FolderTree({
               setMenu({
                 x: e.clientX,
                 y: e.clientY,
-                items: [{ kind: 'action', label: 'New folder', icon: <PlusIcon />, onSelect: () => startAdd(null) }]
+                items: [
+                  { kind: 'action', label: 'New folder', icon: <PlusIcon />, onSelect: () => startAdd(null) },
+                  { kind: 'action', label: 'Export all as ZIP…', icon: <DownloadIcon />, onSelect: () => void exportAll() }
+                ]
               })
             }}
             style={{
               ...ROW_STYLE,
               paddingLeft: 6,
               background:
-                selectedFolderId === null ? 'var(--color-surface-selected)' : 'transparent',
+                selectedFolderId === null ? 'var(--color-surface-selected)' : undefined,
               color: selectedFolderId === null ? 'var(--color-accent)' : 'var(--color-text)'
             }}
           >

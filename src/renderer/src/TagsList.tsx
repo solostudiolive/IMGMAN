@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import type { Tag } from '../../preload/types'
-import { TagIcon, ChevronRightIcon } from './components/icons'
+import { ChevronRightIcon } from './components/icons'
 
 // Left-sidebar "Tags" section: lists every tag in the library and filters the grid to items
 // carrying that tag on click (via SearchCriteria.tagIds, the same search scope folders/saved
@@ -50,34 +50,38 @@ export default function TagsList({
           Tags ({tags.length})
         </span>
       </button>
-      <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: collapsed ? 'none' : 'block' }}>
+      <div style={{ ...CLOUD_STYLE, display: collapsed ? 'none' : 'flex' }}>
         {tags.map((tag) => {
           const active = tag.id === selectedTagId
           return (
-            <li key={tag.id}>
-              <div
-                className="nav-row"
-                style={{
-                  ...ROW_STYLE,
-                  paddingLeft: 6,
-                  background: active ? 'var(--color-surface-selected)' : 'transparent',
-                  color: active ? 'var(--color-accent)' : 'var(--color-text)'
-                }}
-              >
-                <button
-                  type="button"
-                  onClick={() => onSelect(active ? null : tag.id)}
-                  title={tag.name}
-                  style={ROW_NAME_STYLE}
+            <button
+              key={tag.id}
+              type="button"
+              onClick={() => onSelect(active ? null : tag.id)}
+              title={tag.name}
+              className="tag-chip"
+              style={{
+                ...CHIP_STYLE,
+                // Non-active fill + hover come from CSS (.tag-chip); active accent is inline so it wins.
+                background: active ? 'var(--color-accent)' : undefined,
+                color: active ? 'var(--color-accent-contrast)' : 'var(--color-text)'
+              }}
+            >
+              <span style={ROW_TEXT_STYLE}>{tag.name}</span>
+              {tag.count != null && (
+                <span
+                  style={{
+                    ...COUNT_STYLE,
+                    color: active ? 'var(--color-accent-contrast)' : 'var(--color-text-faint)'
+                  }}
                 >
-                  <TagIcon />
-                  <span style={ROW_TEXT_STYLE}>{tag.name}</span>
-                </button>
-              </div>
-            </li>
+                  {tag.count}
+                </span>
+              )}
+            </button>
           )
         })}
-      </ul>
+      </div>
     </nav>
   )
 }
@@ -100,32 +104,41 @@ const HEADER_STYLE: React.CSSProperties = {
   textAlign: 'left'
 }
 
-const ROW_STYLE: React.CSSProperties = {
-  display: 'flex',
-  alignItems: 'center',
+// Tags flow as a wrapping chip cloud (no icons), like a "popular tags" widget.
+const CLOUD_STYLE: React.CSSProperties = {
+  flexWrap: 'wrap',
   gap: 6,
-  borderRadius: 'var(--radius-md)',
-  fontSize: 'var(--fs-sm)',
-  minHeight: 30
+  padding: '2px 0 4px'
 }
 
-const ROW_NAME_STYLE: React.CSSProperties = {
-  flex: 1,
-  minWidth: 0,
+// Each tag renders as a solid filled pill button (uppercase label + count) that hugs its content.
+const CHIP_STYLE: React.CSSProperties = {
   display: 'inline-flex',
   alignItems: 'center',
-  gap: 8,
-  textAlign: 'left',
-  background: 'none',
-  border: 'none',
-  padding: '3px 0',
+  gap: 5,
+  maxWidth: '100%',
+  minWidth: 0,
+  padding: '4px 10px',
+  border: '1px solid var(--color-border)',
+  borderRadius: 'var(--radius-pill)',
   cursor: 'pointer',
-  color: 'inherit'
+  textAlign: 'left'
 }
 
 const ROW_TEXT_STYLE: React.CSSProperties = {
   minWidth: 0,
   whiteSpace: 'nowrap',
   overflow: 'hidden',
-  textOverflow: 'ellipsis'
+  textOverflow: 'ellipsis',
+  fontSize: 10,
+  fontWeight: 'var(--fw-medium)',
+  textTransform: 'uppercase',
+  letterSpacing: 0.5
+}
+
+// Item count, de-emphasized next to the tag name.
+const COUNT_STYLE: React.CSSProperties = {
+  flex: '0 0 auto',
+  fontSize: 10,
+  fontVariantNumeric: 'tabular-nums'
 }

@@ -1,5 +1,6 @@
 import LibraryGate from './LibraryGate'
 import TitleBar from './components/TitleBar'
+import { ToastHost } from './components/Toast'
 
 function App(): React.JSX.Element {
   return (
@@ -20,6 +21,7 @@ function App(): React.JSX.Element {
       <div style={{ flex: '1 1 auto', minHeight: 0 }}>
         <LibraryGate />
       </div>
+      <ToastHost />
     </div>
   )
 }

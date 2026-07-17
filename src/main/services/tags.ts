@@ -2,17 +2,25 @@ import { randomUUID } from 'crypto'
 import { isDatabaseOpen, getDb } from '../db'
 
 // A tag row (mirrors the tags table; color is unused in MVP).
+// `count` is the number of items carrying the tag — only populated by listAllTags().
 export interface Tag {
   id: string
   name: string
   color: string | null
+  count?: number
 }
 
-/** All tags in the active library, ordered by name (empty when no library). */
+/** All tags in the active library, ordered by name, with per-tag item counts (empty when no library). */
 export function listAllTags(): Tag[] {
   if (!isDatabaseOpen()) return []
   return getDb()
-    .prepare('SELECT id, name, color FROM tags ORDER BY name COLLATE NOCASE')
+    .prepare(
+      `SELECT t.id, t.name, t.color, COUNT(it.item_id) AS count
+       FROM tags t
+       LEFT JOIN item_tags it ON it.tag_id = t.id
+       GROUP BY t.id
+       ORDER BY t.name COLLATE NOCASE`
+    )
     .all() as Tag[]
 }
 

@@ -59,7 +59,7 @@
   --radius-pill: 999px;
 
   /* ---- Typography ---- */
-  --font-sans: 'Inter', system-ui, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-sans: 'Play', system-ui, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   --font-mono: ui-monospace, "Cascadia Code", "Consolas", "Courier New", monospace;
   --fs-xs: 11px;
   --fs-sm: 12px;
@@ -73,7 +73,7 @@
   --fw-medium: 500;
   --fw-semibold: 600;
   --fw-bold: 700;
-  /* Inter reads better with slight negative tracking at UI/heading sizes. */
+  /* Slight negative tracking at UI/heading sizes. */
   --ls-tight: -0.011em;
   --ls-normal: 0;
 

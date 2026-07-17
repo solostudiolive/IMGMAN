@@ -17,14 +17,16 @@
     "postinstall": "node node_modules/electron/install.js && electron-builder install-app-deps"
   },
   "dependencies": {
-    "@fontsource/inter": "^5.2.8",
+    "@fontsource/play": "^5.2.8",
     "@virtuoso.dev/masonry": "^1.4.3",
+    "archiver": "^8.0.0",
     "better-sqlite3": "^12.11.1",
     "react-virtuoso": "^4.12.0",
     "sharp": "^0.34.2"
   },
   "devDependencies": {
     "@electron/rebuild": "^4.0.4",
+    "@types/archiver": "^8.0.0",
     "@types/better-sqlite3": "^7.6.13",
     "@types/node": "^22.10.0",
     "@types/react": "^19.0.0",

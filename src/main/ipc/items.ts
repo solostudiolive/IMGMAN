@@ -15,6 +15,7 @@ import {
   findDuplicateGroups,
   itemExportInfo,
   exportItemsToDir,
+  exportItemsToZip,
   itemBaseName,
   convertItemTo,
   convertItemsToDir,
@@ -89,6 +90,28 @@ export function registerItemsIpc(): void {
     if (res.canceled || res.filePaths.length === 0) return { ok: false, cancelled: true }
     try {
       const { exported, failed } = exportItemsToDir(ids, res.filePaths[0])
+      return { ok: true, exported, failed }
+    } catch (e) {
+      return { ok: false, error: e instanceof Error ? e.message : String(e) }
+    }
+  })
+
+  // Export EVERY item's original in the active library into one .zip the user picks.
+  ipcMain.handle('items:exportAllZip', async (event): Promise<ExportResult> => {
+    const items = listItems()
+    if (items.length === 0) return { ok: false, error: 'The library has no items to export.' }
+    const win = BrowserWindow.fromWebContents(event.sender) ?? undefined
+    const res = await dialog.showSaveDialog(win!, {
+      title: 'Export all items as ZIP',
+      defaultPath: 'library-export.zip',
+      filters: [{ name: 'Zip archive', extensions: ['zip'] }]
+    })
+    if (res.canceled || !res.filePath) return { ok: false, cancelled: true }
+    try {
+      const { exported, failed } = await exportItemsToZip(
+        items.map((i) => i.id),
+        res.filePath
+      )
       return { ok: true, exported, failed }
     } catch (e) {
       return { ok: false, error: e instanceof Error ? e.message : String(e) }

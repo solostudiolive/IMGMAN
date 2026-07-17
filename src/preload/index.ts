@@ -52,6 +52,7 @@ const api: IpcApi = {
       ipcRenderer.invoke('items:renameMany', renames),
     rateMany: (ids: string[], rating: number) => ipcRenderer.invoke('items:rateMany', ids, rating),
     export: (ids: string[]) => ipcRenderer.invoke('items:export', ids),
+    exportAllZip: () => ipcRenderer.invoke('items:exportAllZip'),
     convert: (ids: string[], format: string) => ipcRenderer.invoke('items:convert', ids, format),
     backfillPalettes: () => ipcRenderer.invoke('items:backfillPalettes'),
     backfillHashes: () => ipcRenderer.invoke('items:backfillHashes'),
@@ -87,7 +88,8 @@ const api: IpcApi = {
       ipcRenderer.invoke('folders:unassign', itemId, folderId),
     commonForItems: (ids: string[]) => ipcRenderer.invoke('folders:commonForItems', ids),
     unassignMany: (ids: string[], folderId: string) =>
-      ipcRenderer.invoke('folders:unassignMany', ids, folderId)
+      ipcRenderer.invoke('folders:unassignMany', ids, folderId),
+    export: (folderId: string) => ipcRenderer.invoke('folders:export', folderId)
   },
   smartFolders: {
     list: () => ipcRenderer.invoke('smartFolders:list'),

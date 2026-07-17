@@ -1,4 +1,4 @@
-import { ipcMain } from 'electron'
+import { ipcMain, dialog, BrowserWindow } from 'electron'
 import {
   listFolders,
   folderCounts,
@@ -14,7 +14,8 @@ import {
   unassignManyFromFolder,
   type Folder
 } from '../services/folders'
-import type { Item } from '../services/items'
+import { exportItemsToZip, type Item } from '../services/items'
+import type { ExportResult } from './items'
 
 export function registerFoldersIpc(): void {
   ipcMain.handle('folders:list', (): Folder[] => listFolders())
@@ -43,4 +44,29 @@ export function registerFoldersIpc(): void {
   ipcMain.handle('folders:unassignMany', (_e, ids: string[], folderId: string): number =>
     unassignManyFromFolder(ids, folderId)
   )
+
+  // Export all of a folder's items' originals into a single .zip the user picks. Never mutates
+  // the library. Direct members only (mirrors the folder grid filter — no descendant rollup).
+  ipcMain.handle('folders:export', async (event, folderId: string): Promise<ExportResult> => {
+    const folder = listFolders().find((f) => f.id === folderId)
+    const items = listItemsInFolder(folderId)
+    if (items.length === 0) return { ok: false, error: 'This folder has no items to export.' }
+    const win = BrowserWindow.fromWebContents(event.sender) ?? undefined
+    const zipBase = (folder?.name ?? 'folder').replace(/[\\/:*?"<>|]/g, '_').trim() || 'folder'
+    const res = await dialog.showSaveDialog(win!, {
+      title: `Export "${folder?.name ?? 'folder'}" as ZIP`,
+      defaultPath: `${zipBase}.zip`,
+      filters: [{ name: 'Zip archive', extensions: ['zip'] }]
+    })
+    if (res.canceled || !res.filePath) return { ok: false, cancelled: true }
+    try {
+      const { exported, failed } = await exportItemsToZip(
+        items.map((i) => i.id),
+        res.filePath
+      )
+      return { ok: true, exported, failed }
+    } catch (e) {
+      return { ok: false, error: e instanceof Error ? e.message : String(e) }
+    }
+  })
 }

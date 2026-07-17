@@ -106,7 +106,7 @@ export default function SmartFolders({
                   style={{
                     ...ROW_STYLE,
                     paddingLeft: 6,
-                    background: active ? 'var(--color-surface-selected)' : 'transparent',
+                    background: active ? 'var(--color-surface-selected)' : undefined,
                     color: active ? 'var(--color-accent)' : 'var(--color-text)'
                   }}
                 >

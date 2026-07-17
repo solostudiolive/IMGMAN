@@ -2,12 +2,11 @@
 // before the statements below, so the CSS is injected first; applyStoredTheme() then sets
 // data-theme before React renders (and before first paint) → no flash-of-unstyled-content.
 // Note: the CSP blocks an inline <head> script, but this 'self' module is allowed to do it.
-// Inter (self-hosted via @fontsource — bundled by Vite as same-origin woff2, CSP/offline-safe;
+// Play (self-hosted via @fontsource — bundled by Vite as same-origin woff2, CSP/offline-safe;
 // no CDN). Imported before the token/base CSS so the @font-face rules are registered first.
-import '@fontsource/inter/400.css'
-import '@fontsource/inter/500.css'
-import '@fontsource/inter/600.css'
-import '@fontsource/inter/700.css'
+// Play ships only 400 (regular) and 700 (bold); medium/semibold token weights fall back to these.
+import '@fontsource/play/400.css'
+import '@fontsource/play/700.css'
 import './styles/tokens.css'
 import './styles/base.css'
 import React from 'react'

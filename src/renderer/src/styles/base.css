@@ -23,10 +23,21 @@ body {
   font-size: var(--fs-md);
   line-height: var(--lh);
   letter-spacing: var(--ls-normal);
-  /* Inter: enable standard ligatures + contextual alternates. */
+  /* Enable standard ligatures + contextual alternates. */
   font-feature-settings: 'liga' 1, 'calt' 1;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
+}
+
+/* Form controls don't inherit font by default — buttons/inputs (e.g. sidebar .nav-row
+   rows, section toggles, the Settings button) would fall back to the UA system font and
+   ignore --font-sans. Pull them back into the app typeface. */
+button,
+input,
+select,
+textarea,
+optgroup {
+  font-family: inherit;
 }
 
 #root {
@@ -42,6 +53,16 @@ body {
    Selected rows set their background inline, which correctly overrides this hover. */
 .nav-row {
   transition: background var(--dur-fast) var(--ease-out);
+}
+
+/* Sidebar tag pills (TagsList) — filled pill; bg shifts on hover.
+   Active chips set their accent background inline (overrides these). */
+.tag-chip {
+  background: var(--color-bg-elevated);
+  transition: background var(--dur-fast) var(--ease-out);
+}
+.tag-chip:hover {
+  background: var(--color-surface-selected);
 }
 
 .nav-row:hover {

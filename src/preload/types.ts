@@ -97,10 +97,12 @@ export interface SearchCriteria {
 }
 
 // A tag row (mirrors src/main/services/tags.ts Tag).
+// `count` (item count) is only populated by tags.listAll().
 export interface Tag {
   id: string
   name: string
   color: string | null
+  count?: number
 }
 
 // A folder row (mirrors src/main/services/folders.ts Folder). parent_id is null
@@ -169,6 +171,8 @@ export interface IpcApi {
     rateMany: (ids: string[], rating: number) => Promise<number>
     // Export originals to disk (1 item → Save dialog, many → Choose-folder). Never mutates the library.
     export: (ids: string[]) => Promise<ExportResult>
+    // Export EVERY item's original in the active library into one .zip (Save dialog). Never mutates.
+    exportAllZip: () => Promise<ExportResult>
     // Convert image originals to another format (jpg/png/webp/avif) and save to disk.
     convert: (ids: string[], format: ConvertFormat) => Promise<ConvertResult>
     // Backfill dominant-color palettes for image items missing one. Returns count populated.
@@ -209,6 +213,8 @@ export interface IpcApi {
     commonForItems: (ids: string[]) => Promise<Folder[]>
     // Remove many items from a folder at once (items kept). Returns links removed.
     unassignMany: (ids: string[], folderId: string) => Promise<number>
+    // Export all of a folder's items' originals into one .zip (Save dialog). Never mutates the library.
+    export: (folderId: string) => Promise<ExportResult>
   }
   smartFolders: {
     list: () => Promise<SmartFolder[]>
