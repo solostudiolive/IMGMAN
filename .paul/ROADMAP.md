@@ -6,7 +6,17 @@ A local-first desktop asset manager built in stages: stand up the Electron/React
 
 ## Current Milestone
 
-**v1.1 — Rich Media Import** ✅ COMPLETE. Opens with the deferred Phase 9 feature set narrowed: URL import is pulled forward as a standalone feature (compatible with but independent of the browser extension), plus real media thumbnails for video/audio/pdf/font.
+### Phase 13: Smart Media
+**Goal:** Close the media story from v1.1 — audio hover-preview in grid/masonry cells, audio duration in the Inspector, and perceptual (near-duplicate) image detection so re-encodes/resizes are caught.
+**Depends on:** Phase 10 (mediaThumbnail.ts audio extractor), Phase 8 (hash.ts pattern, content_hash migration pattern)
+**Status:** ○ Planning (13-01-PLAN.md authored, 2026-09-14)
+**Decisions:** pHash uses sharp grayscale-resize + hand-rolled DCT (no new deps); phash column added via table_info-guarded ALTER (user_version 2), reusing Phase 8's migration pattern; pHash for images only (non-images stay exact SHA-256); audio preview grid/masonry only (list rows are text-dense, matching 06-04 GIF/video scope); PerceptualDuplicateGroup returns groups with Hamming distance ≤ 8, oldest-first.
+**Plans:**
+- [ ] 13-01: Audio hover-preview (Cell + Inspector duration) + perceptual-hash service, migration, backfill, near-duplicate find (13-01-SUMMARY.md)
+
+---
+
+**v1.1 — Rich Media Import** ✅ COMPLETE (Phases 10–12). Opens with the deferred Phase 9 feature set narrowed: URL import is pulled forward as a standalone feature (compatible with but independent of the browser extension), plus real media thumbnails for video/audio/pdf/font.
 package.json at 1.1.0. Phases 10 (media thumbnails) ✅, 11 (URL import) ✅, 12 (import polish) ✅ — all complete. 10-01-PLAN.md → 10-01-SUMMARY.md; 11-01-PLAN.md → 11-01-SUMMARY.md; 12-01-PLAN.md → 12-01-SUMMARY.md.
 
 ## Completed Milestones
@@ -238,5 +248,5 @@ endpoint that sends images/URLs into the active library.
 ---
 
 *Roadmap created: 2026-06-23*
-*Last updated: 2026-09-14 — v1.1 Rich Media Import 100% complete (Phases 10–12).*
+*Last updated: 2026-09-14 — v1.1 complete; v1.2 Phase 13 (Smart Media) planning.*
 

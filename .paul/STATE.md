@@ -5,33 +5,35 @@
 See: .paul/PROJECT.md (updated 2026-06-23)
 
 **Core value:** A fast, offline-first local "second brain" — collect, organize, search, and browse tens of thousands of visual assets in under a second, with full data ownership.
-**Current focus:** v1.1 — Rich Media Import (Phases 10–12): real thumbnails for video/audio/pdf/font + URL import + polish.
+**Current focus:** v1.2 — Smart Media (Phase 13): audio hover-preview + perceptual (near-duplicate) find.
 
 ## Current Position
 
 Version: 1.1.0 (package.json, post-v1.0.0 bump)
-Milestone: v1.1 — Rich Media Import ✅ COMPLETE (Phases 10–12). v1.0 complete & tagged.
-Phase: Phase 12 — Import pipeline polish ✅ COMPLETE (12-01-PLAN.md → 12-01-SUMMARY.md). Phase 11 (URL import) ✅ and Phase 10 (media thumbnails) ✅ also complete.
-Plan: 12-01 executed & approved. SettingsModal media-thumbnail backfill button + ListRow duration display (duration_ms on Item + ITEM_COLS + {duration ?? dims}).
-Status: Phase 12 complete — SettingsModal media-thumbnail backfill button (mirrors "Extract colors" pattern); Grid.tsx.ListRow shows duration via {duration ?? dims}; duration_ms added to Item interface in both src/main/services/items.ts and src/preload/types.ts; backfillMediaThumbnails (Phase 10) now has a UI trigger. Typecheck node+web PASS.
-Last activity: 2026-09-14 — /paul:unify closed the loop with 12-01-SUMMARY.md.
+Milestone: v1.2 — Smart Media ○ IN PROGRESS (Phase 13 planning). v1.0 complete & tagged. v1.1 ✅ COMPLETE.
+Phase: Phase 13 — Smart Media — Planning (13-01-PLAN.md authored, awaiting approval).
+Plan: 13-01 authored. Scope: audio hover-preview (Cell) + Inspector audio duration row + perceptual-hash service/migration/backfill + Near-duplicates tab in DuplicatesModal.
+Status: v1.1 transition complete (committed 5a112b4 + b8fac8d). Planning v1.2 to address STATE.md's two deferred issues: audio hover-preview and perceptual (near-duplicate) detection.
+Last activity: 2026-09-14 — v1.1 transition-phase committed; /paul:plan 13-smart-media executed.
 
 Progress:
 - v1.0 Eagle Parity: [██████████] 100% ✓ COMPLETE (Phases 5–8 + 8.1; Phase 9 deferred to v1.1)
-- v1.1 Rich Media Import: [██████████] 100% ✓ COMPLETE (Phases 10–12 complete)
+- v1.1 Rich Media Import: [██████████] 100% ✓ COMPLETE (Phases 10–12)
+- v1.2 Smart Media: [░░░░░░░░░░] 0% — Phase 13 planning
 
 ## Loop Position
 
 Current loop state:
 ```
 PLAN ──▶ APPLY ──▶ UNIFY
-  ✓          ✓        ✓   [v1.1 Phase 12: import pipeline polish — LOOP COMPLETE. 12-01-PLAN.md → 12-01-SUMMARY.md.]
+   ○         ○        ○     [v1.2 Phase 13: Smart Media — PLAN authored, awaiting approval. 13-01-PLAN.md]
 ```
-Last activity: 2026-09-14 — /paul:apply executed Phase 12 tasks (SettingsModal backfill button, duration_ms on Item + ITEM_COLS + ListRow {duration ?? dims}). All 3 tasks + human-verify checkpoint approved. Type checks node+web PASS. SUMMARY at .paul/phases/12-import-polish/12-01-SUMMARY.md.
+Last activity: 2026-09-14 — /paul:plan executed for v1.2 Phase 13 (Smart Media): audio hover-preview + perceptual near-duplicate find. 13-01-PLAN.md authored, human-verify checkpoint included, autonomous: false.
 ## Accumulated Context
 
-PHASE 12 (2026-09-14): 12-01-PLAN.md authored + executed. Tasks: (1) SettingsModal media-thumbnail backfill button ✓, (2) duration_ms on Item (main + preload) + ITEM_COLS + ListRow {duration ?? dims} ✓, (3) human-verify checkpoint approved ✓. Files: SettingsModal.tsx, items.ts, types.ts, Grid.tsx. Typecheck node+web PASS. Gap addressed: Phase 10's backfillMediaThumbnails IPC had no UI trigger — now mirrors "Extract colors" pattern in SettingsModal Library maintenance.
-Phase 12 complete → v1.1 Rich Media Import 100% done → transition-phase next (git commit feat(12-import-polish) + PROJECT.md evolve + ROADMAP mark Phase 12 complete + milestone routing).
+PHASE 13 (2026-09-14): 13-01-PLAN.md authored for v1.2 "Smart Media". Scope: audio hover-preview in grid/masonry Cells + Inspector audio duration row + perceptual-hash (pHash) service with table_info-guarded schema migration (phash TEXT, user_version 2) + backfillPerceptualHashes() + findPerceptualDuplicateGroups() + DuplicatesModal Near-duplicates tab. Reuses existing extractAudioThumbnail (mediaThumbnail.ts), formatDuration (exported mediaThumbnail.ts:69), hashFile streaming pattern, and the v1.0 content_hash migration pattern. 3 tasks: (1) audio preview + Inspector row, (2) pHash service+migration+backfill+find, (3) human-verify checkpoint. autonomous: false (has checkpoint).
+
+PHASE 12 (2026-09-14): 12-01-PLAN.md authored + executed + unified. Tasks: (1) SettingsModal media-thumbnail backfill button ✓, (2) duration_ms on Item (main + preload) + ITEM_COLS + ListRow {duration ?? dims} ✓, (3) human-verify checkpoint approved ✓. Files: SettingsModal.tsx, items.ts, types.ts, Grid.tsx. Typecheck node+web PASS. v1.1 closed via transition commit 5a112b4 + docs commit b8fac8d.
 
 ### Decisions
 - 2026-06-26: DESCOPE — Phase 9 (browser-extension collecting) DEFERRED to v1.1; ship v1.0 at Phase 8. During a `/paul:plan` for Phase 9, the user took the ROADMAP's optional descope: ship full v1.0 Eagle Parity now (Phases 5–8 + inserted 8.1) and move the browser extension to v1.1. No Phase-9 PLAN.md was created. v1.1 STARTING DECISIONS captured for when planning resumes: (1) browsers = Chromium (Chrome/Edge) + Firefox, Manifest V3 both (watch Firefox MV3 background/host-permission differences); (2) capture = right-click image + visible-page screenshot + drag-an-image (full Eagle-style); (3) security = loopback-only receiver bound to 127.0.0.1 + a pairing token shown in app Settings (blocks rogue localhost pages/CSRF). Likely plan split: local receiver endpoint first (testable via curl, reuses the Phase-2 import pipeline), then the extension. | v1.0 close-out | Next: /paul:complete-milestone, then /paul:discuss-milestone (or /paul:milestone) for v1.1 opening with Phase 9.
@@ -112,6 +114,9 @@ Stopped at: Phase 12 complete. v1.1 Rich Media Import 100% done → transition-p
 DISCREPANCY (noted 2026-09-14, RESOLVED by transition commit): STATE.md references 11-01-SUMMARY.md and a 2026-09-13 /paul:unify, but that summary file was absent on disk (only 11-01-PLAN.md existed in .paul/phases/11-url-import/). Phase 10/11/12 source was implemented in the working tree but NOT committed — the latest commits on feat/eagle-ui-polish (d6627d7/e7469ae/6cf82fc) were a separate off-loop UI polish + v1.1.0 release bump that did NOT contain Phases 10–12 code. All three phases' files were present in the working tree and typecheck-clean. The transition-phase commit (5a112b4) bundled all three phases. Next action: New milestone planning (v1.2 "Smart Media" or Phase 9 browser-extension) via /paul:plan.
 
 No handoff files to consume.
+
+### Deferred Issues (still open)
+From v1.0/v1.1 close: audio hover-preview pending → ADDRESSED by Phase 13 AC-1. Perceptual/near-duplicate detection pending → ADDRESSED by Phase 13 AC-2. Reference-in-place imports → Phase 14 (later). Signed builds + auto-update → milestone-gate.
 Phase 9 starting decisions for v1.1 are recorded in the Decisions section above + ROADMAP Phase 9 entry.
 SearchCriteria extension point carries: query/types/ext/rating/date/tagIds/color/colorTolerance. NEW reusable infra from Phase 8: services/hash.ts (streamed SHA-256) + the first schema-migration pattern (schema.sql + table_info-guarded ALTER, user_version) in db/index.ts.
 
