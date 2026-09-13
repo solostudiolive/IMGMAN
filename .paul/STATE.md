@@ -10,7 +10,7 @@ See: .paul/PROJECT.md (updated 2026-06-23)
 ## Current Position
 
 Version: 1.1.0 (package.json, post-v1.0.0 bump)
-Milestone: v1.1 — Rich Media Import ✅ IN PROGRESS. v1.0 complete & tagged (main + feat/eagle-ui-polish have post-v1.0 commits).
+Milestone: v1.1 — Rich Media Import ✅ COMPLETE (Phases 10–12). v1.0 complete & tagged.
 Phase: Phase 12 — Import pipeline polish ✅ COMPLETE (12-01-PLAN.md → 12-01-SUMMARY.md). Phase 11 (URL import) ✅ and Phase 10 (media thumbnails) ✅ also complete.
 Plan: 12-01 executed & approved. SettingsModal media-thumbnail backfill button + ListRow duration display (duration_ms on Item + ITEM_COLS + {duration ?? dims}).
 Status: Phase 12 complete — SettingsModal media-thumbnail backfill button (mirrors "Extract colors" pattern); Grid.tsx.ListRow shows duration via {duration ?? dims}; duration_ms added to Item interface in both src/main/services/items.ts and src/preload/types.ts; backfillMediaThumbnails (Phase 10) now has a UI trigger. Typecheck node+web PASS.
@@ -107,10 +107,11 @@ None logged.
 
 Last session: 2026-09-14 — /paul:unify closed the loop on Phase 12 with 12-01-SUMMARY.md. v1.1 Rich Media Import now 100% complete (Phases 10–12). All typechecks pass.
 
-Stopped at: Phase 12 complete. v1.1 Rich Media Import 100% done → transition-phase (git commit + PROJECT.md evolve + ROADMAP mark + milestone routing).
+Stopped at: Phase 12 complete. v1.1 Rich Media Import 100% done → transition-phase executed (git commit 5a112b4, PROJECT.md evolved, ROADMAP marked complete).
 
-DISCREPANCY (noted 2026-09-14): STATE.md references 11-01-SUMMARY.md and a 2026-09-13 /paul:unify, but that summary file is absent on disk (only 11-01-PLAN.md exists in .paul/phases/11-url-import/). Phase 10/11/12 source is implemented in the working tree but NOT committed to git -- the latest commits on feat/eagle-ui-polish (d6627d7/e7469ae/6cf82fc) are a separate off-loop UI polish + v1.1.0 release bump that do NOT contain Phases 10–12 code. All three phases' files are present in the working tree and typecheck-clean. The transition-phase commit will bundle all three phases.
-Next action: Run /paul:transition to commit Phase 12 + close v1.1 milestone.
+DISCREPANCY (noted 2026-09-14, RESOLVED by transition commit): STATE.md references 11-01-SUMMARY.md and a 2026-09-13 /paul:unify, but that summary file was absent on disk (only 11-01-PLAN.md existed in .paul/phases/11-url-import/). Phase 10/11/12 source was implemented in the working tree but NOT committed — the latest commits on feat/eagle-ui-polish (d6627d7/e7469ae/6cf82fc) were a separate off-loop UI polish + v1.1.0 release bump that did NOT contain Phases 10–12 code. All three phases' files were present in the working tree and typecheck-clean. The transition-phase commit (5a112b4) bundled all three phases. Next action: New milestone planning (v1.2 "Smart Media" or Phase 9 browser-extension) via /paul:plan.
+
+No handoff files to consume.
 Phase 9 starting decisions for v1.1 are recorded in the Decisions section above + ROADMAP Phase 9 entry.
 SearchCriteria extension point carries: query/types/ext/rating/date/tagIds/color/colorTolerance. NEW reusable infra from Phase 8: services/hash.ts (streamed SHA-256) + the first schema-migration pattern (schema.sql + table_info-guarded ALTER, user_version) in db/index.ts.
 
