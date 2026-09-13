@@ -1,0 +1,140 @@
+/*
+ * URL import dialog. Token-based; follows SettingsModal.css structural patterns.
+ */
+
+.url-dialog__backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-5);
+  background: rgba(0, 0, 0, 0.55);
+  animation: imgman-fade-in var(--dur-fast) var(--ease-out);
+}
+
+.url-dialog__panel {
+  width: 480px;
+  max-width: 90vw;
+  max-height: 85vh;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-2);
+  animation: imgman-scale-in var(--dur-fast) var(--ease-out);
+}
+
+.url-dialog__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.url-dialog__title {
+  margin: 0;
+  font-size: var(--fs-lg);
+  font-weight: var(--fw-semibold);
+  color: var(--color-text);
+}
+
+.url-dialog__close {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--color-text-muted);
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.url-dialog__close:hover {
+  background: var(--color-surface-hover);
+  color: var(--color-text);
+}
+
+.url-dialog__body {
+  padding: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.url-dialog__label {
+  font-size: var(--fs-sm);
+  color: var(--color-text);
+}
+
+.url-dialog__input {
+  width: 100%;
+  padding: var(--space-2) var(--space-3);
+  background: var(--color-bg-app);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  color: var(--color-text);
+  font-size: var(--fs-md);
+  font-family: inherit;
+  box-sizing: border-box;
+}
+
+.url-dialog__input:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.url-dialog__input:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 1px;
+}
+
+.url-dialog__progress {
+  margin: 0;
+  font-size: var(--fs-sm);
+  color: var(--color-text-muted);
+}
+
+.url-dialog__error {
+  margin: 0;
+  font-size: var(--fs-sm);
+  color: var(--color-danger);
+}
+
+.url-dialog__status {
+  margin: 0;
+  font-size: var(--fs-sm);
+  color: var(--color-success, var(--color-text-muted));
+}
+
+.url-dialog__submit {
+  align-self: flex-start;
+  padding: var(--space-2) var(--space-4);
+  border: 0;
+  border-radius: var(--radius-md);
+  background: var(--color-accent);
+  color: var(--color-accent-contrast);
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-medium);
+  cursor: pointer;
+  transition:
+    background var(--dur-fast) var(--ease-out),
+    opacity var(--dur-fast) var(--ease-out);
+}
+
+.url-dialog__submit:hover:not(:disabled) {
+  background: var(--color-accent-hover, var(--color-accent));
+}
+
+.url-dialog__submit:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}

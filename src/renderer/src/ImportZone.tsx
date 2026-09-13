@@ -1,15 +1,21 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import type { ImportResult } from '../../preload/types'
-import { UploadIcon, ClipboardIcon } from './components/icons'
+import type { ImportProgress, ImportResult } from '../../preload/types'
+import { UploadIcon, ClipboardIcon, LinkIcon } from './components/icons'
 import './ImportZone.css'
 
-export default function ImportZone({ onChanged }: { onChanged?: () => void } = {}) {
+export default function ImportZone({
+  onChanged,
+  onUrlImport
+}: {
+  onChanged?: () => void
+  onUrlImport?: () => void
+} = {}) {
   const [count, setCount] = useState<number | null>(null)
   // Window-level drag overlay: shown while files are dragged anywhere over the app once the
   // library already has items (so the big inline card can collapse to a slim strip).
   const [dragOver, setDragOver] = useState(false)
   const [busy, setBusy] = useState(false)
-  const [progress, setProgress] = useState<{ done: number; total: number } | null>(null)
+  const [progress, setProgress] = useState<ImportProgress | null>(null)
   const [status, setStatus] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   // dragenter/dragleave fire on every child crossing; a depth counter tells us when the
@@ -39,6 +45,8 @@ export default function ImportZone({ onChanged }: { onChanged?: () => void } = {
         } else if (!('cancelled' in res)) {
           setError(res.error)
         }
+      } catch (e) {
+        setError(e instanceof Error ? e.message : String(e))
       } finally {
         setProgress(null)
         setBusy(false)
@@ -106,7 +114,7 @@ export default function ImportZone({ onChanged }: { onChanged?: () => void } = {
         disabled={busy}
       >
         <UploadIcon size={14} />
-        Import folder…
+        Import folder...
       </button>
       <button
         type="button"
@@ -116,6 +124,18 @@ export default function ImportZone({ onChanged }: { onChanged?: () => void } = {
       >
         Paste image
       </button>
+      {onUrlImport && (
+        <button
+          type="button"
+          className="import-btn import-btn--secondary"
+          onClick={onUrlImport}
+          disabled={busy}
+          title="Import a file from a URL"
+        >
+          <LinkIcon size={14} />
+          Import from URL
+        </button>
+      )}
     </>
   )
 
@@ -142,6 +162,18 @@ export default function ImportZone({ onChanged }: { onChanged?: () => void } = {
         <ClipboardIcon size={14} />
         Paste
       </button>
+      {onUrlImport && (
+        <button
+          type="button"
+          className="import-chip"
+          onClick={onUrlImport}
+          disabled={busy}
+          title="Import a file from a URL"
+        >
+          <LinkIcon size={14} />
+          Import URL
+        </button>
+      )}
     </>
   )
 
@@ -149,7 +181,9 @@ export default function ImportZone({ onChanged }: { onChanged?: () => void } = {
     <>
       {progress && (
         <p className="import-status import-status--progress">
-          Importing {progress.done}/{progress.total}…
+          {progress.total != null
+            ? `Importing ${progress.done}/${progress.total}…`
+            : `Downloading ${progress.done} B…`}
         </p>
       )}
       {status && !progress && <p className="import-status import-status--ok">{status}</p>}
@@ -185,7 +219,7 @@ export default function ImportZone({ onChanged }: { onChanged?: () => void } = {
             a folder.
           </p>
           <div className="import-zone__actions">{actions}</div>
-          <p className="import-zone__count">{count === null ? '…' : count} items in this library</p>
+          <p className="import-zone__count">{count === null ? '...' : count} items in this library</p>
         </div>
         {statusLine}
       </div>

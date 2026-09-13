@@ -5,32 +5,33 @@
 See: .paul/PROJECT.md (updated 2026-06-23)
 
 **Core value:** A fast, offline-first local "second brain" — collect, organize, search, and browse tens of thousands of visual assets in under a second, with full data ownership.
-**Current focus:** v1.0 — Eagle Parity (Phases 5–9): full Eagle-app look, feel, and feature parity, reusing the v0.1 backend.
+**Current focus:** v1.1 — Rich Media Import (Phases 10–12): real thumbnails for video/audio/pdf/font + URL import + polish.
 
 ## Current Position
 
-Version: 1.0.0
-Milestone: None active — v1.0 — Eagle Parity ✅ COMPLETE 2026-06-26 (tag v1.0.0). Awaiting next milestone.
-Phase: None active. (v1.0 shipped at Phase 8; Phase 9 browser-extension collecting deferred to v1.1.)
-Plan: None.
-Status: Milestone v1.0 complete — MILESTONES.md entry written, ROADMAP collapsed, PROJECT.md evolved, archive at .paul/milestones/v1.0.0-ROADMAP.md, package.json → 1.0.0, git tag v1.0.0. NEXT ACTION → /paul:discuss-milestone (or /paul:milestone) to define v1.1, which opens with Phase 9.
-Last activity: 2026-06-26 — Ran /paul:complete-milestone: closed v1.0 (4 phases + inserted 8.1, 21 plans, 114 files / +15,638 since v0.1), tagged v1.0.0.
+Version: 1.1.0 (package.json, post-v1.0.0 bump)
+Milestone: v1.1 — Rich Media Import ✅ IN PROGRESS. v1.0 complete & tagged (main + feat/eagle-ui-polish have post-v1.0 commits).
+Phase: Phase 12 — Import pipeline polish ✅ COMPLETE (12-01-PLAN.md → 12-01-SUMMARY.md). Phase 11 (URL import) ✅ and Phase 10 (media thumbnails) ✅ also complete.
+Plan: 12-01 executed & approved. SettingsModal media-thumbnail backfill button + ListRow duration display (duration_ms on Item + ITEM_COLS + {duration ?? dims}).
+Status: Phase 12 complete — SettingsModal media-thumbnail backfill button (mirrors "Extract colors" pattern); Grid.tsx.ListRow shows duration via {duration ?? dims}; duration_ms added to Item interface in both src/main/services/items.ts and src/preload/types.ts; backfillMediaThumbnails (Phase 10) now has a UI trigger. Typecheck node+web PASS.
+Last activity: 2026-09-14 — /paul:unify closed the loop with 12-01-SUMMARY.md.
 
 Progress:
 - v1.0 Eagle Parity: [██████████] 100% ✓ COMPLETE (Phases 5–8 + 8.1; Phase 9 deferred to v1.1)
+- v1.1 Rich Media Import: [██████████] 100% ✓ COMPLETE (Phases 10–12 complete)
 
 ## Loop Position
 
 Current loop state:
 ```
 PLAN ──▶ APPLY ──▶ UNIFY
-  ○        ○        ○     [Milestone v1.0 complete — ready for next milestone]
+  ✓          ✓        ✓   [v1.1 Phase 12: import pipeline polish — LOOP COMPLETE. 12-01-PLAN.md → 12-01-SUMMARY.md.]
 ```
-Next: /paul:discuss-milestone (or /paul:milestone) to define v1.1. v1.1 opens with the deferred
-Phase 9 (browser-extension collecting) — starting decisions captured in the Decisions section below
-and in ROADMAP Phase 9.
-
+Last activity: 2026-09-14 — /paul:apply executed Phase 12 tasks (SettingsModal backfill button, duration_ms on Item + ITEM_COLS + ListRow {duration ?? dims}). All 3 tasks + human-verify checkpoint approved. Type checks node+web PASS. SUMMARY at .paul/phases/12-import-polish/12-01-SUMMARY.md.
 ## Accumulated Context
+
+PHASE 12 (2026-09-14): 12-01-PLAN.md authored + executed. Tasks: (1) SettingsModal media-thumbnail backfill button ✓, (2) duration_ms on Item (main + preload) + ITEM_COLS + ListRow {duration ?? dims} ✓, (3) human-verify checkpoint approved ✓. Files: SettingsModal.tsx, items.ts, types.ts, Grid.tsx. Typecheck node+web PASS. Gap addressed: Phase 10's backfillMediaThumbnails IPC had no UI trigger — now mirrors "Extract colors" pattern in SettingsModal Library maintenance.
+Phase 12 complete → v1.1 Rich Media Import 100% done → transition-phase next (git commit feat(12-import-polish) + PROJECT.md evolve + ROADMAP mark Phase 12 complete + milestone routing).
 
 ### Decisions
 - 2026-06-26: DESCOPE — Phase 9 (browser-extension collecting) DEFERRED to v1.1; ship v1.0 at Phase 8. During a `/paul:plan` for Phase 9, the user took the ROADMAP's optional descope: ship full v1.0 Eagle Parity now (Phases 5–8 + inserted 8.1) and move the browser extension to v1.1. No Phase-9 PLAN.md was created. v1.1 STARTING DECISIONS captured for when planning resumes: (1) browsers = Chromium (Chrome/Edge) + Firefox, Manifest V3 both (watch Firefox MV3 background/host-permission differences); (2) capture = right-click image + visible-page screenshot + drag-an-image (full Eagle-style); (3) security = loopback-only receiver bound to 127.0.0.1 + a pairing token shown in app Settings (blocks rogue localhost pages/CSRF). Likely plan split: local receiver endpoint first (testable via curl, reuses the Phase-2 import pipeline), then the extension. | v1.0 close-out | Next: /paul:complete-milestone, then /paul:discuss-milestone (or /paul:milestone) for v1.1 opening with Phase 9.
@@ -104,10 +105,12 @@ None logged.
 
 ## Session Continuity
 
-Last session: 2026-06-26 — ran /paul:complete-milestone: closed v1.0 — Eagle Parity. Wrote MILESTONES.md entry, archived ROADMAP snapshot (.paul/milestones/v1.0.0-ROADMAP.md), evolved PROJECT.md (requirements validated; Phase-8/8.1 decisions added; version 1.0.0), collapsed ROADMAP, aligned package.json → 1.0.0, committed close-out, tagged v1.0.0.
-Stopped at: v1.0 milestone COMPLETE. No milestone active.
-Next action: `/paul:discuss-milestone` (or `/paul:milestone`) to define v1.1 — opens with the deferred Phase 9 (browser-extension collecting) using the captured starting decisions. Optionally `git push origin main --tags` to publish the release.
-Resume file: .paul/MILESTONES.md
+Last session: 2026-09-14 — /paul:unify closed the loop on Phase 12 with 12-01-SUMMARY.md. v1.1 Rich Media Import now 100% complete (Phases 10–12). All typechecks pass.
+
+Stopped at: Phase 12 complete. v1.1 Rich Media Import 100% done → transition-phase (git commit + PROJECT.md evolve + ROADMAP mark + milestone routing).
+
+DISCREPANCY (noted 2026-09-14): STATE.md references 11-01-SUMMARY.md and a 2026-09-13 /paul:unify, but that summary file is absent on disk (only 11-01-PLAN.md exists in .paul/phases/11-url-import/). Phase 10/11/12 source is implemented in the working tree but NOT committed to git -- the latest commits on feat/eagle-ui-polish (d6627d7/e7469ae/6cf82fc) are a separate off-loop UI polish + v1.1.0 release bump that do NOT contain Phases 10–12 code. All three phases' files are present in the working tree and typecheck-clean. The transition-phase commit will bundle all three phases.
+Next action: Run /paul:transition to commit Phase 12 + close v1.1 milestone.
 Phase 9 starting decisions for v1.1 are recorded in the Decisions section above + ROADMAP Phase 9 entry.
 SearchCriteria extension point carries: query/types/ext/rating/date/tagIds/color/colorTolerance. NEW reusable infra from Phase 8: services/hash.ts (streamed SHA-256) + the first schema-migration pattern (schema.sql + table_info-guarded ALTER, user_version) in db/index.ts.
 

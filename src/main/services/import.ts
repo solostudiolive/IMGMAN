@@ -6,6 +6,7 @@ import { getDb } from '../db'
 import { getActiveLibrary, imagesDir } from './library'
 import { extractPalette, paletteToJson } from './palette'
 import { hashFile, hashBuffer } from './hash'
+import { extractMediaThumbnail } from './mediaThumbnail'
 
 export type ItemType = 'image' | 'video' | 'audio' | 'font' | 'doc' | 'other'
 
@@ -48,9 +49,9 @@ function imagesRoot(): string {
 }
 
 // Prepared INSERT, created lazily against the active connection.
-function insertItem(item: {
+export function insertItem(item: {
   id: string; name: string; ext: string; type: ItemType
-  size_bytes: number; width: number | null; height: number | null
+  size_bytes: number; width: number | null; height: number | null; duration_ms: number | null
   palette: string | null; content_hash: string | null
   created_at: number; imported_at: number; source_url: string | null
 }): void {
@@ -59,7 +60,7 @@ function insertItem(item: {
       `INSERT INTO items
         (id, name, ext, type, size_bytes, width, height, duration_ms, palette, content_hash, rating, source_url, note, created_at, imported_at)
        VALUES
-        (@id, @name, @ext, @type, @size_bytes, @width, @height, NULL, @palette, @content_hash, 0, @source_url, NULL, @created_at, @imported_at)`
+        (@id, @name, @ext, @type, @size_bytes, @width, @height, @duration_ms, @palette, @content_hash, 0, @source_url, NULL, @created_at, @imported_at)`
     )
     .run(item)
 }
@@ -110,6 +111,23 @@ export async function importFile(absPath: string): Promise<ImportedItem> {
     }
   }
 
+  // Real thumbnails for video/audio/pdf/font. Images were handled above;
+  // 'other' gets no media thumbnail. Failures are silently skipped so import
+  // still succeeds without a thumbnail (TypeIcon placeholder falls back in the renderer).
+  let durationMs: number | null = null
+  if (type !== 'image' && type !== 'other') {
+    try {
+      const meta = await extractMediaThumbnail(type, absPath, join(dir, 'thumbnail.webp'))
+      if (meta) {
+        if (meta.width) width = meta.width
+        if (meta.height) height = meta.height
+        durationMs = meta.durationMs
+      }
+    } catch {
+      // Silently skip — import still succeeds with no thumbnail + null fields.
+    }
+  }
+
   // Content hash of the ORIGINAL bytes (all types), for duplicate detection. Streamed; a failure
   // leaves it NULL and never aborts the import (mirrors the palette's defensive handling).
   let contentHash: string | null = null
@@ -125,7 +143,7 @@ export async function importFile(absPath: string): Promise<ImportedItem> {
     id, name, ext, type,
     size_bytes: stats.size,
     width, height,
-    duration_ms: null,
+    duration_ms: durationMs,
     palette,
     content_hash: contentHash,
     rating: 0,
@@ -139,6 +157,7 @@ export async function importFile(absPath: string): Promise<ImportedItem> {
     id, name, ext, type,
     size_bytes: stats.size,
     width, height,
+    duration_ms: durationMs,
     palette,
     content_hash: contentHash,
     created_at: createdAt,
@@ -200,6 +219,7 @@ export async function importImageBuffer(buf: Buffer, suggestedName?: string): Pr
     id, name, ext, type,
     size_bytes: buf.length,
     width, height,
+    duration_ms: null,
     palette,
     content_hash: contentHash,
     created_at: now,

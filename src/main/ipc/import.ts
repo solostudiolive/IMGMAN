@@ -1,5 +1,6 @@
 import { BrowserWindow, dialog, ipcMain, clipboard } from 'electron'
 import { importPaths, importImageBuffer } from '../services/import'
+import { importUrl } from '../services/urlImport'
 import { countItems } from '../services/items'
 import { getActiveLibrary } from '../services/library'
 
@@ -54,6 +55,20 @@ export function registerImportIpc(): void {
         event.sender.send('import:progress', { done, total })
       )
       return { ok: true, imported: res.imported.length, failed: res.failed.length }
+    } catch (e) {
+      return { ok: false, error: e instanceof Error ? e.message : String(e) }
+    }
+  })
+
+  // Import content from a URL: validates, fetches, streams, and imports through the
+  // same pipeline as dropped files. source_url is set to the original URL.
+  ipcMain.handle('import:url', async (event, url: string): Promise<ImportResult> => {
+    if (!getActiveLibrary()) return noLibrary()
+    try {
+      await importUrl(url, (done, total) =>
+        event.sender.send('import:progress', { done, total })
+      )
+      return { ok: true, imported: 1, failed: 0 }
     } catch (e) {
       return { ok: false, error: e instanceof Error ? e.message : String(e) }
     }

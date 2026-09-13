@@ -6,6 +6,7 @@ import { isDatabaseOpen, getDb } from '../db'
 import { getActiveLibrary, imagesDir } from './library'
 import { extractPalette, paletteToJson } from './palette'
 import { hashFile } from './hash'
+import { extractMediaThumbnail } from './mediaThumbnail'
 import type { ItemType } from './import'
 
 // A row projected for the grid (subset of the items table).
@@ -17,6 +18,7 @@ export interface Item {
   size_bytes: number
   width: number | null
   height: number | null
+  duration_ms: number | null
   rating: number
   created_at: number
   imported_at: number
@@ -45,7 +47,7 @@ export function countItems(): number {
 }
 
 // Shared column list + ordering for grid projections (listItems / listUncategorized / listUntagged).
-const ITEM_COLS = `id, name, ext, type, size_bytes, width, height, rating, created_at, imported_at`
+const ITEM_COLS = `id, name, ext, type, size_bytes, width, height, duration_ms, rating, created_at, imported_at`
 
 /** All items in the active library, newest first (empty when no library open). */
 export function listItems(): Item[] {
@@ -267,6 +269,42 @@ export async function backfillHashes(): Promise<number> {
       n++
     } catch {
       // Missing/unreadable file — leave content_hash NULL and move on.
+    }
+  }
+  return n
+}
+
+/**
+ * Backfill real thumbnails for media items (video/audio/font/doc) that don't have one yet
+ * (detected by width IS NULL, since media thumbnails always set width on success).
+ * Reads each item's stored original via originalPath, calls extractMediaThumbnail,
+ * and persists width/height/duration_ms. Per-item failures are skipped. Idempotent.
+ * Returns the number of items populated. Async (ffmpeg.wasm / pdfjs / opentype).
+ */
+export async function backfillMediaThumbnails(): Promise<number> {
+  if (!isDatabaseOpen()) return 0
+  const lib = getActiveLibrary()
+  if (!lib) return 0
+  const root = imagesDir(lib.path)
+  const db = getDb()
+  const rows = db
+    .prepare("SELECT id, ext, type FROM items WHERE type IN ('video','audio','font','doc') AND width IS NULL")
+    .all() as { id: string; ext: string | null; type: ItemType }[]
+  const update = db.prepare('UPDATE items SET width = ?, height = ?, duration_ms = ? WHERE id = ?')
+
+  let n = 0
+  for (const row of rows) {
+    try {
+      const dir = join(root, row.id)
+      const original = originalPath(dir, row.ext)
+      if (!original) continue
+      const meta = await extractMediaThumbnail(row.type, original, join(dir, 'thumbnail.webp'))
+      if (meta) {
+        update.run(meta.width, meta.height, meta.durationMs, row.id)
+        n++
+      }
+    } catch {
+      // Skip this item; a missing/unreadable file shouldn't abort the backfill.
     }
   }
   return n

@@ -39,6 +39,9 @@ A fast, offline-first local "second brain" — collect, organize, search, and br
 - ✓ Find duplicates (SHA-256 `content_hash`; project's first schema migration; keep-newest delete) — Phase 8
 - ✓ Sidebar Tags section (exact-tag filter) + inline library rename — Phase 8 (off-loop)
 - ✓ Inter typeface bundled + "refined dark, Eagle-like" restyle (palette/density/focus ring) — Phase 8.1
+- ✓ Real media thumbnails for video/audio/pdf/font (ffmpeg.wasm + pdfjs-dist + opentype.js + sharp; duration_ms) — Phase 10
+- ✓ URL import (SSRF-safe fetch + stream + size cap + allow-listed types; Import-from-URL dialog) — Phase 11
+- ✓ Media-thumbnail backfill UI + list-row duration display — Phase 12
 
 ### Must Have (MVP)
 - Cross-platform (Windows + macOS) — Windows verified; macOS build unverified (see Constraints/packaging)
@@ -114,4 +117,4 @@ Full design doc (architecture, data model, library format, risks): see root `PRO
 ---
 *Created: 2026-06-23*
 *Version: 1.0.0*
-*Last updated: 2026-06-26 — v1.0 Eagle Parity COMPLETE (Phases 5–8 + inserted 8.1); Phase 9 (browser extension) deferred to v1.1.*
+*Last updated: 2026-09-14 — v1.1 Rich Media Import COMPLETE (Phases 10–12: real media thumbnails + URL import + import polish).*

@@ -40,7 +40,7 @@ export type ConvertResult =
 
 export interface ImportProgress {
   done: number
-  total: number
+  total: number | null // null when content-length is unknown
 }
 
 export type ItemType = 'image' | 'video' | 'audio' | 'font' | 'doc' | 'other'
@@ -54,6 +54,7 @@ export interface Item {
   size_bytes: number
   width: number | null
   height: number | null
+  duration_ms: number | null
   rating: number
   created_at: number
   imported_at: number
@@ -61,7 +62,6 @@ export interface Item {
 
 // The full items row for the inspector (mirrors items.ts FullItem).
 export interface FullItem extends Item {
-  duration_ms: number | null
   palette: string | null
   source_url: string | null
   note: string | null
@@ -150,6 +150,7 @@ export interface IpcApi {
     paths: (paths: string[]) => Promise<ImportResult>
     clipboard: () => Promise<ImportResult>
     folder: () => Promise<ImportResult>
+    url: (url: string) => Promise<ImportResult>
     count: () => Promise<number>
     // Subscribe to batch progress; returns an unsubscribe function.
     onProgress: (cb: (p: ImportProgress) => void) => () => void
@@ -179,6 +180,8 @@ export interface IpcApi {
     backfillPalettes: () => Promise<number>
     // Backfill SHA-256 content hashes for items missing one (all types). Returns count populated.
     backfillHashes: () => Promise<number>
+    // Backfill real thumbnails for media items (video/audio/font/doc) missing one. Returns count populated.
+    backfillMediaThumbnails: () => Promise<number>
     // Groups of byte-identical items (2+ sharing a content hash), oldest-first within each group.
     findDuplicates: () => Promise<DuplicateGroup[]>
     count: () => Promise<number>

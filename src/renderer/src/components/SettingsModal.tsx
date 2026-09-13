@@ -36,6 +36,19 @@ export default function SettingsModal({
       setColorBusy(false)
     }
   }
+  // Media-thumbnail backfill state: busy while running, then the populated count.
+  const [mediaBusy, setMediaBusy] = useState(false)
+  const [mediaResult, setMediaResult] = useState<number | null>(null)
+
+  const extractMedia = async (): Promise<void> => {
+    setMediaBusy(true)
+    setMediaResult(null)
+    try {
+      setMediaResult(await window.api.items.backfillMediaThumbnails())
+    } finally {
+      setMediaBusy(false)
+    }
+  }
 
   // Load the app version when the modal opens.
   useEffect(() => {
@@ -121,6 +134,20 @@ export default function SettingsModal({
           </div>
           {colorResult !== null && (
             <p className="settings__caption">Done — {colorResult} updated</p>
+          )}
+          <div className="settings__row">
+            <span className="settings__label">Media</span>
+            <button
+              type="button"
+              className="settings__segment-btn"
+              disabled={mediaBusy}
+              onClick={() => void extractMedia()}
+            >
+              {mediaBusy ? 'Extracting...' : 'Extract media thumbnails for existing items'}
+            </button>
+          </div>
+          {mediaResult !== null && (
+            <p className="settings__caption">Done — {mediaResult} updated</p>
           )}
           <div className="settings__row">
             <span className="settings__label">Duplicates</span>

@@ -6,9 +6,8 @@ A local-first desktop asset manager built in stages: stand up the Electron/React
 
 ## Current Milestone
 
-**None active.** v1.0 — Eagle Parity shipped 2026-06-26 (tag v1.0.0).
-Run `/paul:discuss-milestone` or `/paul:milestone` to define the next milestone.
-Carry-over: Phase 9 (browser-extension collecting) was deferred from v1.0 and opens v1.1.
+**v1.1 — Rich Media Import** ✅ COMPLETE. Opens with the deferred Phase 9 feature set narrowed: URL import is pulled forward as a standalone feature (compatible with but independent of the browser extension), plus real media thumbnails for video/audio/pdf/font.
+package.json at 1.1.0. Phases 10 (media thumbnails) ✅, 11 (URL import) ✅, 12 (import polish) ✅ — all complete. 10-01-PLAN.md → 10-01-SUMMARY.md; 11-01-PLAN.md → 11-01-SUMMARY.md; 12-01-PLAN.md → 12-01-SUMMARY.md.
 
 ## Completed Milestones
 
@@ -199,5 +198,45 @@ endpoint that sends images/URLs into the active library.
 **Plans:** TBD (define during `/paul:plan` when v1.1 starts; likely split — local receiver endpoint first (testable via curl, reuses Phase-2 import), then the extension)
 
 ---
+
+## Milestone v1.1 — Rich Media Import (Phases 10–12)
+
+> Extends the import pipeline + first-class URL import path. The v0.1/v1.0 backend
+> (per-library SQLite, `imgman://` protocol, `items:*` IPC) is reused; new work
+> extends `importFile` + adds a new URL import path. Focus narrowed from the
+> original Phase-9 browser-extension scope: URL import is a standalone dialog/action
+> (NOT the extension — that stays deferred).
+
+**Goal:** Real thumbnails for video/audio/pdf/font + a secure URL import path.
+
+**Phase 10: Real media thumbnails** ✅ Complete (2026-09-13) (10-01-PLAN.md → 10-01-SUMMARY.md)
+- Pure-JS approach (ffmpeg.wasm + pdfjs-dist + opentype.js + sharp) — avoids native ffmpeg binary packaging
+- `mediaThumbnail.ts` created with extractors for video/audio/pdf/font
+- `importFile` integrated to call `extractMediaThumbnail` for non-image types, populates `duration_ms`
+- Backfill IPC `items:backfillMediaThumbnails` registered (service→ipc→preload→IpcApi chain)
+- Renderer `showThumb` logic updated: `item.type === 'image'` → `item.type !== 'other'` (Grid.tsx + Inspector.tsx)
+- Duration row added in Inspector meta section
+- Typecheck:node + typecheck:web PASS
+
+**Phase 11: URL import with security validation ✅ Complete (2026-09-13)**
+- Fetch URL content → run through same pipeline as dropped file (copy + thumbnail + palette + hash)
+- Security/validation: block localhost/loopback, cap size, respect Content-Type, allow-list types
+- Standalone "Import from URL" dialog/action
+
+**Phase 12: Import pipeline polish** ✅ Complete (2026-09-14) (12-01-PLAN.md → 12-01-SUMMARY.md)
+- Settings UI for media-thumbnail backfill (SettingsModal, mirrors Extract-colors pattern)
+- List-row duration display (duration_ms on Item + ITEM_COLS + ListRow {duration ?? dims})
+- ImportZone error handling inspected, already correct, left unchanged
+- Typecheck node+web PASS
+
+| Phase | Name | Plans | Status | Completed |
+|-------|------|-------|--------|-----------|
+| 10 | Real media thumbnails | 1 | ✅ Complete (2026-09-13) | 2026-09-13 |
+| 11 | URL import with security | 1 | ✅ Complete (2026-09-13) | 2026-09-13 |
+| 12 | Import pipeline polish | 1 | ✅ Complete (2026-09-14) | 2026-09-14 |
+
+---
+
 *Roadmap created: 2026-06-23*
-*Last updated: 2026-06-26 — v1.0 — Eagle Parity COMPLETE (tag v1.0.0); milestone collapsed into Completed. Phase 9 carries to v1.1. Next: /paul:discuss-milestone.*
+*Last updated: 2026-09-14 — v1.1 Rich Media Import 100% complete (Phases 10–12).*
+

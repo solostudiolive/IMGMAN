@@ -33,6 +33,7 @@ const api: IpcApi = {
     paths: (paths: string[]) => ipcRenderer.invoke('import:paths', paths),
     clipboard: () => ipcRenderer.invoke('import:clipboard'),
     folder: () => ipcRenderer.invoke('import:folder'),
+    url: (url: string) => ipcRenderer.invoke('import:url', url),
     count: () => ipcRenderer.invoke('items:count'),
     onProgress: (cb: (p: ImportProgress) => void): (() => void) => {
       const listener = (_e: unknown, p: ImportProgress): void => cb(p)
@@ -56,6 +57,7 @@ const api: IpcApi = {
     convert: (ids: string[], format: string) => ipcRenderer.invoke('items:convert', ids, format),
     backfillPalettes: () => ipcRenderer.invoke('items:backfillPalettes'),
     backfillHashes: () => ipcRenderer.invoke('items:backfillHashes'),
+    backfillMediaThumbnails: () => ipcRenderer.invoke('items:backfillMediaThumbnails'),
     findDuplicates: () => ipcRenderer.invoke('items:findDuplicates'),
     count: () => ipcRenderer.invoke('items:count'),
     search: (criteria: SearchCriteria) => ipcRenderer.invoke('items:search', criteria)

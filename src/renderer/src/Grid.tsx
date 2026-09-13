@@ -348,8 +348,9 @@ function ListRow({
   onItemContextMenu?: (id: string, x: number, y: number) => void
 }) {
   const [failed, setFailed] = useState(false)
-  const showThumb = item.type === 'image' && !failed
+  const showThumb = item.type !== 'other' && !failed
   const dims = item.width && item.height ? `${item.width}×${item.height}` : '—'
+  const duration = item.type !== 'image' && item.duration_ms ? formatDuration(item.duration_ms) : null
   const type = item.ext ? `${item.type} · ${item.ext}` : item.type
 
   return (
@@ -372,7 +373,7 @@ function ListRow({
       </div>
       <span className="list-row__name">{baseName(item.name, item.ext)}</span>
       <span className="list-row__meta list-row__type">{type}</span>
-      <span className="list-row__meta list-row__dims">{dims}</span>
+      <span className="list-row__meta list-row__dims">{duration ?? dims}</span>
       <span className="list-row__meta list-row__size">{formatBytes(item.size_bytes)}</span>
       <span className={`list-row__meta list-row__rating${item.rating ? '' : ' list-row__rating--empty'}`}>
         {item.rating ? '★'.repeat(item.rating) : '—'}
@@ -388,6 +389,15 @@ function formatBytes(bytes: number): string {
   const i = Math.min(units.length - 1, Math.floor(Math.log(bytes) / Math.log(1024)))
   const value = bytes / 1024 ** i
   return `${i === 0 ? value : value.toFixed(value >= 10 || value % 1 === 0 ? 0 : 1)} ${units[i]}`
+}
+
+// Format milliseconds as mm:ss or hh:mm:ss (mirrors Inspector.tsx' formatDuration).
+function formatDuration(ms: number): string {
+  const total = Math.floor(ms / 1000)
+  const h = Math.floor(total / 3600)
+  const m = Math.floor((total % 3600) / 60)
+  const s = total % 60
+  return h > 0 ? `${h}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}` : `${m}:${String(s).padStart(2, '0')}`
 }
 
 function Cell({
@@ -406,7 +416,7 @@ function Cell({
   const [failed, setFailed] = useState(false)
   const [preview, setPreview] = useState(false)
   const hoverTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const showThumb = item.type === 'image' && !failed
+  const showThumb = item.type !== 'other' && !failed
   // Grid tiles are uniform squares; masonry tiles take the item's natural ratio
   // (square fallback when dimensions are unknown, e.g. non-images).
   const aspectRatio =

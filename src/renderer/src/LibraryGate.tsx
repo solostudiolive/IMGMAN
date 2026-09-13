@@ -15,6 +15,7 @@ import DuplicatesModal from './components/DuplicatesModal'
 import ContextMenu, { type MenuNode } from './components/ContextMenu'
 import BatchTagDialog from './components/BatchTagDialog'
 import BatchRenameDialog from './components/BatchRenameDialog'
+import UrlImportDialog from './components/UrlImportDialog'
 import MultiInspector from './components/MultiInspector'
 import {
   EyeIcon,
@@ -78,6 +79,8 @@ export default function LibraryGate() {
   const [settingsOpen, setSettingsOpen] = useState(false)
   // Find-duplicates modal visibility (launched from Settings → Library maintenance).
   const [duplicatesOpen, setDuplicatesOpen] = useState(false)
+  // URL import dialog visibility (standalone "Import from URL" action).
+  const [urlImportOpen, setUrlImportOpen] = useState(false)
   // Open right-click item context menu (null = closed).
   const [itemMenu, setItemMenu] = useState<{ x: number; y: number; items: MenuNode[] } | null>(null)
   // Batch "Add tag…" dialog: the target item ids (null = closed).
@@ -341,7 +344,7 @@ export default function LibraryGate() {
   // list/masonry); Shift+arrows extend; Ctrl/Cmd+A selects all; Home/End jump. Suppressed while
   // typing, the Settings modal is open, or a context menu / batch dialog owns the keyboard.
   useEffect(() => {
-    if (!active || settingsOpen || duplicatesOpen || tagDialog || renameDialog || itemMenu) return
+    if (!active || settingsOpen || duplicatesOpen || urlImportOpen || tagDialog || renameDialog || itemMenu) return
     const clamp = (n: number, lo: number, hi: number): number => Math.min(hi, Math.max(lo, n))
     const onKey = (e: KeyboardEvent): void => {
       const t = e.target as HTMLElement | null
@@ -619,7 +622,11 @@ export default function LibraryGate() {
               </p>
             )}
             <div style={{ flex: '0 0 auto' }}>
-              <ImportZone key={active.path} onChanged={reloadItems} />
+              <ImportZone
+                key={active.path}
+                onChanged={reloadItems}
+                onUrlImport={() => setUrlImportOpen(true)}
+              />
             </div>
             <div style={{ flex: '0 0 auto' }}>
               <ContentToolbar
@@ -695,6 +702,14 @@ export default function LibraryGate() {
           open={duplicatesOpen}
           onClose={() => setDuplicatesOpen(false)}
           onChanged={reloadItems}
+        />
+        <UrlImportDialog
+          open={urlImportOpen}
+          onClose={() => setUrlImportOpen(false)}
+          onImported={() => {
+            setUrlImportOpen(false)
+            reloadItems()
+          }}
         />
       </>
     )

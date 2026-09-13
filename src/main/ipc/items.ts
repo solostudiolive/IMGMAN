@@ -12,6 +12,7 @@ import {
   rateItems,
   backfillPalettes,
   backfillHashes,
+  backfillMediaThumbnails,
   findDuplicateGroups,
   itemExportInfo,
   exportItemsToDir,
@@ -59,6 +60,7 @@ export function registerItemsIpc(): void {
   ipcMain.handle('items:search', (_e, criteria: SearchCriteria): Item[] => searchItems(criteria))
   ipcMain.handle('items:backfillPalettes', (): Promise<number> => backfillPalettes())
   ipcMain.handle('items:backfillHashes', (): Promise<number> => backfillHashes())
+  ipcMain.handle('items:backfillMediaThumbnails', (): Promise<number> => backfillMediaThumbnails())
   ipcMain.handle('items:findDuplicates', (): DuplicateGroup[] => findDuplicateGroups())
 
   // Export originals to disk. A single item opens a Save dialog (pick file + name); multiple items

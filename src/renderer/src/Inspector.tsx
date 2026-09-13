@@ -7,6 +7,14 @@ import { TypeIcon, DownloadIcon } from './components/icons'
 import Select from './components/Select'
 import { baseName, withExt } from './displayName'
 
+function formatDuration(ms: number): string {
+  const total = Math.floor(ms / 1000)
+  const h = Math.floor(total / 3600)
+  const m = Math.floor((total % 3600) / 60)
+  const s = total % 60
+  return h > 0 ? `${h}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}` : `${m}:${String(s).padStart(2, '0')}`
+}
+
 function formatBytes(n: number): string {
   if (!n) return '0 B'
   const units = ['B', 'KB', 'MB', 'GB', 'TB']
@@ -104,8 +112,9 @@ export default function Inspector({
     )
   }
 
-  const showThumb = item.type === 'image' && !thumbFailed
+  const showThumb = item.type !== 'other' && !thumbFailed
   const dims = item.width && item.height ? `${item.width} × ${item.height}` : null
+  const duration = item.duration_ms ? formatDuration(item.duration_ms) : null
   const created = formatDate(item.created_at)
   const imported = formatDate(item.imported_at)
 
@@ -271,6 +280,7 @@ export default function Inspector({
         <Row label="Type" value={item.type} />
         <Row label="Format" value={item.ext ? item.ext.toUpperCase() : null} />
         <Row label="Dimensions" value={dims} />
+        <Row label="Duration" value={duration} />
         <Row label="Size" value={formatBytes(item.size_bytes)} />
         <div
           style={{

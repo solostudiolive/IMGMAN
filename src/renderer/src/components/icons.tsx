@@ -174,6 +174,16 @@ export function DownloadIcon({ size = 14, style }: IconProps): React.JSX.Element
   )
 }
 
+// Link / URL import icon
+export function LinkIcon({ size = 14, style }: IconProps): React.JSX.Element {
+  return (
+    <svg {...strokeProps(size)} style={{ ...base, ...style }}>
+      <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+      <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+    </svg>
+  )
+}
+
 // ---- Item-type placeholders (non-image tiles + inspector/preview fallback) ----
 export function TypeIcon({ type, size = 22, style }: { type: ItemType } & IconProps): React.JSX.Element {
   const p = { ...svgProps(size), style: { ...base, ...style } }
