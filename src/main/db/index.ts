@@ -3,7 +3,7 @@ import Database from 'better-sqlite3'
 // bundle — no separate asset to copy into the packaged app.
 import schema from './schema.sql?raw'
 
-const SCHEMA_VERSION = 2
+const SCHEMA_VERSION = 3
 
 // A single active connection: exactly one library is open at a time.
 let db: Database.Database | null = null
@@ -52,6 +52,9 @@ function runMigrations(database: Database.Database): void {
   const cols = database.prepare('PRAGMA table_info(items)').all() as Array<{ name: string }>
   if (!cols.some((c) => c.name === 'content_hash')) {
     database.exec('ALTER TABLE items ADD COLUMN content_hash TEXT')
+  }
+  if (!cols.some((c) => c.name === 'phash')) {
+    database.exec('ALTER TABLE items ADD COLUMN phash TEXT')
   }
 
   database.pragma(`user_version = ${SCHEMA_VERSION}`)

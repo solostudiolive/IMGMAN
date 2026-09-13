@@ -13,7 +13,9 @@ import {
   backfillPalettes,
   backfillHashes,
   backfillMediaThumbnails,
+  backfillPerceptualHashes,
   findDuplicateGroups,
+  findPerceptualDuplicateGroups,
   itemExportInfo,
   exportItemsToDir,
   exportItemsToZip,
@@ -24,6 +26,7 @@ import {
   type FullItem,
   type ItemPatch,
   type DuplicateGroup,
+  type PerceptualDuplicateGroup,
   type SidebarCounts,
   type ConvertFormat
 } from '../services/items'
@@ -61,7 +64,9 @@ export function registerItemsIpc(): void {
   ipcMain.handle('items:backfillPalettes', (): Promise<number> => backfillPalettes())
   ipcMain.handle('items:backfillHashes', (): Promise<number> => backfillHashes())
   ipcMain.handle('items:backfillMediaThumbnails', (): Promise<number> => backfillMediaThumbnails())
+  ipcMain.handle('items:backfillPerceptualHashes', (): Promise<number> => backfillPerceptualHashes())
   ipcMain.handle('items:findDuplicates', (): DuplicateGroup[] => findDuplicateGroups())
+  ipcMain.handle('items:findPerceptualDuplicates', (): PerceptualDuplicateGroup[] => findPerceptualDuplicateGroups())
 
   // Export originals to disk. A single item opens a Save dialog (pick file + name); multiple items
   // open a Choose-folder dialog and copy each as `name.ext`. Never mutates the library.

@@ -7,6 +7,7 @@ import { getActiveLibrary, imagesDir } from './library'
 import { extractPalette, paletteToJson } from './palette'
 import { hashFile } from './hash'
 import { extractMediaThumbnail } from './mediaThumbnail'
+import { pHashImage, pHashDistance, PHASH_DUPLICATE_THRESHOLD } from './pHash'
 import type { ItemType } from './import'
 
 // A row projected for the grid (subset of the items table).
@@ -316,6 +317,13 @@ export interface DuplicateGroup {
   items: Item[]
 }
 
+// A set of near-duplicate images whose perceptual hashes are within Hamming distance.
+export interface PerceptualDuplicateGroup {
+  representative: string // the phash of the representative (first) item in the group
+  distance: number // max Hamming distance from the representative to the farthest group member
+  items: Item[]
+}
+
 /**
  * Duplicate groups: items sharing a non-NULL content_hash, only where 2+ items share it. Each group's
  * items are oldest-first (imported_at ASC) so the UI can default to "keep the newest, delete the rest".
@@ -340,6 +348,113 @@ export function findDuplicateGroups(): DuplicateGroup[] {
     const last = groups[groups.length - 1]
     if (last && last.hash === content_hash) last.items.push(item as Item)
     else groups.push({ hash: content_hash, items: [item as Item] })
+  }
+  return groups
+}
+
+/**
+ * Backfill perceptual hashes for IMAGE items that don't have one yet. For each such item,
+ * compute a 64-bit DCT pHash from its stored original via pHashImage and persist it to
+ * items.phash. Per-item failures (missing/unreadable file, non-image) are skipped, never fatal.
+ * Idempotent (only touches phash IS NULL rows). Returns the number of items populated. Async (sharp).
+ */
+export async function backfillPerceptualHashes(): Promise<number> {
+  if (!isDatabaseOpen()) return 0
+  const lib = getActiveLibrary()
+  if (!lib) return 0
+  const root = imagesDir(lib.path)
+  const db = getDb()
+  const rows = db
+    .prepare("SELECT id, ext FROM items WHERE type = 'image' AND phash IS NULL")
+    .all() as { id: string; ext: string | null }[]
+  const update = db.prepare('UPDATE items SET phash = ? WHERE id = ?')
+
+  let n = 0
+  for (const row of rows) {
+    try {
+      const path = originalPath(join(root, row.id), row.ext)
+      if (!path) continue
+      const hash = await pHashImage(path)
+      if (hash) {
+        update.run(hash, row.id)
+        n++
+      }
+    } catch {
+      // Skip this item; a missing/unreadable file shouldn't abort the backfill.
+    }
+  }
+  return n
+}
+
+/**
+ * Find near-duplicate image groups via perceptual hashing. Reads all items with a phash,
+ * clusters them by Hamming distance (≤ PHASH_DUPLICATE_THRESHOLD): items within range of a
+ * group's representative form one cluster; transitive merges combine overlapping clusters
+ * (union-find). Each group's items are oldest-first (imported_at ASC); empty when no library
+ * or fewer than 2 images with phash. Returns PerceptualDuplicateGroup[].
+ */
+export function findPerceptualDuplicateGroups(): PerceptualDuplicateGroup[] {
+  if (!isDatabaseOpen()) return []
+  const rows = getDb()
+    .prepare(
+      `SELECT id, name, ext, type, size_bytes, width, height, rating, created_at, imported_at, phash
+       FROM items
+       WHERE type = 'image' AND phash IS NOT NULL
+       ORDER BY imported_at ASC`
+    )
+    .all() as Array<Item & { phash: string }>
+
+  if (rows.length < 2) return []
+
+  // Union-find over indices. Transitivity: if A≈B and B≈C, all three share a group even if A≠C.
+  const parent: number[] = rows.map((_, i) => i)
+  const find = (x: number): number => {
+    while (parent[x] !== x) {
+      parent[x] = parent[parent[x]]
+      x = parent[x]
+    }
+    return x
+  }
+  const union = (a: number, b: number): void => {
+    const ra = find(a)
+    const rb = find(b)
+    if (ra !== rb) parent[rb] = ra
+  }
+
+  // Naive O(n²) pairwise distance — acceptable at 10k-ish images; optimize with LSH only if needed.
+  for (let i = 0; i < rows.length; i++) {
+    for (let j = i + 1; j < rows.length; j++) {
+      const d = pHashDistance(rows[i].phash, rows[j].phash)
+      if (d !== null && d <= PHASH_DUPLICATE_THRESHOLD) union(i, j)
+    }
+  }
+
+  // Bucket indices by their union-find root.
+  const clusters = new Map<number, number[]>()
+  for (let i = 0; i < rows.length; i++) {
+    const r = find(i)
+    let c = clusters.get(r)
+    if (!c) {
+      c = []
+      clusters.set(r, c)
+    }
+    c.push(i)
+  }
+
+  // Keep only clusters with 2+ members; build PerceptualDuplicateGroup sorted oldest-first.
+  const groups: PerceptualDuplicateGroup[] = []
+  for (const cluster of clusters.values()) {
+    if (cluster.length < 2) continue
+    const items: Item[] = []
+    let maxDist = 0
+    const rep = rows[cluster[0]].phash
+    for (const idx of cluster) {
+      const { phash, ...item } = rows[idx]
+      items.push(item as Item)
+      const d = pHashDistance(phash, rep)
+      if (d !== null && d > maxDist) maxDist = d
+    }
+    groups.push({ representative: rep, distance: maxDist, items })
   }
   return groups
 }

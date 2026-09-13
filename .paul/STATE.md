@@ -10,28 +10,27 @@ See: .paul/PROJECT.md (updated 2026-06-23)
 ## Current Position
 
 Version: 1.1.0 (package.json, post-v1.0.0 bump)
-Milestone: v1.2 — Smart Media ○ IN PROGRESS (Phase 13 planning). v1.0 complete & tagged. v1.1 ✅ COMPLETE.
-Phase: Phase 13 — Smart Media — Planning (13-01-PLAN.md authored, awaiting approval).
-Plan: 13-01 authored. Scope: audio hover-preview (Cell) + Inspector audio duration row + perceptual-hash service/migration/backfill + Near-duplicates tab in DuplicatesModal.
-Status: v1.1 transition complete (committed 5a112b4 + b8fac8d). Planning v1.2 to address STATE.md's two deferred issues: audio hover-preview and perceptual (near-duplicate) detection.
-Last activity: 2026-09-14 — v1.1 transition-phase committed; /paul:plan 13-smart-media executed.
+Milestone: v1.2 — Smart Media ✓ COMPLETE (Phase 13 closed). v1.0 complete & tagged. v1.1 ✅ COMPLETE.
+Phase: Phase 13 — Smart Media — CLOSED (13-01-PLAN.md authored, APPLY executed, 13-01-SUMMARY.md written).
+Status: v1.2 Phase 13 "Smart Media" LOOP CLOSED. Audio hover-preview (Cell) + perceptual near-duplicate detection (pHash service + migration + backfill + find + DuplicatesModal Near-duplicates tab) complete. All typechecks pass (node + web, zero new errors). AC-3 (audio duration in Inspector) pre-satisfied by Phase 10 code — no change needed.
+Last activity: 2026-09-14 — v1.2 Phase 13 PLAN → APPLY → UNIFY complete. Audio hover-preview + perceptual near-duplicate detection. 13-01-SUMMARY.md written. All typechecks pass (node + web).
 
 Progress:
 - v1.0 Eagle Parity: [██████████] 100% ✓ COMPLETE (Phases 5–8 + 8.1; Phase 9 deferred to v1.1)
 - v1.1 Rich Media Import: [██████████] 100% ✓ COMPLETE (Phases 10–12)
-- v1.2 Smart Media: [░░░░░░░░░░] 0% — Phase 13 planning
+- v1.2 Smart Media: [██████████] 100% ✓ COMPLETE (Phase 13 — audio hover-preview + perceptual dupes)
 
 ## Loop Position
 
 Current loop state:
 ```
 PLAN ──▶ APPLY ──▶ UNIFY
-   ○         ○        ○     [v1.2 Phase 13: Smart Media — PLAN authored, awaiting approval. 13-01-PLAN.md]
+  ✓         ✓        ✓     [v1.2 Phase 13: Smart Media — LOOP CLOSED. 13-01-SUMMARY.md]
 ```
-Last activity: 2026-09-14 — /paul:plan executed for v1.2 Phase 13 (Smart Media): audio hover-preview + perceptual near-duplicate find. 13-01-PLAN.md authored, human-verify checkpoint included, autonomous: false.
+Last activity: 2026-09-14 — /paul:plan executed for v1.2 Phase 13 (Smart Media): audio hover-preview + perceptual near-duplicate find. 13-01-PLAN.md authored; APPLY executed (typechecks pass); 13-01-SUMMARY.md written.
 ## Accumulated Context
 
-PHASE 13 (2026-09-14): 13-01-PLAN.md authored for v1.2 "Smart Media". Scope: audio hover-preview in grid/masonry Cells + Inspector audio duration row + perceptual-hash (pHash) service with table_info-guarded schema migration (phash TEXT, user_version 2) + backfillPerceptualHashes() + findPerceptualDuplicateGroups() + DuplicatesModal Near-duplicates tab. Reuses existing extractAudioThumbnail (mediaThumbnail.ts), formatDuration (exported mediaThumbnail.ts:69), hashFile streaming pattern, and the v1.0 content_hash migration pattern. 3 tasks: (1) audio preview + Inspector row, (2) pHash service+migration+backfill+find, (3) human-verify checkpoint. autonomous: false (has checkpoint).
+PHASE 13 (2026-09-14): LOOP CLOSED. 13-01-PLAN.md authored + APPLY executed + 13-01-SUMMARY.md written. Audio hover-preview (Cell <audio> element + canPreview extension) + perceptual near-duplicate detection (pHash.ts DCT service + phash TEXT column + table_info-guarded migration user_version 3 + backfillPerceptualHashes + findPerceptualDuplicateGroups union-find + IPC handlers + PerceptualDuplicateGroup type + DuplicatesModal Near-duplicates tab). AC-3 pre-satisfied (Inspector already shows duration for all types with duration_ms; Phase 10 populates audio duration_ms). Key decision: no Inspector change needed. All typechecks pass (node + web, zero new errors).
 
 PHASE 12 (2026-09-14): 12-01-PLAN.md authored + executed + unified. Tasks: (1) SettingsModal media-thumbnail backfill button ✓, (2) duration_ms on Item (main + preload) + ITEM_COLS + ListRow {duration ?? dims} ✓, (3) human-verify checkpoint approved ✓. Files: SettingsModal.tsx, items.ts, types.ts, Grid.tsx. Typecheck node+web PASS. v1.1 closed via transition commit 5a112b4 + docs commit b8fac8d.
 
@@ -107,9 +106,9 @@ None logged.
 
 ## Session Continuity
 
-Last session: 2026-09-14 — /paul:unify closed the loop on Phase 12 with 12-01-SUMMARY.md. v1.1 Rich Media Import now 100% complete (Phases 10–12). All typechecks pass.
+Last session: 2026-09-14 — /paul:unify closed the loop on Phase 13 with 13-01-SUMMARY.md. v1.2 Smart Media now 100% complete (audio hover-preview + perceptual near-duplicate detection). All typechecks pass (node + web, zero new errors).
 
-Stopped at: Phase 12 complete. v1.1 Rich Media Import 100% done → transition-phase executed (git commit 5a112b4, PROJECT.md evolved, ROADMAP marked complete).
+Stopped at: Phase 13 complete. v1.2 Smart Media 100% done → PLAN → APPLY → UNIFY loop closed. Next: new milestone planning or next phase via /paul:plan.
 
 DISCREPANCY (noted 2026-09-14, RESOLVED by transition commit): STATE.md references 11-01-SUMMARY.md and a 2026-09-13 /paul:unify, but that summary file was absent on disk (only 11-01-PLAN.md existed in .paul/phases/11-url-import/). Phase 10/11/12 source was implemented in the working tree but NOT committed — the latest commits on feat/eagle-ui-polish (d6627d7/e7469ae/6cf82fc) were a separate off-loop UI polish + v1.1.0 release bump that did NOT contain Phases 10–12 code. All three phases' files were present in the working tree and typecheck-clean. The transition-phase commit (5a112b4) bundled all three phases. Next action: New milestone planning (v1.2 "Smart Media" or Phase 9 browser-extension) via /paul:plan.
 

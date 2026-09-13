@@ -426,7 +426,8 @@ function Cell({
   // delay keeps fast sweeps / scrolling from loading originals.
   const isGif = item.type === 'image' && /(^|\.)gif$/i.test(item.ext)
   const isVideo = item.type === 'video'
-  const canPreview = isGif || isVideo
+  const isAudio = item.type === 'audio'
+  const canPreview = isGif || isVideo || isAudio
 
   const clearHover = (): void => {
     if (hoverTimer.current) {
@@ -490,6 +491,15 @@ function Cell({
       >
         {preview && isVideo ? (
           <video src={`imgman://original/${item.id}`} muted loop autoPlay playsInline style={mediaStyle} />
+        ) : preview && isAudio ? (
+          <audio
+            src={`imgman://original/${item.id}`}
+            muted
+            loop
+            autoPlay
+            playsInline
+            style={mediaStyle}
+          />
         ) : preview && isGif ? (
           <img src={`imgman://original/${item.id}`} style={mediaStyle} />
         ) : showThumb ? (

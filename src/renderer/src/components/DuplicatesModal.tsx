@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import type { DuplicateGroup } from '../../../preload/types'
+import type { DuplicateGroup, PerceptualDuplicateGroup } from '../../../preload/types'
 import { TypeIcon } from './icons'
 import './DuplicatesModal.css'
 
@@ -25,6 +25,9 @@ export default function DuplicatesModal({
 }): React.JSX.Element | null {
   const [busy, setBusy] = useState(false)
   const [groups, setGroups] = useState<DuplicateGroup[]>([])
+  const [pGroups, setPGroups] = useState<PerceptualDuplicateGroup[]>([])
+  // 'exact' shows byte-identical duplicates; 'near' shows perceptual near-duplicates.
+  const [tab, setTab] = useState<'exact' | 'near'>('exact')
   // Item ids checked for deletion.
   const [selected, setSelected] = useState<Set<string>>(() => new Set())
 
@@ -36,7 +39,8 @@ export default function DuplicatesModal({
     return ids
   }
 
-  // Scan on open (backfill hashes first so pre-hash libraries are covered), then group.
+  // Scan on open: backfill hashes + perceptual hashes so pre-existing libraries are covered,
+  // then fetch both duplicate groupings.
   const scan = async (): Promise<void> => {
     setBusy(true)
     try {
@@ -44,6 +48,10 @@ export default function DuplicatesModal({
       const gs = await window.api.items.findDuplicates()
       setGroups(gs)
       setSelected(defaultSelection(gs))
+
+      await window.api.items.backfillPerceptualHashes()
+      const pgs = await window.api.items.findPerceptualDuplicates()
+      setPGroups(pgs)
     } finally {
       setBusy(false)
     }
@@ -78,8 +86,17 @@ export default function DuplicatesModal({
       return next
     })
 
-  const selectedItems = groups.flatMap((g) => g.items).filter((it) => selected.has(it.id))
+  // Both tabs share the selection model (groups.items are Item[]). `activeGroups` is the
+  // currently-rendered set; `selected`/`toggle` operate over whichever tab is shown.
+  const activeGroups = tab === 'near' ? pGroups : groups
+  const activeItems = activeGroups.flatMap((g) => g.items)
+  const selectedItems = activeItems.filter((it) => selected.has(it.id))
   const reclaimable = selectedItems.reduce((sum, it) => sum + it.size_bytes, 0)
+
+  // Reset selection when the tab changes so cross-tab checkboxes don't bleed.
+  useEffect(() => {
+    setSelected(new Set())
+  }, [tab])
 
   const deleteSelected = async (): Promise<void> => {
     const ids = [...selected]
@@ -95,6 +112,8 @@ export default function DuplicatesModal({
       const gs = await window.api.items.findDuplicates()
       setGroups(gs)
       setSelected(defaultSelection(gs))
+      const pgs = await window.api.items.findPerceptualDuplicates()
+      setPGroups(pgs)
     } finally {
       setBusy(false)
     }
@@ -116,18 +135,40 @@ export default function DuplicatesModal({
           </button>
         </div>
 
+        {/* Tab switcher: exact (byte-identical) vs near (perceptual). */}
+        <div className="dups__tabs" role="tablist">
+          <button
+            type="button"
+            role="tab"
+            aria-selected={tab === 'exact'}
+            className={`dups__tab${tab === 'exact' ? ' dups__tab--active' : ''}`}
+            onClick={() => setTab('exact')}
+          >
+            Exact
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={tab === 'near'}
+            className={`dups__tab${tab === 'near' ? ' dups__tab--active' : ''}`}
+            onClick={() => setTab('near')}
+          >
+            Near-duplicates
+          </button>
+        </div>
+
         <div className="dups__summary">
           {busy
             ? 'Scanning…'
-            : groups.length === 0
-              ? 'No duplicates found.'
-              : `${groups.length} group${groups.length > 1 ? 's' : ''} · ${selected.size} selected · ${formatBytes(reclaimable)} reclaimable`}
+            : activeGroups.length === 0
+              ? `${tab === 'near' ? 'No near-duplicates' : 'No duplicates'} found.`
+              : `${activeGroups.length} group${activeGroups.length > 1 ? 's' : ''} · ${selected.size} selected · ${formatBytes(reclaimable)} reclaimable`}
         </div>
 
         <div className="dups__body">
           {!busy &&
-            groups.map((g) => (
-              <div key={g.hash} className="dups__group">
+            activeGroups.map((g) => (
+              <div key={'representative' in g ? g.representative : g.hash} className="dups__group">
                 {g.items.map((it, idx) => {
                   const isNewest = idx === g.items.length - 1
                   return (
@@ -149,6 +190,7 @@ export default function DuplicatesModal({
                         <span className="dups__sub">
                           {formatBytes(it.size_bytes)}
                           {isNewest && <span className="dups__badge">newest</span>}
+                          {tab === 'near' && 'distance' in g && <span className="dups__badge">Δ {g.distance}</span>}
                         </span>
                       </span>
                     </label>

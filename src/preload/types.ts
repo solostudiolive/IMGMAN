@@ -80,6 +80,13 @@ export interface DuplicateGroup {
   items: Item[]
 }
 
+// A cluster of near-duplicate images within Hamming distance (mirrors items.ts PerceptualDuplicateGroup).
+export interface PerceptualDuplicateGroup {
+  representative: string // the phash of the representative (first/earliest) item
+  distance: number // max Hamming distance from representative to farthest group member
+  items: Item[]
+}
+
 // Search/filter criteria (mirrors src/main/services/search.ts SearchCriteria).
 // Absent fields impose no constraint; query matches name/note/tag-name.
 export interface SearchCriteria {
@@ -182,8 +189,12 @@ export interface IpcApi {
     backfillHashes: () => Promise<number>
     // Backfill real thumbnails for media items (video/audio/font/doc) missing one. Returns count populated.
     backfillMediaThumbnails: () => Promise<number>
+    // Backfill perceptual (pHash) hashes for image items missing one. Returns count populated.
+    backfillPerceptualHashes: () => Promise<number>
     // Groups of byte-identical items (2+ sharing a content hash), oldest-first within each group.
     findDuplicates: () => Promise<DuplicateGroup[]>
+    // Groups of near-duplicate images (Hamming distance <= 8 within a cluster), oldest-first.
+    findPerceptualDuplicates: () => Promise<PerceptualDuplicateGroup[]>
     count: () => Promise<number>
     search: (criteria: SearchCriteria) => Promise<Item[]>
   }
