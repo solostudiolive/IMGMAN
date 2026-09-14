@@ -22,6 +22,7 @@ import {
   itemBaseName,
   convertItemTo,
   convertItemsToDir,
+  readOriginalFile,
   type Item,
   type FullItem,
   type ItemPatch,
@@ -67,6 +68,7 @@ export function registerItemsIpc(): void {
   ipcMain.handle('items:backfillPerceptualHashes', (): Promise<number> => backfillPerceptualHashes())
   ipcMain.handle('items:findDuplicates', (): DuplicateGroup[] => findDuplicateGroups())
   ipcMain.handle('items:findPerceptualDuplicates', (): PerceptualDuplicateGroup[] => findPerceptualDuplicateGroups())
+  ipcMain.handle('items:original', (_e, id: string): Uint8Array | null => readOriginalFile(id))
 
   // Export originals to disk. A single item opens a Save dialog (pick file + name); multiple items
   // open a Choose-folder dialog and copy each as `name.ext`. Never mutates the library.

@@ -58,7 +58,11 @@ const api: IpcApi = {
     backfillPalettes: () => ipcRenderer.invoke('items:backfillPalettes'),
     backfillHashes: () => ipcRenderer.invoke('items:backfillHashes'),
     backfillMediaThumbnails: () => ipcRenderer.invoke('items:backfillMediaThumbnails'),
+    backfillPerceptualHashes: () => ipcRenderer.invoke('items:backfillPerceptualHashes'),
     findDuplicates: () => ipcRenderer.invoke('items:findDuplicates'),
+    findPerceptualDuplicates: () => ipcRenderer.invoke('items:findPerceptualDuplicates'),
+    // Read one item's original file bytes (bypasses custom-scheme CORS for fetch).
+    original: (id: string) => ipcRenderer.invoke('items:original', id),
     count: () => ipcRenderer.invoke('items:count'),
     search: (criteria: SearchCriteria) => ipcRenderer.invoke('items:search', criteria)
   },

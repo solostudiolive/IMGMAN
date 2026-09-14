@@ -1,4 +1,4 @@
-import { rmSync, existsSync, readdirSync, copyFileSync, createWriteStream } from 'fs'
+import { rmSync, existsSync, readdirSync, copyFileSync, createWriteStream, readFileSync } from 'fs'
 import { join } from 'path'
 import { ZipArchive, type ArchiverError } from 'archiver'
 import sharp from 'sharp'
@@ -481,6 +481,29 @@ export function itemExportInfo(id: string): { path: string; filename: string } |
   if (!src) return null
   const ext = row.ext ? `.${row.ext}` : ''
   return { path: src, filename: `${safeFilename(row.name)}${ext}` }
+}
+
+/**
+ * Read one item's stored ORIGINAL file bytes into a Uint8Array for in-memory
+ * consumption (e.g. PDF.js inline rendering). Returns null for unknown id,
+ * no library, or missing file. Never throws — the caller decides how to surface
+ * a missing file.
+ */
+export function readOriginalFile(id: string): Uint8Array | null {
+  if (!isDatabaseOpen()) return null
+  const lib = getActiveLibrary()
+  if (!lib) return null
+  const row = getDb()
+    .prepare('SELECT id, ext FROM items WHERE id = ?')
+    .get(id) as { id: string; ext: string | null } | undefined
+  if (!row) return null
+  const src = originalPath(join(imagesDir(lib.path), row.id), row.ext)
+  if (!src) return null
+  try {
+    return new Uint8Array(readFileSync(src))
+  } catch {
+    return null
+  }
 }
 
 /**

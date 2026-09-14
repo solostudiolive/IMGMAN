@@ -1,17 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import * as pdfjsLib from 'pdfjs-dist'
 import type { PDFDocumentProxy, PDFPageProxy } from 'pdfjs-dist/types/src/display/api'
-import type { PageViewport } from 'pdfjs-dist/types/src/display/page_viewport'
 import { baseName } from '../displayName'
-
-// pdfjs-dist ships its own worker file. In the sandboxed Electron renderer we
-// point GlobalWorkerOptions.workerSrc at the bundled worker so PDF.js can spawn
-// it without a network fetch (CSP allows worker-src 'self' after the index.html
-// update). This matches how the main-process mediaThumbnail.ts initializes the
-// library, just with a real worker instead of null (the renderer has a DOM).
-if (typeof window !== 'undefined') {
-  pdfjsLib.GlobalWorkerOptions.workerSrc = new URL('pdfjs-dist/build/pdf.worker.mjs', import.meta.url).href
-}
 
 export default function PdfViewer({ src, fileName }: { src: string; fileName: string }): React.JSX.Element {
   const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -19,14 +9,12 @@ export default function PdfViewer({ src, fileName }: { src: string; fileName: st
   const [page, setPage] = useState<PDFPageProxy | null>(null)
   const [pageNum, setPageNum] = useState(1)
   const [pageCount, setPageCount] = useState(0)
-  const [viewport, setViewport] = useState<{ width: number; height: number } | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  // Load the PDF document once. We can't pass an `imgman://` URL directly to
-  // getDocument — PDF.js rejects non-standard protocols (only http/https/ftp are
-  // valid). Instead we fetch the bytes via the protocol handler and pass a
-  // Uint8Array as `data`, mirroring the main-process mediaThumbnail.ts pattern.
+  // Extract the item id from the imgman://original/<id> URL, then read the bytes
+  // via the preload IPC bridge (avoids fetch() CORS issues with the custom scheme
+  // in the dev-server origin).
   useEffect(() => {
     let cancelled = false
     setLoading(true)
@@ -38,14 +26,14 @@ export default function PdfViewer({ src, fileName }: { src: string; fileName: st
 
     ;(async () => {
       try {
-        const response = await fetch(src)
-        if (!response.ok) {
-          throw new Error(`Failed to fetch PDF: ${response.status} ${response.statusText}`)
+        const id = src.split('/').pop()
+        if (!id) {
+          throw new Error('Could not extract item id from src')
         }
-        const arrayBuffer = await response.arrayBuffer()
-        const data = new Uint8Array(arrayBuffer)
-
-        // getDocument with inline data never touches the network / worker fetch.
+        const data = await window.api.items.original(id)
+        if (!data || data.length === 0) {
+          throw new Error('File not found on disk')
+        }
         const loadingTask = pdfjsLib.getDocument({ data })
         const doc = await loadingTask.promise
         if (cancelled) {
@@ -54,6 +42,7 @@ export default function PdfViewer({ src, fileName }: { src: string; fileName: st
         }
         setPdf(doc)
         setPageCount(doc.numPages)
+        setLoading(false)
       } catch (err: unknown) {
         if (!cancelled) {
           console.error('PDF load error:', err)
@@ -68,7 +57,6 @@ export default function PdfViewer({ src, fileName }: { src: string; fileName: st
     }
   }, [src])
 
-  // When the document loads, fetch the current page and read its viewport.
   useEffect(() => {
     if (!pdf) return
     let cancelled = false
@@ -80,7 +68,7 @@ export default function PdfViewer({ src, fileName }: { src: string; fileName: st
         if (cancelled) return
         setPage(p)
         const vp = p.getViewport({ scale: 1 })
-        setViewport({ width: Math.round(vp.width), height: Math.round(vp.height) })
+        void vp // viewport computed on render below
       } catch (err: unknown) {
         if (!cancelled) {
           console.error('PDF page error:', err)
@@ -94,7 +82,6 @@ export default function PdfViewer({ src, fileName }: { src: string; fileName: st
     }
   }, [pdf, pageNum])
 
-  // Render the current page to the canvas whenever the page or viewport changes.
   useEffect(() => {
     if (!page || !canvasRef.current) {
       setLoading(true)
@@ -116,7 +103,6 @@ export default function PdfViewer({ src, fileName }: { src: string; fileName: st
       viewport: renderViewport
     })
 
-    // Clean up any ongoing render on unmount / page change.
     return () => {
       void renderTask.cancel()
     }
@@ -192,7 +178,7 @@ export default function PdfViewer({ src, fileName }: { src: string; fileName: st
             </div>
           )}
           {loading && !page ? (
-            <div style={{ fontSize: 13, opacity: 0.6 }}>Rendering page…</div>
+            <div style={{ fontSize: 13, opacity: 0.6 }}>Rendering page...</div>
           ) : (
             <canvas
               ref={canvasRef}

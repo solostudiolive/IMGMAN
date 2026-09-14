@@ -195,6 +195,8 @@ export interface IpcApi {
     findDuplicates: () => Promise<DuplicateGroup[]>
     // Groups of near-duplicate images (Hamming distance <= 8 within a cluster), oldest-first.
     findPerceptualDuplicates: () => Promise<PerceptualDuplicateGroup[]>
+    // Read one item's original file bytes (for in-memory consumers like PDF.js).
+    original: (id: string) => Promise<Uint8Array | null>
     count: () => Promise<number>
     search: (criteria: SearchCriteria) => Promise<Item[]>
   }
