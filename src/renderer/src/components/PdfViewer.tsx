@@ -155,14 +155,17 @@ export default function PdfViewer({ src, fileName }: { src: string; fileName: st
             >
               <button
                 type="button"
-                onClick={prevPage}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  setPageNum((n) => Math.max(n - 1, 1))
+                }}
                 disabled={pageNum <= 1}
                 style={{
                   border: '1px solid var(--color-border)',
                   background: 'var(--color-bg)',
                   color: 'var(--color-text)',
                   borderRadius: 4,
-                  padding: '2px 10px',
+                  padding: '4px 12px',
                   cursor: pageNum <= 1 ? 'default' : 'pointer'
                 }}
               >
@@ -173,14 +176,17 @@ export default function PdfViewer({ src, fileName }: { src: string; fileName: st
               </span>
               <button
                 type="button"
-                onClick={nextPage}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  setPageNum((n) => Math.min(n + 1, pageCount))
+                }}
                 disabled={pageNum >= pageCount}
                 style={{
                   border: '1px solid var(--color-border)',
                   background: 'var(--color-bg)',
                   color: 'var(--color-text)',
                   borderRadius: 4,
-                  padding: '2px 10px',
+                  padding: '4px 12px',
                   cursor: pageNum >= pageCount ? 'default' : 'pointer'
                 }}
               >
@@ -195,14 +201,16 @@ export default function PdfViewer({ src, fileName }: { src: string; fileName: st
               ref={canvasRef}
               style={{
                 maxWidth: '100%',
-                maxHeight: 'calc(100% - 40px)',
+                maxHeight: 'calc(100% - 60px)',
                 width: 'auto',
                 height: 'auto',
-                objectFit: 'contain'
+                objectFit: 'contain',
+                // Ensure the canvas doesn't capture clicks meant for the buttons below it.
+                pointerEvents: 'none'
               }}
             />
           )}
-          <div style={{ marginTop: 12, fontSize: 11, opacity: 0.5 }}>{baseName(fileName)}</div>
+          <div style={{ marginTop: 8, fontSize: 11, opacity: 0.5 }}>{baseName(fileName)}</div>
         </>
       )}
     </div>
