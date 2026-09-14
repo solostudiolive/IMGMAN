@@ -39,12 +39,14 @@ Inline PDF rendering via `pdfjs-dist` (already installed) in both preview surfac
 
 3. **Button click fix**: Buttons weren't responding because the canvas overlay captured pointer events. Fixed by adding `e.stopPropagation()` to button `onClick` handlers (preventing the lightbox-close handler from firing) and setting `pointerEvents: 'none'` on the canvas so clicks pass through to the container below.
 
-3. **Pre-existing typecheck error fixed**: `IpcApi` was missing `backfillPerceptualHashes` and `findPerceptualDuplicates` (handlers existed in `ipc/items.ts` but were never exposed through the typed preload interface).
+4. **Keyboard navigation**: Added ArrowLeft/ArrowRight key listener inside PdfViewer for prev/next page navigation. LibraryGate handles Space/Escape for lightbox open/close at the backdrop level; PdfViewer handles its own keydown for page navigation.
+
+5. **Pre-existing typecheck error fixed**: `IpcApi` was missing `backfillPerceptualHashes` and `findPerceptualDuplicates` (handlers existed in `ipc/items.ts` but were never exposed through the typed preload interface).
 
 ### Acceptance criteria — all met
 - [x] **AC-1**: PDF renders as canvas in QuickPreview (Space/Enter lightbox) — page counter + Prev/Next
 - [x] **AC-2**: Inspector click-to-enlarge opens PDF viewer via existing QuickPreview wiring
-- [x] **AC-3**: Page navigation bounded (Prev disabled pg1, Next disabled last page); ArrowLeft/ArrowRight inherited from LibraryGate key handling
+- [x] **AC-3**: Page navigation bounded (Prev disabled pg1, Next disabled last page); ArrowLeft/ArrowRight via PdfViewer's own keydown listener
 - [x] **AC-4**: No CSP violations — `worker-src 'self'` covers the blob worker URL; `img-src` already includes `imgman:`
 
 ### Verification
