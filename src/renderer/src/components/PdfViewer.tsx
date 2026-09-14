@@ -2,6 +2,17 @@ import { useEffect, useRef, useState } from 'react'
 import * as pdfjsLib from 'pdfjs-dist'
 import type { PDFDocumentProxy, PDFPageProxy } from 'pdfjs-dist/types/src/display/api'
 import { baseName } from '../displayName'
+import workerUrl from 'pdfjs-dist/build/pdf.worker.mjs?url'
+
+// pdfjs-dist ships its own worker file. In the sandboxed Electron renderer we
+// point GlobalWorkerOptions.workerSrc at the bundled worker so PDF.js can spawn
+// it without a network fetch (CSP allows worker-src 'self' after the index.html
+// update). Vite's ?url import resolves from node_modules and returns a proper
+// dev-server or build-time URL (new URL() with a bare specifier would resolve
+// relative to the current module and miss node_modules).
+if (typeof window !== 'undefined' && workerUrl) {
+  pdfjsLib.GlobalWorkerOptions.workerSrc = workerUrl
+}
 
 export default function PdfViewer({ src, fileName }: { src: string; fileName: string }): React.JSX.Element {
   const canvasRef = useRef<HTMLCanvasElement>(null)
