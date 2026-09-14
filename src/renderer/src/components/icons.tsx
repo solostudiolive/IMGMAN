@@ -184,6 +184,35 @@ export function LinkIcon({ size = 14, style }: IconProps): React.JSX.Element {
   )
 }
 
+// ---- Media player action icons ----
+export function PlayIcon({ size = 24, style }: IconProps): React.JSX.Element {
+  return (
+    <svg {...strokeProps(size)} style={{ ...base, ...style }}>
+      <path d="M5 3v18l15-9L5 3Z" />
+    </svg>
+  )
+}
+
+export function PauseIcon({ size = 24, style }: IconProps): React.JSX.Element {
+  return (
+    <svg {...strokeProps(size)} style={{ ...base, ...style }}>
+      <rect x="3" y="5" width="7" height="14" rx="1" />
+      <rect x="14" y="5" width="7" height="14" rx="1" />
+    </svg>
+  )
+}
+
+export function MaximizeIcon({ size = 24, style }: IconProps): React.JSX.Element {
+  return (
+    <svg {...strokeProps(size)} style={{ ...base, ...style }}>
+      <path d="M8 3H4a1 1 0 0 0-1 1v4" />
+      <path d="M4 8V4l4 4" />
+      <path d="M16 21h4a1 1 0 0 0 1-1v-4" />
+      <path d="M20 16h-4l4 4Z" />
+    </svg>
+  )
+}
+
 // ---- Item-type placeholders (non-image tiles + inspector/preview fallback) ----
 export function TypeIcon({ type, size = 22, style }: { type: ItemType } & IconProps): React.JSX.Element {
   const p = { ...svgProps(size), style: { ...base, ...style } }
