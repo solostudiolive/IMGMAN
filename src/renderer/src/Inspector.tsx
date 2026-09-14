@@ -113,6 +113,7 @@ export default function Inspector({
   }
 
   const showThumb = item.type !== 'other' && !thumbFailed
+  const isPlayer = item.type === 'video' || item.type === 'audio'
   const dims = item.width && item.height ? `${item.width} × ${item.height}` : null
   const duration = item.duration_ms ? formatDuration(item.duration_ms) : null
   const created = formatDate(item.created_at)
@@ -189,12 +190,12 @@ export default function Inspector({
   return (
     <aside style={ASIDE_STYLE}>
       <div
-        className={showThumb ? 'inspector-thumb' : undefined}
-        onClick={() => showThumb && setZoomed(true)}
-        title={showThumb ? 'Click to enlarge' : undefined}
+        className={showThumb && !isPlayer ? 'inspector-thumb' : undefined}
+        onClick={() => showThumb && !isPlayer && setZoomed(true)}
+        title={showThumb && !isPlayer ? 'Click to enlarge' : undefined}
         style={{
           width: '100%',
-          aspectRatio: '1 / 1',
+          aspectRatio: isPlayer ? '16 / 9' : '1 / 1',
           borderRadius: 8,
           overflow: 'hidden',
           position: 'relative',
@@ -203,10 +204,37 @@ export default function Inspector({
           alignItems: 'center',
           justifyContent: 'center',
           marginBottom: 12,
-          cursor: showThumb ? 'zoom-in' : 'default'
+          cursor: showThumb && !isPlayer ? 'zoom-in' : 'default'
         }}
       >
-        {showThumb ? (
+        {isPlayer ? (
+          item.type === 'video' ? (
+            <video
+              src={`imgman://original/${item.id}`}
+              controls
+              autoPlay
+              muted
+              loop
+              playsInline
+              style={{ width: '100%', height: '100%', objectFit: 'contain', background: '#000', borderRadius: 8 }}
+            />
+          ) : (
+            <div
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: 12,
+                width: '100%',
+                padding: '0 12px',
+                boxSizing: 'border-box'
+              }}
+            >
+              <TypeIcon type="audio" size={40} style={{ color: 'var(--color-text-faint)' }} />
+              <audio src={`imgman://original/${item.id}`} controls autoPlay style={{ width: '100%' }} />
+            </div>
+          )
+        ) : showThumb ? (
           <>
             <img
               className="inspector-thumb__img"
@@ -221,7 +249,7 @@ export default function Inspector({
         ) : (
           <TypeIcon type={item.type} size={48} style={{ color: 'var(--color-text-faint)' }} />
         )}
-        {item.ext && (
+        {item.ext && !isPlayer && (
           // Eagle-style format badge in the corner of the preview.
           <span className="inspector-badge">{item.ext.toUpperCase()}</span>
         )}

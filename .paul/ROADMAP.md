@@ -18,9 +18,18 @@ A local-first desktop asset manager built in stages: stand up the Electron/React
 ### Phase 14: PDF Inline View
 **Goal:** Render PDFs inline in the QuickPreview lightbox and Inspector preview — first page on open with Prev/Next page navigation. Uses the already-installed `pdfjs-dist` (same library used for PDF thumbnails in `mediaThumbnail.ts`). Audio + video hover-play are already complete (Phases 13/6); PDF is the missing preview surface.
 **Depends on:** Phase 10 (pdfjs-dist installed + PDF thumbnail pattern); Phase 3 (QuickPreview + Inspector preview wiring)
-**Status:** ○ Planning (14-01-PLAN.md authored, 2026-09-14)
+**Status:** ✅ Complete (2026-09-14) (14-01-SUMMARY.md committed)
 **Plans:**
-- [ ] 14-01: PDF.js inline viewer in QuickPreview + Inspector + page navigation + CSP update
+- [x] 14-01: PdfViewer component (pdfjs-dist via items:original IPC bridge) in QuickPreview + Inspector + page navigation + ArrowLeft/Right + CSP worker-src 'self'
+
+---
+
+### Phase 15: Hover Preview Popover
+**Goal:** Float audio/video hover previews in a **top-right popover** of the grid viewport instead of replacing thumbnails inline in cells. Same 180 ms hover-intent; single active popover switching on cursor tracking; dismisses on leaving both cell and popover; no layout shift. Reuses `imgman://original` + existing muted/loop/autoPlay contract.
+**Depends on:** Phase 14 (cell preview wiring in place from 06-04); Phase 6 (hover-preview pattern)
+**Status:** ○ Planning (15-01-PLAN.md authored, 2026-09-14)
+**Plans:**
+- [ ] 15-01: Refactor hover-preview from inline cell to fixed top-right popover (Grid.tsx + Grid.css)
 
 ---
 
@@ -251,9 +260,12 @@ endpoint that sends images/URLs into the active library.
 | 10 | Real media thumbnails | 1 | ✅ Complete (2026-09-13) | 2026-09-13 |
 | 11 | URL import with security | 1 | ✅ Complete (2026-09-13) | 2026-09-13 |
 | 12 | Import pipeline polish | 1 | ✅ Complete (2026-09-14) | 2026-09-14 |
+| 13 | Smart Media | 1 | ✅ Complete (2026-09-14) | 2026-09-14 |
+| 14 | PDF Inline View | 1 | ✅ Complete (2026-09-14) | 2026-09-14 |
+| 15 | Hover Preview Popover | 1 | ○ Planning (2026-09-14) | — |
 
 ---
 
 *Roadmap created: 2026-06-23*
-*Last updated: 2026-09-14 — v1.2 Phase 13 (Smart Media) complete; v1.3 Phase 14 (PDF Inline View) planning.*
+*Last updated: 2026-09-14 — v1.2 Phase 13 complete; v1.3 Phase 14 complete; v1.3 Phase 15 (Hover Preview Popover) planning.*
 

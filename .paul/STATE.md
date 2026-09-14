@@ -5,30 +5,31 @@
 See: .paul/PROJECT.md (updated 2026-06-23)
 
 **Core value:** A fast, offline-first local "second brain" — collect, organize, search, and browse tens of thousands of visual assets in under a second, with full data ownership.
-**Current focus:** v1.3 — PDF Inline View (Phase 14): inline PDF rendering in QuickPreview + Inspector.
+**Current focus:** v1.3 — Hover Preview Popover (Phase 15): float audio/video hover-preview in a top-right popover instead of inline in grid cells.
 
 ## Current Position
 
 Version: 1.1.0 (package.json, post-v1.0.0 bump)
-Milestone: v1.3 — PDF Inline View — PLANNING (Phase 14). v1.2 ✓ COMPLETE.
-Phase: Phase 14 — PDF Inline View — UNIFY (loop closed; implementation complete, awaiting commit).
-Status: v1.2 Phase 13 "Smart Media" LOOP CLOSED ✓✓✓. v1.3 Phase 14 "PDF Inline View" — LOOP CLOSED ✓✓✓ (14-01-PLAN.md + implementation + 14-01-SUMMARY.md). NOTE: audio + video hover-play in grid cells were already complete (Phase 13 / Phase 6); only PDF inline viewing was missing. Uses already-installed pdfjs-dist (same lib used for thumbnails in mediaThumbnail.ts).
-Last activity: 2026-09-14 — /paul:plan created 14-01-PLAN.md for PDF inline viewing. Audio/video hover-play confirmed already implemented.
+Milestone: v1.3 — Hover Preview Popover (Phase 15). v1.2 ✓ COMPLETE. Phase 14 ✓ COMPLETE.
+Phase: Phase 15 — Hover Preview Popover — PLANNING (Phase 14 ✓ complete).
+Status: v1.2 Phase 13 "Smart Media" LOOP CLOSED ✓✓✓. v1.3 Phase 14 "PDF Inline View" — LOOP CLOSED ✓✓✓ (6 commits incl. 5 post-unify fixes: worker URL, button click, keyboard nav, IPC CORS). v1.3 continuing with Phase 15 "Hover Preview Popover" — audio/video hover-preview being refactored from inline cell to top-right popover.
+Last activity: 2026-09-14 — /paul:plan created 14-01-PLAN.md (Phase 14 complete). Now starting Phase 15: hover-preview popover plan.
 
 Progress:
 - v1.0 Eagle Parity: [██████████] 100% ✓ COMPLETE (Phases 5–8 + 8.1; Phase 9 deferred to v1.1)
 - v1.1 Rich Media Import: [██████████] 100% ✓ COMPLETE (Phases 10–12)
 - v1.2 Smart Media: [██████████] 100% ✓ COMPLETE (Phase 13 — audio hover-preview + perceptual dupes)
-- v1.3 PDF Inline View: [░░░░░░░░░░] 0% PLANNING (Phase 14 — PDF inline rendering in QuickPreview + Inspector)
+- v1.3 PDF Inline View: [██████████] 100% ✓ COMPLETE (Phase 14 — PDF inline rendering ✓)
+- v1.3 Hover Preview Popover: [░░░░░░░░░░] 0% PLANNING (Phase 15 — audio/video hover-preview popover)
 
 ## Loop Position
 
 Current loop state:
 ```
 PLAN ──▶ APPLY ──▶ UNIFY
-  ✓        ✓        ✓     [v1.3 Phase 14: PDF Inline View — LOOP CLOSED]
+  ○        ○        ○     [v1.3 Phase 15: Hover Preview Popover — PLAN created]
 ```
-Last activity: 2026-09-14 — /paul:unify 14-01 closed the loop. PdfViewer component (pdfjs-dist via imgman:// fetch → getDocument) renders inline in QuickPreview lightbox + Inspector click-to-enlarge (existing wiring reused). CSP worker-src 'self' permits blob: worker URL. Web typecheck PASS (zero new errors). 14-01-SUMMARY.md written.
+Last activity: 2026-09-14 — Phase 14 loop closed (14-01-SUMMARY.md). Started Phase 15: /paul:plan created 15-01-PLAN.md for hover-preview popover refactoring.
 ## Accumulated Context
 
 PHASE 13 (2026-09-14): LOOP CLOSED. 13-01-PLAN.md authored + APPLY executed + 13-01-SUMMARY.md written. Audio hover-preview (Cell <audio> element + canPreview extension) + perceptual near-duplicate detection (pHash.ts DCT service + phash TEXT column + table_info-guarded migration user_version 3 + backfillPerceptualHashes + findPerceptualDuplicateGroups union-find + IPC handlers + PerceptualDuplicateGroup type + DuplicatesModal Near-duplicates tab). AC-3 pre-satisfied (Inspector already shows duration for all types with duration_ms; Phase 10 populates audio duration_ms). Key decision: no Inspector change needed. All typechecks pass (node + web, zero new errors).
@@ -107,16 +108,17 @@ None logged.
 
 ## Session Continuity
 
-Last session: 2026-09-14 — /paul:unify closed the loop on Phase 14 (PDF Inline View) with 14-01-SUMMARY.md. v1.3 Phase 14 now LOOP CLOSED ✓✓✓. Web typecheck passes (zero new errors). NOTE: pre-existing node typecheck error from Phase 13 (backfillPerceptualHashes/findPerceptualDuplicates not wired into preload/index.ts) — unrelated to this phase, not introduced here.
+Last session: 2026-09-14 — Phase 14 loop closed (14-01-SUMMARY.md committed across 6 commits). Web typecheck passes (zero errors). Started Phase 15: /paul:plan created 15-01-PLAN.md for hover-preview popover.
 
-Stopped at: Phase 14 complete. v1.3 PDF Inline View 100% done → PLAN → APPLY → UNIFY loop closed. Implementation: PdfViewer component (pdfjs-dist via imgman:// fetch → getDocument) renders inline in QuickPreview lightbox + Inspector click-to-enlarge; CSP worker-src 'self' permits blob: worker URL. Next phase will come from v1.3+ roadmap planning or /paul:plan.
+Stopped at: Phase 14 complete. v1.3 PDF Inline View LOOP CLOSED ✓✓✓. New loop: Phase 15 — Hover Preview Popover (15-01-PLAN.md just created, awaiting APPLY). Refactor audio/video hover-preview from inline-in-cell to a fixed top-right popover anchored to the grid viewport.
 
-DISCREPANCY (noted 2026-09-14, RESOLVED by transition commit): STATE.md references 11-01-SUMMARY.md and a 2026-09-13 /paul:unify, but that summary file was absent on disk (only 11-01-PLAN.md existed in .paul/phases/11-url-import/). Phase 10/11/12 source was implemented in the working tree but NOT committed — the latest commits on feat/eagle-ui-polish (d6627d7/e7469ae/6cf82fc) were a separate off-loop UI polish + v1.1.0 release bump that did NOT contain Phases 10–12 code. All three phases' files were present in the working tree and typecheck-clean. The transition-phase commit (5a112b4) bundled all three phases. Next action: New milestone planning (v1.2 "Smart Media" or Phase 9 browser-extension) via /paul:plan.
+DISCREPANCY (noted 2026-09-14, RESOLVED by transition commit): STATE.md references 11-01-SUMMARY.md and a 2026-09-13 /paul:unify, but that summary file was absent on disk (only 11-01-PLAN.md existed in .paul/phases/11-url-import/). Phase 10/11/12 source was implemented in the working tree but NOT committed — the latest commits on feat/eagle-ui-polish (d6627d7/e7469ae/6cf82fc) were a separate off-loop UI polish + v1.1.0 release bump that did NOT contain Phases 10–12 code. All three phases' files were present in the working tree and typecheck-clean. The transition-phase commit (5a112b4) bundled all three phases. Next action: Phase 15 APPLY after plan approval.
 
 No handoff files to consume.
 
 ### Deferred Issues (still open)
-From v1.0/v1.1 close: audio hover-preview pending → ADDRESSED by Phase 13 AC-1. Perceptual/near-duplicate detection pending → ADDRESSED by Phase 13 AC-2. Reference-in-place imports → Phase 14 (later). Signed builds + auto-update → milestone-gate.
+From v1.0/v1.1 close: Perceptual/near-duplicate detection pending → ADDRESSED by Phase 13 AC-2. Reference-in-place imports → deferred (Phase 15+ scope). Signed builds + auto-update → milestone-gate.
+Note: audio hover-preview was ADDRESSED by Phase 13 (inline in cell); Phase 15 upgrades it to a popover.
 Phase 9 starting decisions for v1.1 are recorded in the Decisions section above + ROADMAP Phase 9 entry.
 SearchCriteria extension point carries: query/types/ext/rating/date/tagIds/color/colorTolerance. NEW reusable infra from Phase 8: services/hash.ts (streamed SHA-256) + the first schema-migration pattern (schema.sql + table_info-guarded ALTER, user_version) in db/index.ts.
 

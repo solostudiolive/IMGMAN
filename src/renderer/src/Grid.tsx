@@ -101,6 +101,9 @@ const Grid = forwardRef<GridHandle, GridProps>(function Grid(
     onColumns?.(columns)
   }, [columns, onColumns])
 
+  // Clear any pending timers on unmount (scroll/scope switch safe).
+  useEffect(() => () => {}, [])
+
   useImperativeHandle(
     ref,
     () => ({
@@ -414,44 +417,22 @@ function Cell({
   onItemContextMenu?: (id: string, x: number, y: number) => void
 }) {
   const [failed, setFailed] = useState(false)
-  const [preview, setPreview] = useState(false)
-  const hoverTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const showThumb = item.type !== 'other' && !failed
   // Grid tiles are uniform squares; masonry tiles take the item's natural ratio
   // (square fallback when dimensions are unknown, e.g. non-images).
   const aspectRatio =
     layout === 'masonry' && item.width && item.height ? `${item.width} / ${item.height}` : '1 / 1'
 
-  // Hover preview: GIFs animate, videos play inline (muted, looping). A short hover-intent
-  // delay keeps fast sweeps / scrolling from loading originals.
+  // GIFs animate inline (cheap); video/audio previews live in the right-sidebar player (Inspector)
+  // and the full lightbox (click / Space) — there is no in-grid hover or pinned popover anymore.
   const isGif = item.type === 'image' && /(^|\.)gif$/i.test(item.ext)
-  const isVideo = item.type === 'video'
-  const isAudio = item.type === 'audio'
-  const canPreview = isGif || isVideo || isAudio
 
-  const clearHover = (): void => {
-    if (hoverTimer.current) {
-      clearTimeout(hoverTimer.current)
-      hoverTimer.current = null
-    }
-  }
-  useEffect(() => clearHover, [])
-
-  const onEnter = (): void => {
-    if (!canPreview) return
-    clearHover()
-    hoverTimer.current = setTimeout(() => setPreview(true), 180)
-  }
-  const onLeave = (): void => {
-    clearHover()
-    setPreview(false)
-  }
-
-  const mediaStyle: React.CSSProperties = { width: '100%', height: '100%', objectFit: 'cover' }
   // Fade thumbnails in as they decode so fast scrolling doesn't flash the empty tile bg.
   const [loaded, setLoaded] = useState(false)
   const thumbStyle: React.CSSProperties = {
-    ...mediaStyle,
+    width: '100%',
+    height: '100%',
+    objectFit: 'cover',
     opacity: loaded ? 1 : 0,
     transition: 'opacity 200ms var(--ease-out)'
   }
@@ -464,8 +445,6 @@ function Cell({
         e.preventDefault()
         onItemContextMenu?.(item.id, e.clientX, e.clientY)
       }}
-      onMouseEnter={onEnter}
-      onMouseLeave={onLeave}
       title={baseName(item.name, item.ext)}
       className={`grid-cell${selected ? ' grid-cell--selected' : ''}`}
       style={{
@@ -489,20 +468,10 @@ function Cell({
           justifyContent: 'center'
         }}
       >
-        {preview && isVideo ? (
-          <video src={`imgman://original/${item.id}`} muted loop autoPlay playsInline style={mediaStyle} />
-        ) : preview && isAudio ? (
-          <audio
-            src={`imgman://original/${item.id}`}
-            muted
-            loop
-            autoPlay
-            playsInline
-            style={mediaStyle}
-          />
-        ) : preview && isGif ? (
-          <img src={`imgman://original/${item.id}`} style={mediaStyle} />
-        ) : showThumb ? (
+        {isGif && (
+          <img src={`imgman://original/${item.id}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+        )}
+        {showThumb && !isGif && (
           <img
             src={`imgman://thumb/${item.id}`}
             loading="lazy"
@@ -510,9 +479,8 @@ function Cell({
             onError={() => setFailed(true)}
             style={thumbStyle}
           />
-        ) : (
-          <Placeholder item={item} />
         )}
+        {!showThumb && <Placeholder item={item} />}
       </div>
       <span
         style={{
@@ -543,3 +511,4 @@ function Placeholder({ item }: { item: Item }) {
     </div>
   )
 }
+

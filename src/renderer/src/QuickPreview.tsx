@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { Item } from '../../preload/types'
 import { TypeIcon, PlayIcon, PauseIcon, MaximizeIcon } from './components/icons'
 import PdfViewer from './components/PdfViewer'
@@ -53,6 +53,12 @@ function MediaPlayer({
 }): React.JSX.Element {
   const mediaRef = useRef<HTMLVideoElement | HTMLAudioElement>(null)
   const [playing, setPlaying] = useState(true)
+
+  // The lightbox opens on a user gesture (Space / click), so explicitly resuming playback
+  // here is allowed even for unmuted audio — browsers otherwise block autoplay with sound.
+  useEffect(() => {
+    void mediaRef.current?.play().catch(() => {})
+  }, [])
 
   const togglePlay = (): void => {
     const el = mediaRef.current
