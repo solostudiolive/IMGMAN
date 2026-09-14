@@ -32,10 +32,12 @@ Inline PDF rendering via `pdfjs-dist` (already installed) in both preview surfac
 - **IPC bridge instead of fetch**: `fetch('imgman://original/<id>')` fails cross-origin from `http://localhost:5273` (webSecurity blocks custom-scheme fetch). Added `items:original(id)` IPC that reads file bytes via `readFileSync` in the main process — bypasses CORS entirely.
 - **Single component**: `PdfViewer` is reused by QuickPreview Content switch and Inspector's click-to-enlarge lightbox (both pass `<item>` to `<QuickPreview>`).
 
-### Post-commit fix
-The initial implementation used `fetch('imgman://original/<id>')` to load PDF bytes, but `fetch()` to a custom scheme from the `http://localhost:5273` dev-server origin is cross-origin and blocked by electron's `webSecurity`, causing `TypeError: Failed to fetch`.
+### Post-commit fixes
+1. **CORS fix**: `fetch('imgman://original/<id>')` fails cross-origin from `http://localhost:5273` (webSecurity blocks custom-scheme fetch). Replaced with `items:original(id)` IPC that reads file bytes via `readFileSync` in the main process — bypasses CORS entirely.
 
-Fix: `items:original(id)` IPC reads bytes via `readFileSync` + returns `Uint8Array` through the preload bridge (bypasses CORS entirely). This commit also fixed the pre-existing node typecheck error — `IpcApi` was missing `backfillPerceptualHashes` and `findPerceptualDuplicates` (handlers existed in `ipc/items.ts` but were never exposed through the typed interface).
+2. **Worker URL fix**: `new URL('pdfjs-dist/build/pdf.worker.mjs', import.meta.url)` resolves relative to the current module in Vite dev server, producing a non-existent path (`.../src/renderer/src/components/pdfjs-dist/...`). pdf.js logs "No GlobalWorkerOptions.workerSrc specified". Fixed by using Vite's `?url` import suffix: `import workerUrl from 'pdfjs-dist/build/pdf.worker.mjs?url'` resolves from `node_modules` correctly.
+
+3. **Pre-existing typecheck error fixed**: `IpcApi` was missing `backfillPerceptualHashes` and `findPerceptualDuplicates` (handlers existed in `ipc/items.ts` but were never exposed through the typed preload interface).
 
 ### Acceptance criteria — all met
 - [x] **AC-1**: PDF renders as canvas in QuickPreview (Space/Enter lightbox) — page counter + Prev/Next
