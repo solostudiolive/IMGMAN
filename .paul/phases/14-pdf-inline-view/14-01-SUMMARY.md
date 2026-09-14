@@ -37,6 +37,8 @@ Inline PDF rendering via `pdfjs-dist` (already installed) in both preview surfac
 
 2. **Worker URL fix**: `new URL('pdfjs-dist/build/pdf.worker.mjs', import.meta.url)` resolves relative to the current module in Vite dev server, producing a non-existent path (`.../src/renderer/src/components/pdfjs-dist/...`). pdf.js logs "No GlobalWorkerOptions.workerSrc specified". Fixed by using Vite's `?url` import suffix: `import workerUrl from 'pdfjs-dist/build/pdf.worker.mjs?url'` resolves from `node_modules` correctly.
 
+3. **Button click fix**: Buttons weren't responding because the canvas overlay captured pointer events. Fixed by adding `e.stopPropagation()` to button `onClick` handlers (preventing the lightbox-close handler from firing) and setting `pointerEvents: 'none'` on the canvas so clicks pass through to the container below.
+
 3. **Pre-existing typecheck error fixed**: `IpcApi` was missing `backfillPerceptualHashes` and `findPerceptualDuplicates` (handlers existed in `ipc/items.ts` but were never exposed through the typed preload interface).
 
 ### Acceptance criteria — all met
