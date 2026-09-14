@@ -653,12 +653,6 @@ export default function LibraryGate() {
                 onColumns={(n) => (columnsRef.current = n)}
                 onSelect={(id, mods) => {
                   sel.handleSelect(id, orderedIds, mods)
-                  // A plain click on a video/audio item opens the full player (Space-equivalent).
-                  // Modifier clicks (multi-select) just extend the selection without opening it.
-                  if (!mods.ctrl && !mods.shift) {
-                    const it = sortedItems.find((i) => i.id === id)
-                    if (it && (it.type === 'video' || it.type === 'audio')) setPreviewOpen(true)
-                  }
                 }}
                 onMarqueeSelect={(ids, additive) => sel.applyMarquee(ids, additive)}
                 onBackgroundClick={() => sel.clear()}

@@ -553,3 +553,260 @@ textarea:focus-visible {
     scroll-behavior: auto !important;
   }
 }
+
+/* ── Sidebar Audio Mini-Player (.sp-*) ────────────────────────────────── */
+
+.sp-player {
+  width: 100%;
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  padding: 12px;
+  box-sizing: border-box;
+  margin-bottom: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+
+/* Transport row: artwork · skip/play/skip · mute */
+.sp-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Animated music-note artwork tile */
+.sp-artwork {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #312e81 0%, #4f46e5 60%, #7c3aed 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255, 255, 255, 0.92);
+  flex-shrink: 0;
+  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.35);
+  transition: box-shadow 0.3s ease;
+}
+
+.sp-artwork--playing {
+  animation: sp-pulse 2s ease-in-out infinite;
+}
+
+@keyframes sp-pulse {
+  0%, 100% { box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3), 0 0 0 0 rgba(99, 102, 241, 0.18); }
+  50%       { box-shadow: 0 2px 12px rgba(99, 102, 241, 0.55), 0 0 0 4px rgba(99, 102, 241, 0.12); }
+}
+
+/* Skip + Play buttons cluster */
+.sp-transport {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex: 1;
+  justify-content: center;
+}
+
+/* Generic icon button */
+.sp-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: var(--color-text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px;
+  border-radius: 6px;
+  line-height: 1;
+  transition: color var(--dur-fast) var(--ease-out), background var(--dur-fast) var(--ease-out), transform 80ms ease;
+  flex-shrink: 0;
+}
+
+.sp-btn:hover {
+  color: var(--color-text);
+  background: var(--color-bg-surface, rgba(0,0,0,0.06));
+}
+
+.sp-btn:active {
+  transform: scale(0.88);
+}
+
+/* Primary play/pause circle */
+.sp-btn--play {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  padding: 0;
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  color: #fff;
+  box-shadow: 0 2px 10px rgba(99, 102, 241, 0.45);
+}
+
+.sp-btn--play:hover {
+  background: linear-gradient(135deg, #818cf8 0%, #a78bfa 100%);
+  color: #fff;
+  box-shadow: 0 3px 14px rgba(99, 102, 241, 0.6);
+  transform: scale(1.06);
+}
+
+.sp-btn--play:active {
+  transform: scale(0.93);
+}
+
+/* Scrubber track wrapper (large click area) */
+.sp-track-wrap {
+  width: 100%;
+  padding: 5px 0;
+  cursor: pointer;
+  touch-action: none;
+}
+
+.sp-track {
+  position: relative;
+  width: 100%;
+  height: 3px;
+  background: var(--color-border);
+  border-radius: 999px;
+  transition: height 140ms ease;
+  overflow: visible;
+}
+
+.sp-track-wrap:hover .sp-track {
+  height: 5px;
+}
+
+.sp-track-fill {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  background: linear-gradient(90deg, #6366f1, #a78bfa);
+  border-radius: 999px;
+  pointer-events: none;
+  box-shadow: 0 0 6px rgba(99, 102, 241, 0.5);
+}
+
+.sp-track-thumb {
+  position: absolute;
+  right: -5px;
+  top: 50%;
+  transform: translateY(-50%) scale(0);
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.35), 0 0 0 2px rgba(99, 102, 241, 0.4);
+  transition: transform 140ms ease;
+  pointer-events: none;
+}
+
+.sp-track-wrap:hover .sp-track-thumb {
+  transform: translateY(-50%) scale(1);
+}
+
+/* Elapsed / total time */
+.sp-time-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 10px;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text-faint);
+  margin-top: -3px;
+  letter-spacing: 0.02em;
+}
+
+/* ── Sidebar Video Mini-Player (.sv-*) ─────────────────────────────────── */
+
+/* Center play button shown while paused */
+.sv-center-play {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.18);
+  pointer-events: none;
+}
+
+.sv-center-btn {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.58);
+  border: 1.5px solid rgba(255, 255, 255, 0.22);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+}
+
+/* Gradient overlay panel at the bottom of the video frame */
+.sv-overlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.45) 55%, transparent 100%);
+  padding: 22px 10px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  transition: opacity 250ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.sv-overlay--hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Override sp-track's themed background so it reads on the dark video frame */
+.sv-track {
+  background: rgba(255, 255, 255, 0.28) !important;
+}
+
+/* Controls row inside the overlay */
+.sv-controls-row {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.sv-time {
+  font-size: 10px;
+  font-variant-numeric: tabular-nums;
+  color: rgba(255, 255, 255, 0.82);
+  flex: 1;
+  white-space: nowrap;
+  padding: 0 4px;
+  letter-spacing: 0.02em;
+}
+
+/* Icon buttons inside the dark video overlay */
+.sv-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: rgba(255, 255, 255, 0.82);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  border-radius: 4px;
+  line-height: 1;
+  transition: color 100ms ease, background 100ms ease, transform 80ms ease;
+  flex-shrink: 0;
+}
+
+.sv-btn:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.sv-btn:active {
+  transform: scale(0.88);
+}

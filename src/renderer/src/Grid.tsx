@@ -101,8 +101,6 @@ const Grid = forwardRef<GridHandle, GridProps>(function Grid(
     onColumns?.(columns)
   }, [columns, onColumns])
 
-  // Clear any pending timers on unmount (scroll/scope switch safe).
-  useEffect(() => () => {}, [])
 
   useImperativeHandle(
     ref,
@@ -423,8 +421,7 @@ function Cell({
   const aspectRatio =
     layout === 'masonry' && item.width && item.height ? `${item.width} / ${item.height}` : '1 / 1'
 
-  // GIFs animate inline (cheap); video/audio previews live in the right-sidebar player (Inspector)
-  // and the full lightbox (click / Space) — there is no in-grid hover or pinned popover anymore.
+  // GIFs animate inline (cheap); the full lightbox opens on click / Space — nothing renders inline in the cell.
   const isGif = item.type === 'image' && /(^|\.)gif$/i.test(item.ext)
 
   // Fade thumbnails in as they decode so fast scrolling doesn't flash the empty tile bg.

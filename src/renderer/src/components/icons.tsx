@@ -187,17 +187,17 @@ export function LinkIcon({ size = 14, style }: IconProps): React.JSX.Element {
 // ---- Media player action icons ----
 export function PlayIcon({ size = 24, style }: IconProps): React.JSX.Element {
   return (
-    <svg {...strokeProps(size)} style={{ ...base, ...style }}>
-      <path d="M5 3v18l15-9L5 3Z" />
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" style={{ ...base, ...style }}>
+      <polygon points="6 4 20 12 6 20 6 4" />
     </svg>
   )
 }
 
 export function PauseIcon({ size = 24, style }: IconProps): React.JSX.Element {
   return (
-    <svg {...strokeProps(size)} style={{ ...base, ...style }}>
-      <rect x="3" y="5" width="7" height="14" rx="1" />
-      <rect x="14" y="5" width="7" height="14" rx="1" />
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" style={{ ...base, ...style }}>
+      <rect x="5" y="4" width="4.5" height="16" rx="1.5" />
+      <rect x="14.5" y="4" width="4.5" height="16" rx="1.5" />
     </svg>
   )
 }
@@ -209,6 +209,71 @@ export function MaximizeIcon({ size = 24, style }: IconProps): React.JSX.Element
       <path d="M4 8V4l4 4" />
       <path d="M16 21h4a1 1 0 0 0 1-1v-4" />
       <path d="M20 16h-4l4 4Z" />
+    </svg>
+  )
+}
+
+export function VolumeIcon({ size = 20, style }: IconProps): React.JSX.Element {
+  return (
+    <svg {...strokeProps(size)} style={{ ...base, ...style }}>
+      <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
+      <path d="M15.54 8.46a5 5 0 0 1 0 7.07" />
+      <path d="M19.07 4.93a10 10 0 0 1 0 14.14" />
+    </svg>
+  )
+}
+
+export function VolumeMuteIcon({ size = 20, style }: IconProps): React.JSX.Element {
+  return (
+    <svg {...strokeProps(size)} style={{ ...base, ...style }}>
+      <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
+      <line x1="22" y1="9" x2="16" y2="15" />
+      <line x1="16" y1="9" x2="22" y2="15" />
+    </svg>
+  )
+}
+
+export function SkipBackIcon({ size = 20, style }: IconProps): React.JSX.Element {
+  return (
+    <svg {...strokeProps(size)} style={{ ...base, ...style }}>
+      <polygon points="19 20 9 12 19 4 19 20" />
+      <line x1="5" y1="19" x2="5" y2="5" />
+    </svg>
+  )
+}
+
+export function SkipForwardIcon({ size = 20, style }: IconProps): React.JSX.Element {
+  return (
+    <svg {...strokeProps(size)} style={{ ...base, ...style }}>
+      <polygon points="5 4 15 12 5 20 5 4" />
+      <line x1="19" y1="5" x2="19" y2="19" />
+    </svg>
+  )
+}
+
+export function FullscreenIcon({ size = 20, style }: IconProps): React.JSX.Element {
+  return (
+    <svg {...strokeProps(size)} style={{ ...base, ...style }}>
+      <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3" />
+    </svg>
+  )
+}
+
+export function ExitFullscreenIcon({ size = 20, style }: IconProps): React.JSX.Element {
+  return (
+    <svg {...strokeProps(size)} style={{ ...base, ...style }}>
+      <path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3" />
+    </svg>
+  )
+}
+
+export function RepeatIcon({ size = 20, style }: IconProps): React.JSX.Element {
+  return (
+    <svg {...strokeProps(size)} style={{ ...base, ...style }}>
+      <path d="m17 2 4 4-4 4" />
+      <path d="M3 11v-1a4 4 0 0 1 4-4h14" />
+      <path d="m7 22-4-4 4-4" />
+      <path d="M21 13v1a4 4 0 0 1-4 4H3" />
     </svg>
   )
 }

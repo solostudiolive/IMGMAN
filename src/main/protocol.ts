@@ -13,14 +13,14 @@ const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/
 /**
  * Must run BEFORE app `whenReady` — privileged schemes register at startup.
  * `standard` + `secure` makes imgman:// behave like https (proper origin,
- * fetchable, streamable) so <img src> and fetch() work from the sandboxed
- * renderer without relaxing its security.
+ * fetchable, streamable) so <img src>, <video>, <audio> and fetch() work from
+ * the sandboxed renderer without relaxing its security.
  */
 export function registerImgmanScheme(): void {
   protocol.registerSchemesAsPrivileged([
     {
       scheme: IMGMAN_SCHEME,
-      privileges: { standard: true, secure: true, supportFetchAPI: true, stream: true }
+      privileges: { standard: true, secure: true, supportFetchAPI: true, stream: true, bypassCSP: true }
     }
   ])
 }
@@ -86,7 +86,7 @@ export function registerImgmanProtocol(): void {
     if (!abs) return notFound()
 
     // net.fetch over a file URL handles streaming, range requests, and
-    // Content-Type inference.
+    // Content-Type inference natively in Chromium.
     return net.fetch(pathToFileURL(abs).toString())
   })
 }

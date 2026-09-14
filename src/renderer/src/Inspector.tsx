@@ -1,9 +1,9 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { FullItem } from '../../preload/types'
 import TagEditor from './TagEditor'
 import FolderAssigner from './FolderAssigner'
 import QuickPreview from './QuickPreview'
-import { TypeIcon, DownloadIcon } from './components/icons'
+import { TypeIcon, DownloadIcon, PlayIcon, PauseIcon, SkipBackIcon, SkipForwardIcon, VolumeIcon, VolumeMuteIcon, FullscreenIcon } from './components/icons'
 import Select from './components/Select'
 import { baseName, withExt } from './displayName'
 
@@ -113,7 +113,9 @@ export default function Inspector({
   }
 
   const showThumb = item.type !== 'other' && !thumbFailed
-  const isPlayer = item.type === 'video' || item.type === 'audio'
+  const isVideo = item.type === 'video'
+  const isAudio = item.type === 'audio'
+  const isPlayer = isVideo || isAudio
   const dims = item.width && item.height ? `${item.width} × ${item.height}` : null
   const duration = item.duration_ms ? formatDuration(item.duration_ms) : null
   const created = formatDate(item.created_at)
@@ -189,71 +191,59 @@ export default function Inspector({
 
   return (
     <aside style={ASIDE_STYLE}>
-      <div
-        className={showThumb && !isPlayer ? 'inspector-thumb' : undefined}
-        onClick={() => showThumb && !isPlayer && setZoomed(true)}
-        title={showThumb && !isPlayer ? 'Click to enlarge' : undefined}
-        style={{
-          width: '100%',
-          aspectRatio: isPlayer ? '16 / 9' : '1 / 1',
-          borderRadius: 8,
-          overflow: 'hidden',
-          position: 'relative',
-          background: 'var(--color-bg-elevated)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          marginBottom: 12,
-          cursor: showThumb && !isPlayer ? 'zoom-in' : 'default'
-        }}
-      >
-        {isPlayer ? (
-          item.type === 'video' ? (
-            <video
+      {isAudio ? (
+        <SidebarAudioPlayer
+          key={item.id}
+          src={`imgman://original/${item.id}`}
+          durationMs={item.duration_ms ?? null}
+        />
+      ) : (
+        <div
+          className={showThumb && !isVideo ? 'inspector-thumb' : undefined}
+          onClick={() => showThumb && !isVideo && setZoomed(true)}
+          title={showThumb && !isVideo ? 'Click to enlarge' : undefined}
+          style={{
+            width: '100%',
+            aspectRatio: isVideo ? '16 / 9' : '1 / 1',
+            borderRadius: 8,
+            overflow: 'hidden',
+            position: 'relative',
+            background: 'var(--color-bg-elevated)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            marginBottom: 12,
+            cursor: showThumb && !isVideo ? 'zoom-in' : 'default'
+          }}
+        >
+          {isVideo ? (
+            <SidebarVideoPlayer
+              key={item.id}
               src={`imgman://original/${item.id}`}
-              controls
-              autoPlay
-              muted
-              loop
-              playsInline
-              style={{ width: '100%', height: '100%', objectFit: 'contain', background: '#000', borderRadius: 8 }}
+              durationMs={item.duration_ms ?? null}
+              onExpand={() => setZoomed(true)}
             />
+          ) : showThumb ? (
+            <>
+              <img
+                className="inspector-thumb__img"
+                src={`imgman://thumb/${item.id}`}
+                onError={() => setThumbFailed(true)}
+                style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+              />
+              <span className="inspector-thumb__hint" aria-hidden>
+                ⤢
+              </span>
+            </>
           ) : (
-            <div
-              style={{
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                gap: 12,
-                width: '100%',
-                padding: '0 12px',
-                boxSizing: 'border-box'
-              }}
-            >
-              <TypeIcon type="audio" size={40} style={{ color: 'var(--color-text-faint)' }} />
-              <audio src={`imgman://original/${item.id}`} controls autoPlay style={{ width: '100%' }} />
-            </div>
-          )
-        ) : showThumb ? (
-          <>
-            <img
-              className="inspector-thumb__img"
-              src={`imgman://thumb/${item.id}`}
-              onError={() => setThumbFailed(true)}
-              style={{ width: '100%', height: '100%', objectFit: 'contain' }}
-            />
-            <span className="inspector-thumb__hint" aria-hidden>
-              ⤢
-            </span>
-          </>
-        ) : (
-          <TypeIcon type={item.type} size={48} style={{ color: 'var(--color-text-faint)' }} />
-        )}
-        {item.ext && !isPlayer && (
-          // Eagle-style format badge in the corner of the preview.
-          <span className="inspector-badge">{item.ext.toUpperCase()}</span>
-        )}
-      </div>
+            <TypeIcon type={item.type} size={48} style={{ color: 'var(--color-text-faint)' }} />
+          )}
+          {item.ext && !isVideo && (
+            // Eagle-style format badge in the corner of the preview.
+            <span className="inspector-badge">{item.ext.toUpperCase()}</span>
+          )}
+        </div>
+      )}
 
       {/* Inline-editable filename (rename). Enter/blur commits, Escape reverts. */}
       <input
@@ -447,6 +437,304 @@ function Row({ label, value }: { label: string; value: string | null }): React.J
       <dd style={{ margin: 0, wordBreak: 'break-word', flex: 1, color: 'var(--color-text)' }}>
         {value}
       </dd>
+    </div>
+  )
+}
+
+// ── Sidebar Audio Mini-Player ────────────────────────────────────────────
+function SidebarAudioPlayer({
+  src,
+  durationMs
+}: {
+  src: string
+  durationMs: number | null
+}): React.JSX.Element {
+  const audioRef = useRef<HTMLAudioElement>(null)
+  const trackRef = useRef<HTMLDivElement>(null)
+  const isDragging = useRef(false)
+  const [playing, setPlaying] = useState(false)
+  const [currentTime, setCurrentTime] = useState(0)
+  const [duration, setDuration] = useState(durationMs ? durationMs / 1000 : 0)
+  const [muted, setMuted] = useState(false)
+
+  const togglePlay = useCallback((): void => {
+    const el = audioRef.current
+    if (!el) return
+    if (el.paused) { void el.play(); setPlaying(true) }
+    else { el.pause(); setPlaying(false) }
+  }, [])
+
+  const seekBy = useCallback((delta: number): void => {
+    const el = audioRef.current
+    if (!el) return
+    const next = Math.max(0, Math.min(el.duration || duration, el.currentTime + delta))
+    el.currentTime = next
+    setCurrentTime(next)
+  }, [duration])
+
+  const doSeek = useCallback((clientX: number): void => {
+    const el = trackRef.current
+    const audio = audioRef.current
+    if (!el || !audio) return
+    const dur = audio.duration || duration
+    if (dur <= 0) return
+    const rect = el.getBoundingClientRect()
+    const t = Math.min(1, Math.max(0, (clientX - rect.left) / rect.width)) * dur
+    audio.currentTime = t
+    setCurrentTime(t)
+  }, [duration])
+
+  const handleScrubMouseDown = useCallback((e: React.MouseEvent<HTMLDivElement>): void => {
+    e.preventDefault()
+    e.stopPropagation()
+    isDragging.current = true
+    doSeek(e.clientX)
+    const onMove = (ev: MouseEvent): void => { if (isDragging.current) doSeek(ev.clientX) }
+    const onUp = (ev: MouseEvent): void => {
+      if (isDragging.current) { doSeek(ev.clientX); isDragging.current = false }
+      window.removeEventListener('mousemove', onMove)
+      window.removeEventListener('mouseup', onUp)
+    }
+    window.addEventListener('mousemove', onMove)
+    window.addEventListener('mouseup', onUp)
+  }, [doSeek])
+
+  const handleScrubClick = useCallback((e: React.MouseEvent<HTMLDivElement>): void => {
+    e.stopPropagation()
+    if (isDragging.current) return
+    doSeek(e.clientX)
+  }, [doSeek])
+
+  const toggleMute = useCallback((): void => {
+    const el = audioRef.current
+    if (!el) return
+    el.muted = !muted
+    setMuted((m) => !m)
+  }, [muted])
+
+  const pct = duration > 0 ? Math.min(100, (currentTime / duration) * 100) : 0
+
+  return (
+    <div className="sp-player">
+      <audio
+        ref={audioRef}
+        src={src}
+        onTimeUpdate={() => { if (audioRef.current) setCurrentTime(audioRef.current.currentTime) }}
+        onLoadedMetadata={() => { if (audioRef.current) setDuration(audioRef.current.duration) }}
+        onEnded={() => setPlaying(false)}
+        onPlay={() => setPlaying(true)}
+        onPause={() => setPlaying(false)}
+      />
+
+      {/* Transport: artwork + play controls + mute */}
+      <div className="sp-row">
+        <div className={`sp-artwork${playing ? ' sp-artwork--playing' : ''}`}>
+          <TypeIcon type="audio" size={20} />
+        </div>
+        <div className="sp-transport">
+          <button type="button" className="sp-btn" onClick={() => seekBy(-10)} title="Rewind 10s">
+            <SkipBackIcon size={14} />
+          </button>
+          <button type="button" className="sp-btn sp-btn--play" onClick={togglePlay} title={playing ? 'Pause' : 'Play'}>
+            {playing ? <PauseIcon size={15} /> : <PlayIcon size={15} />}
+          </button>
+          <button type="button" className="sp-btn" onClick={() => seekBy(10)} title="Forward 10s">
+            <SkipForwardIcon size={14} />
+          </button>
+        </div>
+        <button type="button" className="sp-btn" onClick={toggleMute} title={muted ? 'Unmute' : 'Mute'}>
+          {muted ? <VolumeMuteIcon size={14} /> : <VolumeIcon size={14} />}
+        </button>
+      </div>
+
+      {/* Scrubber */}
+      <div
+        ref={trackRef}
+        className="sp-track-wrap"
+        onMouseDown={handleScrubMouseDown}
+        onClick={handleScrubClick}
+      >
+        <div className="sp-track">
+          <div className="sp-track-fill" style={{ width: `${pct}%` }}>
+            <div className="sp-track-thumb" />
+          </div>
+        </div>
+      </div>
+
+      {/* Time row */}
+      <div className="sp-time-row">
+        <span>{formatDuration(currentTime * 1000)}</span>
+        <span>{formatDuration(duration * 1000)}</span>
+      </div>
+    </div>
+  )
+}
+
+// ── Sidebar Video Mini-Player ────────────────────────────────────────────
+function SidebarVideoPlayer({
+  src,
+  durationMs,
+  onExpand
+}: {
+  src: string
+  durationMs: number | null
+  onExpand: () => void
+}): React.JSX.Element {
+  const videoRef = useRef<HTMLVideoElement>(null)
+  const trackRef = useRef<HTMLDivElement>(null)
+  const isDragging = useRef(false)
+  const hideTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const [playing, setPlaying] = useState(false)
+  const [currentTime, setCurrentTime] = useState(0)
+  const [duration, setDuration] = useState(durationMs ? durationMs / 1000 : 0)
+  const [muted, setMuted] = useState(true)
+  const [controlsVisible, setControlsVisible] = useState(true)
+
+  // Autoplay muted on mount; clean up any lingering timer on unmount.
+  useEffect(() => {
+    const el = videoRef.current
+    if (!el) return
+    el.muted = true
+    void el.play().catch(() => {})
+    return () => { if (hideTimer.current) clearTimeout(hideTimer.current) }
+  }, [])
+
+  // Always show controls while paused; auto-hide 2 s after mouse activity when playing.
+  const nudgeControls = useCallback((): void => {
+    setControlsVisible(true)
+    if (hideTimer.current) clearTimeout(hideTimer.current)
+    hideTimer.current = setTimeout(() => setControlsVisible(false), 2000)
+  }, [])
+
+  useEffect(() => {
+    if (!playing) {
+      setControlsVisible(true)
+      if (hideTimer.current) { clearTimeout(hideTimer.current); hideTimer.current = null }
+    }
+    return () => { if (hideTimer.current) clearTimeout(hideTimer.current) }
+  }, [playing])
+
+  const togglePlay = useCallback((): void => {
+    const el = videoRef.current
+    if (!el) return
+    if (el.paused) void el.play()
+    else el.pause()
+  }, [])
+
+  const doSeek = useCallback((clientX: number): void => {
+    const el = trackRef.current
+    const video = videoRef.current
+    if (!el || !video) return
+    const dur = video.duration || duration
+    if (dur <= 0) return
+    const rect = el.getBoundingClientRect()
+    const t = Math.min(1, Math.max(0, (clientX - rect.left) / rect.width)) * dur
+    video.currentTime = t
+    setCurrentTime(t)
+  }, [duration])
+
+  const handleScrubMouseDown = useCallback((e: React.MouseEvent<HTMLDivElement>): void => {
+    e.preventDefault()
+    e.stopPropagation()
+    isDragging.current = true
+    doSeek(e.clientX)
+    const onMove = (ev: MouseEvent): void => { if (isDragging.current) doSeek(ev.clientX) }
+    const onUp = (ev: MouseEvent): void => {
+      if (isDragging.current) { doSeek(ev.clientX); isDragging.current = false }
+      window.removeEventListener('mousemove', onMove)
+      window.removeEventListener('mouseup', onUp)
+    }
+    window.addEventListener('mousemove', onMove)
+    window.addEventListener('mouseup', onUp)
+  }, [doSeek])
+
+  const handleScrubClick = useCallback((e: React.MouseEvent<HTMLDivElement>): void => {
+    e.stopPropagation()
+    if (isDragging.current) return
+    doSeek(e.clientX)
+  }, [doSeek])
+
+  const toggleMute = useCallback((): void => {
+    const el = videoRef.current
+    if (!el) return
+    el.muted = !muted
+    setMuted((m) => !m)
+  }, [muted])
+
+  const pct = duration > 0 ? Math.min(100, (currentTime / duration) * 100) : 0
+
+  return (
+    <div
+      style={{
+        position: 'relative',
+        width: '100%',
+        height: '100%',
+        background: '#000',
+        cursor: playing && !controlsVisible ? 'none' : 'default'
+      }}
+      onMouseMove={() => { if (playing) nudgeControls() }}
+      onClick={togglePlay}
+    >
+      <video
+        ref={videoRef}
+        src={src}
+        playsInline
+        loop
+        style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block' }}
+        onPlay={() => setPlaying(true)}
+        onPause={() => setPlaying(false)}
+        onTimeUpdate={() => { if (videoRef.current) setCurrentTime(videoRef.current.currentTime) }}
+        onLoadedMetadata={() => { if (videoRef.current) setDuration(videoRef.current.duration) }}
+        onEnded={() => setPlaying(false)}
+      />
+
+      {/* Center play indicator when paused */}
+      {!playing && (
+        <div className="sv-center-play">
+          <div className="sv-center-btn">
+            <PlayIcon size={20} />
+          </div>
+        </div>
+      )}
+
+      {/* Bottom controls overlay */}
+      <div
+        className={`sv-overlay${!controlsVisible && playing ? ' sv-overlay--hidden' : ''}`}
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Scrubber — reuses sp-track styles with sv-track dark override */}
+        <div
+          ref={trackRef}
+          className="sp-track-wrap"
+          onMouseDown={handleScrubMouseDown}
+          onClick={handleScrubClick}
+        >
+          <div className="sp-track sv-track">
+            <div className="sp-track-fill" style={{ width: `${pct}%` }}>
+              <div className="sp-track-thumb" />
+            </div>
+          </div>
+        </div>
+        <div className="sv-controls-row">
+          <button type="button" className="sv-btn" onClick={togglePlay} title={playing ? 'Pause' : 'Play'}>
+            {playing ? <PauseIcon size={13} /> : <PlayIcon size={13} />}
+          </button>
+          <span className="sv-time">
+            {formatDuration(currentTime * 1000)} / {formatDuration(duration * 1000)}
+          </span>
+          <button type="button" className="sv-btn" onClick={toggleMute} title={muted ? 'Unmute' : 'Mute'}>
+            {muted ? <VolumeMuteIcon size={13} /> : <VolumeIcon size={13} />}
+          </button>
+          <button
+            type="button"
+            className="sv-btn"
+            onClick={(e) => { e.stopPropagation(); onExpand() }}
+            title="Open full preview"
+          >
+            <FullscreenIcon size={13} />
+          </button>
+        </div>
+      </div>
     </div>
   )
 }

@@ -20,16 +20,16 @@ Progress:
 - v1.1 Rich Media Import: [██████████] 100% ✓ COMPLETE (Phases 10–12)
 - v1.2 Smart Media: [██████████] 100% ✓ COMPLETE (Phase 13 — audio hover-preview + perceptual dupes)
 - v1.3 PDF Inline View: [██████████] 100% ✓ COMPLETE (Phase 14 — PDF inline rendering ✓)
-- v1.3 Hover Preview Popover: [░░░░░░░░░░] 0% PLANNING (Phase 15 — audio/video hover-preview popover)
+- v1.3 Hover Preview Popover: [░░░░░░░░░░] 0% APPLY REVERTED (Phase 15 — popover implemented then user-reverted; video/audio cells have no grid hover preview)
 
 ## Loop Position
 
 Current loop state:
 ```
 PLAN ──▶ APPLY ──▶ UNIFY
-  ○        ○        ○     [v1.3 Phase 15: Hover Preview Popover — PLAN created]
+  ✓        ○        ○     [v1.3 Phase 15: Hover Preview Popover — PLAN created; APPLY started then reverted]
 ```
-Last activity: 2026-09-14 — Phase 14 loop closed (14-01-SUMMARY.md). Started Phase 15: /paul:plan created 15-01-PLAN.md for hover-preview popover refactoring.
+Last activity: 2026-09-15 — Phase 15 APPLY started (shared hover state + HoverPreview portal + token CSS), then user-directed full revert ("remove popover from video and audio"). Popover removed; Grid.tsx/Grid.css back to pre-plan state. Phase 15 not closed.
 ## Accumulated Context
 
 PHASE 13 (2026-09-14): LOOP CLOSED. 13-01-PLAN.md authored + APPLY executed + 13-01-SUMMARY.md written. Audio hover-preview (Cell <audio> element + canPreview extension) + perceptual near-duplicate detection (pHash.ts DCT service + phash TEXT column + table_info-guarded migration user_version 3 + backfillPerceptualHashes + findPerceptualDuplicateGroups union-find + IPC handlers + PerceptualDuplicateGroup type + DuplicatesModal Near-duplicates tab). AC-3 pre-satisfied (Inspector already shows duration for all types with duration_ms; Phase 10 populates audio duration_ms). Key decision: no Inspector change needed. All typechecks pass (node + web, zero new errors).
@@ -71,6 +71,7 @@ PHASE 12 (2026-09-14): 12-01-PLAN.md authored + executed + unified. Tasks: (1) S
 - 2026-06-23: Pinned vite ^7 + @vitejs/plugin-react ^5 (electron-vite 5 caps vite at 7; plugin-react 6 needs vite 8). | Phase 1 | Constrains future vite/plugin upgrades.
 - 2026-06-23: SQL schema imported via Vite `?raw` (inlined into bundle) instead of copying schema.sql as an asset. | Phase 1 | Schema travels with build; edits need rebuild.
 - 2026-06-23: postinstall runs `node node_modules/electron/install.js` + `electron-builder install-app-deps` because npm 11 silently skips dependency install scripts (Electron binary download was missed). | Phase 1 | Required for `npm run dev` to find Electron on fresh installs.
+- 2026-09-15: Phase 15 hover-preview popover REVERTED per user direction ("remove popover from video and audio"). The popover was implemented (Grid-level shared `hoverItem` + 180 ms intent/120 ms leave-grace timers, `HoverPreview` portal to document.body at fixed top-right inset, token-styled CSS w/ entrance animation) then fully removed. Video/audio cells now have NO grid hover preview (Inspector right-sidebar player still renders media). The current working tree had no inline video/audio preview either — that was moved to the Inspector earlier, so the plan's "refactor from inline" premise was already stale. `15-01-PLAN.md` remains but is superseded; no SUMMARY created. | Phase 15 | No media hover-preview ships; Grid.tsx/Grid.css reverted to pre-plan state (only the unrelated feat/eagle-ui-polish branch changes remain).
 
 ### Deferred Issues
 None logged.
@@ -110,7 +111,7 @@ None logged.
 
 Last session: 2026-09-14 — Phase 14 loop closed (14-01-SUMMARY.md committed across 6 commits). Web typecheck passes (zero errors). Started Phase 15: /paul:plan created 15-01-PLAN.md for hover-preview popover.
 
-Stopped at: Phase 14 complete. v1.3 PDF Inline View LOOP CLOSED ✓✓✓. New loop: Phase 15 — Hover Preview Popover (15-01-PLAN.md just created, awaiting APPLY). Refactor audio/video hover-preview from inline-in-cell to a fixed top-right popover anchored to the grid viewport.
+Stopped at: Phase 15 APPLY started then user-reverted (2026-09-15). The hover-preview popover for video/audio was implemented and then fully removed per "remove popover from video and audio". Grid.tsx/Grid.css are back to pre-plan state (only the unrelated feat/eagle-ui-polish branch changes remain). No media hover-preview ships. 15-01-PLAN.md is superseded.
 
 DISCREPANCY (noted 2026-09-14, RESOLVED by transition commit): STATE.md references 11-01-SUMMARY.md and a 2026-09-13 /paul:unify, but that summary file was absent on disk (only 11-01-PLAN.md existed in .paul/phases/11-url-import/). Phase 10/11/12 source was implemented in the working tree but NOT committed — the latest commits on feat/eagle-ui-polish (d6627d7/e7469ae/6cf82fc) were a separate off-loop UI polish + v1.1.0 release bump that did NOT contain Phases 10–12 code. All three phases' files were present in the working tree and typecheck-clean. The transition-phase commit (5a112b4) bundled all three phases. Next action: Phase 15 APPLY after plan approval.
 
