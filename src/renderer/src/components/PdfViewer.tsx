@@ -119,8 +119,23 @@ export default function PdfViewer({ src, fileName }: { src: string; fileName: st
     }
   }, [page])
 
-  const prevPage = (): void => setPageNum((n) => Math.max(n - 1, 1))
-  const nextPage = (): void => setPageNum((n) => Math.min(n + 1, pageCount))
+  // Keyboard navigation (ArrowLeft/ArrowRight) — LibraryGate only forwards
+  // Space/Escape for quick-preview; this lightbox has its own key handler
+  // because it's a focused viewing surface, not a background overlay.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent): void => {
+      if (e.target instanceof HTMLButtonElement) return // ignore when typing in controls
+      if (e.key === 'ArrowLeft' && pageNum > 1) {
+        e.preventDefault()
+        setPageNum((n) => Math.max(n - 1, 1))
+      } else if (e.key === 'ArrowRight' && pageNum < pageCount) {
+        e.preventDefault()
+        setPageNum((n) => Math.min(n + 1, pageCount))
+      }
+    }
+    document.addEventListener('keydown', onKey)
+    return () => document.removeEventListener('keydown', onKey)
+  }, [pageNum, pageCount])
 
   return (
     <div
